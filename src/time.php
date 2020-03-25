@@ -9,6 +9,7 @@
 namespace LFPhp\Func;
 
 use DateTime;
+use DateTimeZone;
 use Exception;
 
 const DATETIME_FMT = 'Y-m-d H:i:s';
@@ -79,6 +80,17 @@ function time_get_month_period_ranges($start_str, $end_str){
 		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Y-m-01 00:00:00', $end), date('Y-m-d H:i:s', $end)));
 	}
 	return $ranges;
+}
+
+/**
+ * @param $timezone_title
+ * @return float|int
+ * @throws \Exception
+ */
+function get_timezone_offset_min_between_gmt($timezone_title) {
+	$dtz = new DateTimeZone($timezone_title);
+	$dt = new DateTime("now", $dtz);
+	return $dtz->getOffset($dt)/60;
 }
 
 /**
