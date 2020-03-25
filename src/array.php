@@ -42,6 +42,28 @@ function array_group($array, $by_key, $force_unique = false){
 }
 
 /**
+ * 划分范围，
+ * 将指定开始···结束数值按照一定size进行分组。
+ * 如对：2 ~ 9 数字进行分组，每组最大个数为3，则结果为： [2,3,4],[5,6,7],[8,9]
+ * <pre>
+ * 用法：
+ * foreach(range_slice(2,9) as list($s, $e)){
+ *      echo "$s ~ $e", PHP_EOL;
+ * }
+ * </pre>
+ * @param int $start 开始下标
+ * @param int $end 结束下标
+ * @param int $size 每页大小
+ * @return \Generator
+ */
+function range_slice($start, $end, $size){
+	$page_count = ceil(($end - $start)/$size);
+	for($i = 0; $i < $page_count; $i++){
+		yield [$start + $i*$size, min($start + ($i + 1)*$size, $end)];
+	}
+}
+
+/**
  * shuffle objects, key original assoc key
  * @param array|object $objects
  * @return array
