@@ -15,6 +15,7 @@ function server_in_windows(){
  */
 function console_color($text, $fore_color = null, $back_color = null){
 	static $fore_color_map = [
+		'default'      => '0:39',
 		'black'        => '0;30',
 		'dark_gray'    => '1;30',
 		'blue'         => '0;34',
@@ -69,7 +70,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 	$left = $progress_length - $fin;
 
 	$reminds = '';
-	if($start_time){
+	if($start_time && $fin){
 		$expired = time() - $start_time;
 		$reminds = ' in '.round($expired*$left/$fin).'s';
 	}
