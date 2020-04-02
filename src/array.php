@@ -93,6 +93,10 @@ function array_random(array $arr = [], $num = 1, &$key_or_keys = null){
 		$key_or_keys = array_rand($arr, 1);
 		return $arr[$key_or_keys];
 	}
+	if(count($arr) <= $num){
+		$key_or_keys = array_keys($arr);
+		return $arr;
+	}
 	$key_or_keys = array_rand($arr, $num);
 	$ret = [];
 	foreach($key_or_keys as $k){
