@@ -136,6 +136,36 @@ function microtime_diff($start, $end = null){
 }
 
 /**
+ * format time range
+ * @param int $secs
+ * @param bool $keep_zero_padding
+ * @param bool $full_desc
+ * @return string
+ */
+function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
+	$tks = [
+		31536000 => ['year', 'Year'],
+		2592000 => ['month', 'month'],
+		604800 => ['week', 'week'],
+		86400 => ['day', 'day'],
+		3600 => ['hour', 'hr'],
+		60 => ['minute', 'min'],
+		1 => ['second', 'sec'],
+	];
+	$text = '';
+	foreach($tks as $s => list($fd, $sd)){
+		if($secs > $s){
+			$offset = round($secs/$s);
+			$text .= $offset.($full_desc ? $fd : $sd);
+			$secs -= $offset*$s;
+		}else if($keep_zero_padding && $text){
+			$text .= "0".($full_desc ? $fd : $sd);
+		}
+	}
+	return $text;
+}
+
+/**
  * convert microtime format to date
  * @param $microtime
  * @param string $format
