@@ -7,6 +7,8 @@
  */
 namespace LFPhp\Func;
 
+use \Exception;
+
 /**
  * utf-8中英文截断（两个英文一个数量单位）
  * @param string $string 串
@@ -180,6 +182,58 @@ function int2str($data){
 		return (string)$data;
 	}
 	return $data;
+}
+
+/**
+ * 公式运算
+ * @param string $stm 表达式，变量以$符号开始，小括号中表示该变量的描述文本（可为空）,结构如：$var1(变量1)
+ * @param array $param 传入变量，[key=>val]结构
+ * @param callable|null $result_decorator 计算结果修饰回调（仅影响计算过程中的结果，不影响真实计算结果）
+ * @return array [计算结果, 计算公式， 计算过程]
+ * @example 表达式例子： $order_sum(订单总金额) * (1 - $tax_rate(税率)) - $shipping - $refund(退款)
+ */
+function calc_formula($stm, array $param, callable $result_decorator = null){
+	//提取备注
+	$var_descriptions = [];
+	$stm = preg_replace_callback('/(\$[\w]+)(\([^)]+\))/', function($matches)use(&$var_descriptions){
+		$k = substr($matches[1], 1);
+		$var_descriptions[$k] = str_replace(['(', ')'], '', $matches[2]);
+		return $matches[1];
+	}, $stm);
+
+	if(!preg_match_all('/\$([\w]+)/', $stm, $vars)){
+		throw new Exception('No variables found in statement:'.$stm);
+	}
+
+	$vars = $vars[1];
+	$param_keys = array_keys($param);
+	if($var_no_defines = array_diff($vars, $param_keys)){
+		throw new Exception('Variables required: '.join(',', $var_no_defines));
+	}
+	if($param_overloads = array_diff($vars, $param_keys)){
+		throw new Exception('Parameters passed more than required: '.join(',', $param_overloads));
+	}
+
+	extract($param, EXTR_OVERWRITE);
+	$_RESULT_ = null;
+	$code = '$_RESULT_ = '.$stm.';';
+	eval($code);
+	if(!isset($_RESULT_)){
+		throw new Exception('No result detected:'.$stm);
+	}
+	$_RESULT_STR = is_callable($result_decorator) ? call_user_func($result_decorator, $_RESULT_) : $_RESULT_;
+	$full_statement = preg_replace_callback('/\$([\w]+)/', function($matches) use ($param){
+			return $param[$matches[1]] ?: 0;
+		}, $stm)." = $_RESULT_STR";
+
+	if($var_descriptions){
+		$formula = preg_replace_callback('/\$([\w]+)/', function($matches) use ($var_descriptions){
+			return $var_descriptions[$matches[1]] ?: $matches[1];
+		}, $stm);
+	}else{
+		$formula = $stm;
+	}
+	return [$_RESULT_, $formula, $full_statement];
 }
 
 /**
