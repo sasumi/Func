@@ -134,7 +134,14 @@ function console_color($text, $fore_color = null, $back_color = null){
 function show_progress($index, $total, $patch_text = '', $start_time = null, $progress_length = 50, $max_length = 0){
 	$pc = round(100*$index/$total);
 	$reminds = '';
-	if($start_time && $index){
+	if(!$start_time){
+		static $inner_start_time;
+		if(!$inner_start_time){
+			$inner_start_time = time();
+		}
+		$start_time = $inner_start_time;
+	}
+	if($index){
 		$reminds = ' in '.format_time_size((time() - $start_time)*($total - $index)/$index);
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
