@@ -1,5 +1,4 @@
 <?php
-
 namespace LFPhp\Func;
 
 function server_in_windows(){
