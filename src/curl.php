@@ -19,11 +19,11 @@ function curl_get($url, $data = null, array $curl_option = []){
 	return curl_execute($ch);
 }
 
-function curl_get_only(){
+function curl_get_only($url, $data, $timeout = 1, array $curl_option = []){
 
 }
 
-function curl_post_only(){
+function curl_post_only($url, $data, $timeout = 1, array $curl_option = []){
 	
 }
 
@@ -52,7 +52,7 @@ function curl_post($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post_json($url, $data = null, array $curl_option = []){
-	$data = is_array($data) ? json_encode($data) : $data;
+	$data = ($data && !is_string($data)) ? json_encode($data) : $data;
 	$curl_option = curl_merge_options([
 		CURLOPT_HTTPHEADER => [
 			'Content-Type: application/json; charset=utf-8',
