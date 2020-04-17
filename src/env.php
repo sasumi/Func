@@ -154,3 +154,59 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 		echo PHP_EOL;
 	}
 }
+
+/**
+ * 运行终端命令
+ * @param string $command 命令
+ * @param array $param 参数
+ * @param bool $async 是否以异步方式执行
+ * @return bool|string|null
+ */
+function run_command($command, array $param = [], $async = false){
+	$descriptors_pec = array(
+		0 => array("pipe", "r"),   // stdin is a pipe that the child will read from
+		1 => array("pipe", "w"),   // stdout is a pipe that the child will write to
+		2 => array("pipe", "w")    // stderr is a pipe that the child will write to
+	);
+
+	//WINDOWS环境：必须传递 $_SERVER给子进程，否则子进程内数据库连接可能出错 ？？
+	$process = proc_open(build_command($command, $param), $descriptors_pec, $pipes, realpath('./'), $_SERVER);
+	if($process === false || $process === null){
+		throw new \Exception('Process create fail:'.$command);
+	}
+	if($async){
+		return true;
+	}
+	if(is_resource($process)){
+		$result_str = $error_str = '';
+		while($s = fgets($pipes[1])){
+			$result_str .= $s;
+		}
+		$has_error = false;
+		while($e = fgets($pipes[2])){
+			$has_error = true;
+			$error_str .= $e;;
+		}
+		return $has_error ? $error_str : $result_str;
+	}
+	proc_close($process);
+	return null;
+}
+
+function build_command($cmd_line, array $param = []){
+	foreach($param as $k => $val){
+		if(is_array($val)){
+			foreach($val as $i => $vi){
+				$vi = escapeshellarg($vi);
+				$cmd_line .= " --{$k}[{$i}]={$vi}";
+			}
+		} else if(strlen($k)>0){
+			$val = escapeshellarg($val);
+			$cmd_line .= " --$k=$val";
+		} else{
+			$val = escapeshellarg($val);
+			$cmd_line .= " -$k=$val";
+		}
+	}
+	return $cmd_line;
+}
