@@ -87,7 +87,7 @@ function object_shuffle($objects){
  */
 function array_random(array $arr = [], $num = 1, &$key_or_keys = null){
 	if(!$arr){
-		return null;
+		return [];
 	}
 	if($num == 1){
 		$key_or_keys = array_rand($arr, 1);
@@ -126,7 +126,7 @@ function plain_items($arr, $original_key = '', $original_key_name = 'original_ke
 		$arr[$original_key_name] = $original_key;
 		return array($arr);
 	}else{
-		$ret = array();
+		$ret = [];
 		foreach($arr as $k => $item){
 			$ret = array_merge($ret, plain_items($item, $k, $original_key_name));
 		}
@@ -172,7 +172,7 @@ function restructure_files(array $input){
  * @return array
  */
 function array_copy_by_fields(array $array, array $fields){
-	$tmp = array();
+	$tmp = [];
 	foreach($fields as $field){
 		$tmp[$field] = $array[$field];
 	}
@@ -403,7 +403,7 @@ function array_trim_fields(array $data, array $fields = [], $recursive = true){
  * @param null &$key
  * @return mixed|null
  */
-function array_first(array $data = array(), &$key = null){
+function array_first(array $data = [], &$key = null){
 	foreach($data as $key => $item){
 		return $item;
 	}
@@ -416,7 +416,7 @@ function array_first(array $data = array(), &$key = null){
  * @param null $key
  * @return null
  */
-function array_last(array $data = array(), &$key = null){
+function array_last(array $data = [], &$key = null){
 	if(!empty($data)){
 		$keys = array_keys($data);
 		$key = array_pop($keys);
@@ -453,7 +453,7 @@ function array_orderby($src_arr){
 	$data = array_shift($args);
 	foreach($args as $n => $field){
 		if(is_string($field)){
-			$tmp = array();
+			$tmp = [];
 			foreach($data as $key => $row){
 				$tmp[$key] = $row[$field];
 			}
@@ -574,7 +574,7 @@ function null_in_array(array $arr){
  */
 function array_filter_by_keys($arr, $keys){
 	$args = is_array($keys) ? $keys : array_slice(func_get_args(), 1);
-	$data = array();
+	$data = [];
 	foreach($args as $k){
 		$data[$k] = $arr[$k];
 	}
@@ -634,7 +634,7 @@ function assert_array_has_keys($arr, $keys){
  * @param array $group_by_parents
  * @return array
  */
-function array_filter_subtree($parent_id, $all, $opt = array(), $level = 0, $group_by_parents = array()){
+function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by_parents = []){
 	$opt = array_merge(array(
 		'return_as_tree' => false,             //以目录树返回，还是以平铺数组形式返回
 		'level_key'      => 'tree_level',      //返回数据中是否追加等级信息,如果选项为空, 则不追加等级信息
@@ -649,7 +649,7 @@ function array_filter_subtree($parent_id, $all, $opt = array(), $level = 0, $gro
 	$as_tree = $opt['return_as_tree'];
 	$c_k = $opt['children_key'];
 
-	$result = array();
+	$result = [];
 	$group_by_parents = $group_by_parents ?: array_group($all, $pn_k);
 
 	foreach($all as $k => $item){
@@ -687,7 +687,7 @@ function array_insert_after(array $src_array, $data, $rel_key = ''){
 	if(!in_array($rel_key, array_keys($src_array))){
 		return array_push($src_array, $data);
 	}else{
-		$tmp_array = array();
+		$tmp_array = [];
 		$len = 0;
 
 		foreach($src_array as $key => $src){
@@ -709,11 +709,11 @@ function array_insert_after(array $src_array, $data, $rel_key = ''){
  * @param string $rel_key
  * @return array
  */
-function array_merge_after(array $src_array = array(), array $new_array = array(), $rel_key = ''){
+function array_merge_after(array $src_array = [], array $new_array = [], $rel_key = ''){
 	if(!in_array($rel_key, array_keys($src_array))){
 		return array_merge($src_array, $new_array);
 	}else{
-		$tmp_array = array();
+		$tmp_array = [];
 		$len = 0;
 
 		foreach($src_array as $key => $src){
@@ -747,7 +747,7 @@ function is_assoc_array($array){
  * @return mixed
  */
 function array_transform(array $data, array $rules){
-	$ret_array = array();
+	$ret_array = [];
 	foreach($rules as $key => $value){
 		if(!is_int($key) && isset($data[$key])){
 			if(is_array($value) && !empty($value)){
@@ -773,7 +773,7 @@ function array_transform(array $data, array $rules){
  * @return array|mixed
  */
 function array_value_recursive(array $arr, $key = ''){
-	$val = array();
+	$val = [];
 	array_walk_recursive($arr, function($v, $k) use ($key, &$val){
 		if(!$key || $k == $key)
 			array_push($val, $v);

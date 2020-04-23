@@ -5,7 +5,6 @@
  * Date: 17/7/17
  * Time: 22:13
  */
-
 namespace LFPhp\Func;
 
 use DateTime;
@@ -13,9 +12,11 @@ use DateTimeZone;
 use Exception;
 
 const DATETIME_FMT = 'Y-m-d H:i:s';
-const ONE_DAY = 86400;
+const ONE_MINUTE = 60;
 const ONE_HOUR = 3600;
+const ONE_DAY = 86400;
 const ONE_WEEK = 604800;
+const ONE_MONTH = 2592000‬; //30 days
 
 /**
  * 获取制定开始时间、结束时间的上中下旬分段数组

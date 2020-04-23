@@ -193,6 +193,12 @@ function run_command($command, array $param = [], $async = false){
 	return null;
 }
 
+/**
+ * 构建命令行
+ * @param $cmd_line
+ * @param array $param
+ * @return string
+ */
 function build_command($cmd_line, array $param = []){
 	foreach($param as $k => $val){
 		if(is_array($val)){
