@@ -37,7 +37,7 @@ function dump(){
 
 	//remove closure calling & print out location.
 	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-	if($GLOBALS['DUMP_WITH_TRACE']){
+	if(isset($GLOBALS['DUMP_WITH_TRACE']) && $GLOBALS['DUMP_WITH_TRACE']){
 		echo "[trace]",PHP_EOL;
 		print_trace($trace, true, true);
 	} else {
