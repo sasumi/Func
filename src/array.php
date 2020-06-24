@@ -200,9 +200,9 @@ function array_merge_recursive_distinct(array &$array1, array &$array2){
 
 /**
  * 清理数组中null的元素
- * @param array $data
+ * @param array|mixed $data
  * @param bool $recursive
- * @return array
+ * @return array|mixed
  */
 function array_clear_null($data, $recursive = true){
 	if(empty($data) || !is_array($data)){
@@ -221,9 +221,9 @@ function array_clear_null($data, $recursive = true){
 
 /**
  * 清理数组中empty的元素
- * @param $data
+ * @param array|mixed $data
  * @param bool $recursive
- * @return array
+ * @return array|mixed
  */
 function array_clear_empty($data, $recursive = true){
 	if(empty($data) || !is_array($data)){
