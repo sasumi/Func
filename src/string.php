@@ -190,6 +190,7 @@ function int2str($data){
  * @param array $param 传入变量，[key=>val]结构
  * @param callable|null $result_decorator 计算结果修饰回调（仅影响计算过程中的结果，不影响真实计算结果）
  * @return array [计算结果, 计算公式， 计算过程]
+ * @throws \Exception
  * @example 表达式例子： $order_sum(订单总金额) * (1 - $tax_rate(税率)) - $shipping - $refund(退款)
  */
 function calc_formula($stm, array $param, callable $result_decorator = null){
@@ -471,6 +472,31 @@ function resolve_size($val){
 			$val *= 1024;
 	}
 	return $val;
+}
+
+/**
+ * @param $str
+ * @return mixed|string
+ * base64编码
+ */
+function url_safe_b64encode($str){
+	$data = base64_encode($str);
+	$data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
+	return $data;
+}
+
+/**
+ * @param $str
+ * @return string
+ * base64解码
+ */
+function url_safe_b64decode($str){
+	$data = str_replace(array('-', '_'), array('+', '/'), $str);
+	$mod4 = strlen($data)%4;
+	if($mod4){
+		$data .= substr('====', $mod4);
+	}
+	return base64_decode($data);
 }
 
 /**
