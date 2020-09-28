@@ -161,6 +161,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
  * @param array $param 参数
  * @param bool $async 是否以异步方式执行
  * @return bool|string|null
+ * @throws \Exception
  */
 function run_command($command, array $param = [], $async = false){
 	$descriptors_pec = array(

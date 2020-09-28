@@ -10,6 +10,7 @@ use Exception;
  * @param mixed|null $data
  * @param array|null|callable $curl_option 额外CURL选项，如果是闭包函数，传入第一个参数为ch
  * @return array [head, body, ...] curl_getinfo信息
+ * @throws \Exception
  */
 function curl_get($url, $data = null, array $curl_option = []){
 	if($data){
@@ -155,6 +156,7 @@ function curl_instance($url, array $curl_option){
  * convert data to request string
  * @param mixed $data
  * @return string
+ * @throws \Exception
  */
 function curl_data2str($data){
 	if(is_scalar($data)){

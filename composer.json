@@ -20,12 +20,33 @@
   "require": {
 	"php": ">=5.6",
 	"ext-mbstring": "*",
-	"ext-json": "*"
+	"ext-json": "*",
+	"ext-curl": "*"
   },
-  "require-dev": {},
+  "require-dev": {
+	"phpunit/phpunit": "8.5.8"
+  },
   "autoload": {
 	"files": [
-	  "autoload.php"
+	  "src/array.php",
+	  "src/env.php",
+	  "src/file.php",
+	  "src/util.php",
+	  "src/string.php",
+	  "src/time.php",
+	  "src/cron.php",
+	  "src/curl.php"
 	]
+  },
+  "autoload-dev": {
+	"psr-4": {
+	  "LFPhp\\Func\\TestCase\\": "test"
+	}
+  },
+  "repositories": {
+	"packagist": {
+	  "type": "composer",
+	  "url": "https://mirrors.aliyun.com/composer/"
+	}
   }
 }
