@@ -16,7 +16,10 @@ const ONE_MINUTE = 60;
 const ONE_HOUR = 3600;
 const ONE_DAY = 86400;
 const ONE_WEEK = 604800;
-const ONE_MONTH = 2592000; //30 days
+const ONE_MONTH30 = 2592000; //30 days
+const ONE_MONTH31 = 2678400; //31 days
+const ONE_YEAR365 = 31536000; //one year, 365 days
+const ONE_YEAR366 = 31622400; //one year, 366 days
 
 /**
  * 获取制定开始时间、结束时间的上中下旬分段数组
@@ -95,6 +98,23 @@ function get_timezone_offset_min_between_gmt($timezone_title) {
 }
 
 /**
+ * 获取剩余时间（秒）
+ * 如果是CLI模式，该函数不进行计算
+ * @return int|null 秒，null表示无限制
+ */
+function ge_time_left(){
+	if(PHP_SAPI === 'cli'){
+		return null;
+	}
+	$sys_max_exe_time = ini_get('max_execution_time');
+	if(!$sys_max_exe_time){
+		return null;
+	}
+	$cost = time() - $_SERVER['REQUEST_TIME'];
+	return $sys_max_exe_time - $cost;
+}
+
+/**
  * 过滤时间范围，补充上时分秒
  * @param array $ranges 时间范围（开始，结束）
  * @param string|int $default_start 默认开始时间
@@ -145,9 +165,9 @@ function microtime_diff($start, $end = null){
  */
 function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 	$tks = [
-		31536000 => ['year', 'Year'],
-		2592000 => ['month', 'month'],
-		604800 => ['week', 'week'],
+		31536000 => ['year', 'year'],
+		2592000 => ['month', 'mon'],
+		604800 => ['week', 'wk'],
 		86400 => ['day', 'day'],
 		3600 => ['hour', 'hr'],
 		60 => ['minute', 'min'],
