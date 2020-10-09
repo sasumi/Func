@@ -107,7 +107,7 @@ function ge_time_left(){
 	if(!$sys_max_exe_time){
 		return null;
 	}
-	$cost = time() - $_SERVER['REQUEST_TIME'];
+	$cost = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
 	return $sys_max_exe_time - $cost;
 }
 
