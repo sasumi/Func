@@ -103,9 +103,6 @@ function get_timezone_offset_min_between_gmt($timezone_title) {
  * @return int|null 秒，null表示无限制
  */
 function ge_time_left(){
-	if(PHP_SAPI === 'cli'){
-		return null;
-	}
 	$sys_max_exe_time = ini_get('max_execution_time');
 	if(!$sys_max_exe_time){
 		return null;
