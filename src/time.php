@@ -102,7 +102,7 @@ function get_timezone_offset_min_between_gmt($timezone_title) {
  * 如果是CLI模式，该函数不进行计算
  * @return int|null 秒，null表示无限制
  */
-function ge_time_left(){
+function get_time_left(){
 	$sys_max_exe_time = ini_get('max_execution_time');
 	if(!$sys_max_exe_time){
 		return null;
