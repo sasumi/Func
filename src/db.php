@@ -2,8 +2,16 @@
 
 namespace LFPhp\Func\db;
 
+use Exception;
 use LFPhp\Logger\Logger;
 use PDO;
+use PDOException;
+use function LFPhp\Func\array_first;
+
+/**
+ * 数据库类型，当前只支持MySQL
+ */
+const DB_TYPE_MYSQL = 'mysql';
 
 /**
  * get db logger
@@ -16,18 +24,33 @@ function __get_db_logger($fn){
 
 /**
  * PDO connect
- * @param $host
- * @param $user
- * @param $password
- * @param $database
+ * @param string $db_type
+ * @param string $host
+ * @param string $user
+ * @param string $password
+ * @param string $database
+ * @param int|null $port
+ * @param string $charsets
+ * @param bool $persistence_connect
+ * @return \PDO
+ */
+function db_connect($db_type, $host, $user, $password, $database, $port = null, $charsets = '', $persistence_connect = false){
+	$dsn = db_build_dsn($db_type, $host, $database, $port, $charsets);
+	return db_connect_dsn($dsn, $user, $password, $persistence_connect);
+}
+
+/**
+ * @param string $host
+ * @param string $user
+ * @param string $password
+ * @param string $database
  * @param null $port
  * @param string $charsets
  * @param bool $persistence_connect
  * @return \PDO
  */
-function db_connect($host, $user, $password, $database, $port = null, $charsets = '', $persistence_connect = false){
-	$dsn = db_build_dsn($host, $database, $port, $charsets);
-	return db_connect_dsn($dsn, $user, $password, $persistence_connect);
+function db_mysql_connect($host, $user, $password, $database, $port = null, $charsets = '', $persistence_connect = false){
+	return db_connect(DB_TYPE_MYSQL, $host, $user, $password, $database, $port, $charsets, $persistence_connect);
 }
 
 /**
@@ -47,26 +70,27 @@ function db_connect_dsn($dsn, $user, $password, $persistence_connect = false){
 	__get_db_logger(__FUNCTION__)->info('DB connect', $dsn, $user);
 	try {
 		$conn = new PDO($dsn, $user, $password, $opt);
-	} catch(\PDOException $e){
+	} catch(PDOException $e){
 		$msg = $e->getMessage();
 		if(stripos(PHP_OS, 'win') !== false){
 			$msg = mb_convert_encoding($msg, 'utf-8','gbk');
 		}
-		throw new \PDOException($msg."\n[DSN: $dsn]", $e->getCode(), $e->getPrevious());
+		throw new PDOException($msg."\n[DSN: $dsn]", $e->getCode(), $e->getPrevious());
 	}
 	return $conn;
 }
 
 /**
  * build DSN
- * @param $host
- * @param $database
+ * @param string $db_type
+ * @param string $host
+ * @param string $database
  * @param string $port
  * @param string $charsets
  * @return string
  */
-function db_build_dsn($host, $database, $port = '', $charsets = ''){
-	$dns = "mysql:host=$host;dbname={$database}";
+function db_build_dsn($db_type, $host, $database, $port = '', $charsets = ''){
+	$dns = "$db_type:host=$host;dbname={$database}";
 	if($port){
 		$dns .= ";port={$port}";
 	}
@@ -79,26 +103,26 @@ function db_build_dsn($host, $database, $port = '', $charsets = ''){
 /**
  * db query
  * @param \PDO $pdo
- * @param $sql
+ * @param string $sql
  * @return false|\PDOStatement
  */
 function db_query(PDO $pdo, $sql){
 	__get_db_logger(__FUNCTION__)->debug($sql);
 	try{
 		return $pdo->query($sql);
-	}catch(\PDOException $e){
+	}catch(PDOException $e){
 		$msg = $e->getMessage();
 		if(stripos(PHP_OS, 'win') !== false){
 			$msg = mb_convert_encoding($msg, 'utf-8','gbk');
 		}
-		throw new \PDOException($msg."\n[SQL: \"$sql\"]", $e->getCode(), $e->getPrevious());
+		throw new PDOException($msg."\n[SQL: \"$sql\"]", $e->getCode(), $e->getPrevious());
 	}
 }
 
 /**
  * db get all
  * @param \PDO $pdo
- * @param $sql
+ * @param string $sql
  * @return array
  */
 function db_query_all(PDO $pdo, $sql){
@@ -107,14 +131,37 @@ function db_query_all(PDO $pdo, $sql){
 	return $result->fetchAll();
 }
 
+/**
+ * database query one record
+ * @param \PDO $pdo
+ * @param string $sql
+ * @return array
+ * @throws \Exception
+ */
 function db_query_one(PDO $pdo, $sql){
 	$sql = db_sql_patch_limit($sql, 0, 1);
 	$rows = db_query_all($pdo, $sql);
-	return $rows[0];
+	return $rows[0] ? $rows[0] : [];
 }
 
 /**
- * patch limitation for SQL
+ * database query one field
+ * @param \PDO $pdo
+ * @param string $sql
+ * @param string|null $field
+ * @return mixed|null
+ * @throws \Exception
+ */
+function db_query_field(PDO $pdo, $sql, $field = null){
+	$one = db_query_one($pdo, $sql);
+	if(!$one){
+		return null;
+	}
+	return $field ? $one[$field] : array_first($one);
+}
+
+/**
+ * 追加limit语句到sql上
  * @param string $sql
  * @param int $start_offset
  * @param int|null $size
@@ -123,17 +170,18 @@ function db_query_one(PDO $pdo, $sql){
  */
 function db_sql_patch_limit($sql, $start_offset, $size = null){
 	if(preg_match("/limit\s\W+$/", $sql)){
-		throw new \Exception('SQL already has limitation:'.$sql);
+		throw new Exception('SQL already has limitation:'.$sql);
 	}
 	$sql .= " LIMIT $start_offset".($size ? ",$size" : "");
 	return $sql;
 }
 
 /**
- * get record count
+ * 查询记录数
  * @param \PDO $pdo
- * @param $sql
+ * @param string $sql
  * @return int
+ * @throws \Exception
  */
 function db_query_count(PDO $pdo, $sql){
 	$sql = str_replace(array("\n", "\r"), '', trim($sql));
@@ -157,24 +205,28 @@ function db_query_count(PDO $pdo, $sql){
 }
 
 /**
- * query paginate
+ * 分页查询
  * @param \PDO $pdo
- * @param $sql
- * @param $page
- * @param $page_size
- * @return array
+ * @param string $sql
+ * @param int $page
+ * @param int $page_size
+ * @return array [列表, 总数]
  * @throws \Exception
  */
 function db_query_paginate(PDO $pdo, $sql, $page, $page_size){
+	$total = db_query_count($pdo, $sql);
+	if(!$total){
+		return [[], 0];
+	}
 	$start = ($page - 1)*$page_size;
 	$sql = db_sql_patch_limit($sql, $start, $page_size);
-	return db_query_all($pdo, $sql);
+	return [db_query_all($pdo, $sql), $total];
 }
 
 /**
  * 分块读取
  * @param \PDO $pdo
- * @param $sql
+ * @param string $sql
  * @param callable $handler
  * @param int $chunk_size
  * @return bool
@@ -194,7 +246,7 @@ function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
 
 /**
  * @param \PDO $pdo
- * @param $sql
+ * @param string $sql
  * @param callable $watcher
  * @param int $chunk_size
  * @param int $sleep_interval
@@ -251,7 +303,7 @@ function db_quote_field($fields){
 			$fields[$k] = db_quote_field($field);
 		}
 	}else if(!is_string($fields)){
-		throw new \Exception('Fields must be array or string');
+		throw new Exception('Fields must be array or string');
 	}else if(strpos($fields, ' ')){
 		$tmp = explode(' ', $fields);
 		$f = array_shift($tmp);
@@ -393,24 +445,26 @@ function db_increase(PDO $pdo, $table, $increase_field, $increment_count = 1, ..
 }
 
 /**
- * db transaction
+ * 事务处理
  * @param \PDO $pdo
- * @param callable $handler
+ * @param callable $handler 处理器，如果返回false或抛出异常，将中断提交，执行回滚操作
  * @return bool|mixed
  * @throws \Exception
  */
 function db_transaction(PDO $pdo, callable $handler){
-	$pdo->beginTransaction();
+	$result = null;
 	try{
+		$pdo->beginTransaction();
 		$result = call_user_func($handler);
 		if($result === false){
-			$pdo->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
 			return false;
 		}
 		$pdo->commit();
-	}catch(\Exception $e){
+	}catch(Exception $e){
 		$pdo->rollBack();
 		throw $e;
+	} finally {
+		$pdo->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
 	}
 	return $result;
 }
