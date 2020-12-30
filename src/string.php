@@ -289,21 +289,6 @@ function __h($str, $len = null, $tail = '...', &$over_length = false, $type = nu
 	return htmlspecialchars($str, $type);
 }
 
-/**
- * 获取Excel等电子表格中列名
- * @param string $column 列序号，由1开始
- * @return string
- */
-function get_spreadsheet_column($column){
-	$numeric = ($column - 1)%26;
-	$letter = chr(65 + $numeric);
-	$num2 = intval(($column - 1)/26);
-	if($num2 > 0){
-		return get_spreadsheet_column($num2).$letter;
-	}else{
-		return $letter;
-	}
-}
 
 /**
  * 数字金额转换成中文大写金额的函数

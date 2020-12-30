@@ -20,14 +20,6 @@ function curl_get($url, $data = null, array $curl_option = []){
 	return curl_execute($ch);
 }
 
-function curl_get_only($url, $data, $timeout = 1, array $curl_option = []){
-
-}
-
-function curl_post_only($url, $data, $timeout = 1, array $curl_option = []){
-	
-}
-
 /**
  * POST请求
  * @param $url

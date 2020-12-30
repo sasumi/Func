@@ -7,6 +7,7 @@ use LFPhp\Logger\Logger;
 use PDO;
 use PDOException;
 use function LFPhp\Func\array_first;
+use function LFPhp\Func\array_last;
 
 /**
  * 数据库类型，当前只支持MySQL
@@ -37,6 +38,57 @@ function __get_db_logger($fn){
 function db_connect($db_type, $host, $user, $password, $database, $port = null, $charsets = '', $persistence_connect = false){
 	$dsn = db_build_dsn($db_type, $host, $database, $port, $charsets);
 	return db_connect_dsn($dsn, $user, $password, $persistence_connect);
+}
+
+/**
+ * connect database via ssh proxy
+ * @desc ssh2 extension required
+ * @param $db_config ['type', 'host', 'user', 'password', 'database', 'port']
+ * @param $ssh_config ['host', 'user', 'password'', 'port']
+ * @param array $proxy_config ['host', 'port']
+ * @return \PDO
+ * @throws \Exception
+ */
+function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
+	$logger = __get_db_logger(__FUNCTION__);
+
+	$ssh_conn = ssh2_connect($ssh_config['host'], $ssh_config['port']);
+	$logger->info('ssh connected', $ssh_config);
+
+	if(!ssh2_auth_password($ssh_conn, $ssh_config['user'], $ssh_config['password'])){
+		$logger->error('ssh connect fail');
+		throw new \Exception('SSH connect fail');
+	}
+	$logger->info('ssh authorized', $ssh_config);
+	$proxy_config = array_merge($proxy_config, [
+		'host' => 'localhost',
+		'port' => db_auto_ssh_port($db_config),
+	]);
+
+	$tunnel = ssh2_tunnel($ssh_conn, $proxy_config['host'], $proxy_config['port']);
+	if(!is_resource($tunnel)){
+		$logger->error('ssh tunnel bind fail', $proxy_config);
+		throw new Exception('SSH tunnel bind error('.$proxy_config['host'].':'.$proxy_config['port'].')');
+	}
+
+	$logger->info('ssh tunnel created', $tunnel, $proxy_config);
+	$db_conn = db_connect($db_config['type'],
+		$proxy_config['host'],
+		$db_config['user'],
+		$proxy_config['password'],
+		$db_config['database'],
+		$proxy_config['port']);
+	return $db_conn;
+}
+
+function db_auto_ssh_port($db_config, $port_init = 9999){
+	static $ps = [];
+	$k = serialize($db_config);
+	if(!isset($ps[$k])){
+		$ls = array_last($ps) ?: ($port_init - 1);
+		$ps[$k] = $ls + 1;
+	}
+	return $ps[$k];
 }
 
 /**
@@ -90,6 +142,7 @@ function db_connect_dsn($dsn, $user, $password, $persistence_connect = false){
  * @return string
  */
 function db_build_dsn($db_type, $host, $database, $port = '', $charsets = ''){
+	$db_type = $db_type ?: 'mysql';
 	$dns = "$db_type:host=$host;dbname={$database}";
 	if($port){
 		$dns .= ";port={$port}";

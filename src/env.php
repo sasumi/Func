@@ -1,10 +1,20 @@
 <?php
 namespace LFPhp\Func;
 
+/**
+ * 检测服务器是否在视窗系统中运行
+ * @return bool
+ */
 function server_in_windows(){
 	return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 }
 
+/**
+ * 获取PHP允许上传的最大文件尺寸
+ * 依赖：最大上传文件尺寸，最大POST尺寸
+ * @param bool $human_readable 是否以可读方式返回
+ * @return string|number
+ */
 function get_upload_max_size($human_readable = false){
 	$upload_sz = trim(ini_get('upload_max_filesize'));
 	$upload_sz = resolve_size($upload_sz);
@@ -18,6 +28,7 @@ function get_upload_max_size($human_readable = false){
 }
 
 /**
+ * 获取PHP配置信息
  * @return array
  */
 function get_php_info(){

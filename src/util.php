@@ -17,6 +17,10 @@ function tick_dump($step = 1, $fun = '\dump'){
 	eval("declare(ticks = $step);");
 }
 
+/**
+ * 程序调试函数
+ * 调用方式：dump($var1, $var2, ..., 1) ，当最后一个数值为1时，表示退出（die）程序运行
+ */
 function dump(){
 	$params = func_get_args();
 	$cli = PHP_SAPI === 'cli';
