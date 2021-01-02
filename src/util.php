@@ -56,9 +56,12 @@ function dump(){
  * @param $trace
  * @param bool $with_callee
  * @param bool $with_index
+ * @param bool $as_return
+ * @return string
  */
-function print_trace($trace, $with_callee = false, $with_index = false){
+function print_trace($trace, $with_callee = false, $with_index = false, $as_return = false){
 	$ct = count($trace);
+	$str = '';
 	foreach($trace as $k=>$item){
 		$callee = '';
 		if($with_callee){
@@ -71,11 +74,15 @@ function print_trace($trace, $with_callee = false, $with_index = false){
 			$callee = $item['class'] ? "\t{$item['class']}{$item['type']}{$item['function']}($arg_statement)" : "\t{$item['function']}($arg_statement)";
 		}
 		if($with_index){
-			echo "[", ($ct - $k), "] ";
+			$str .= "[". ($ct - $k). "] ";
 		}
 		$loc = $item['file'] ? "{$item['file']} #{$item['line']} " : '';
-		echo "{$loc}{$callee}", PHP_EOL;
+		$str .= "{$loc}{$callee}".PHP_EOL;
 	}
+	if($as_return){
+		return $str;
+	}
+	echo $str;
 }
 
 /**
@@ -263,5 +270,66 @@ function var_export_min($var, $return = false){
 	}else{
 		return var_export($var, $return);
 	}
+	return null;
+}
+
+/**
+ * 代码打点
+ * @param string $tag
+ * @param bool $trace_location
+ * @param bool $mem_usage
+ * @return mixed
+ */
+function debug_mark($tag = '', $trace_location = true, $mem_usage = true){
+	$k = __FUNCTION__;
+	$tm = microtime();
+	$trace = $mem = null;
+	if($mem_usage){
+		$mem = memory_get_usage(true);
+	}
+	if($trace_location){
+		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+	}
+
+	if(!isset($GLOBALS[$k])){
+		$GLOBALS[$k] = [];
+	}
+	$GLOBALS[$k][] = [$tag, $tm, $trace, $mem];
+	return $GLOBALS[$k];
+}
+
+/**
+ * 输出打点信息
+ * @param bool $as_return
+ * @return string|null
+ */
+function debug_mark_output($as_return = false){
+	$k = __NAMESPACE__.'\\debug_mark';
+	if($as_return){
+		return $GLOBALS[$k];
+	}
+	$str = '';
+	$last_time = null;
+	foreach($GLOBALS[$k] as $idx=>list($tag, $tm, $trace, $mem)){
+		$t = explode(' ', $tm);
+		$time_txt = date('Y/m/d H:i:s', $t[1]).substr($t[0], 1,4);
+		if($last_time){
+			$time_txt .= '('.microtime_diff($last_time, $t).')';
+		}
+		$mem_txt = '';
+		if($mem){
+			$mem_txt = format_size($mem);
+		}
+		$callee = $file_loc = '';
+		if($trace){
+			$callee = $trace['class'] ? "{$trace['class']}{$trace['type']}{$trace['function']}()" : "{$trace['function']}()";
+			$file_loc = $trace['file'].'#'.$trace['line'];
+		}
+		$str .= "{$time_txt} [{$mem_txt}] $tag $callee $file_loc".PHP_EOL;
+	}
+	if($as_return){
+		return $str;
+	}
+	echo $str;
 	return null;
 }
