@@ -7,7 +7,8 @@
   "homepage": "http://blog.yikepi.com/",
   "type": "library",
   "license": "Apache-2.0",
-  "authors": [
+  "version": "1.0.21",
+  "authors":  [
 	{
 	  "name": "Sasumi.H",
 	  "email": "cnsasumi@outlook.com",
@@ -23,8 +24,8 @@
 	"ext-json": "*",
 	"ext-curl": "*",
 	"ext-pdo": "*",
-    "lfphp/logger": "^1.0",
-	"ext-ssh2": "*"
+	"ext-ssh2": "*",
+    "lfphp/logger": "^1.0"
   },
   "require-dev": {
 	"phpunit/phpunit": "8.5.8"
