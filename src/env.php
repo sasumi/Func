@@ -28,6 +28,22 @@ function get_upload_max_size($human_readable = false){
 }
 
 /**
+ * 获取最大socket可用超时时间
+ * @param int $ttf 允许提前时长
+ * @return int 超时时间（秒），如为0，表示不限制超时时间
+ */
+function get_max_socket_timeout($ttf = 0){
+	$max_execute_timeout = ini_get('max_execution_time') ?: 0;
+	$max_socket_timeout = ini_get('default_socket_timeout') ?: 0;
+	$max = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) :
+		min($max_execute_timeout, $max_socket_timeout);
+	if($ttf && $max){
+		return max($max - $ttf, 1); //最低保持1s，避免0值
+	}
+	return $max;
+}
+
+/**
  * 获取PHP配置信息
  * @return array
  */
