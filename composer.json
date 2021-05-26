@@ -39,6 +39,7 @@
 	  "src/string.php",
 	  "src/sheet.php",
 	  "src/time.php",
+	  "src/html.php",
 	  "src/cron.php",
 	  "src/db.php",
 	  "src/curl.php"

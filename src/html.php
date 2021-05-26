@@ -1,0 +1,646 @@
+<?php
+/**
+ * Html 快速操作函数
+ */
+namespace LFPhp\Func;
+
+use Exception;
+
+const HTML_SELF_CLOSING_TAGS = [
+	'area',
+	'base',
+	'br',
+	'col',
+	'embed',
+	'hr',
+	'img',
+	'input',
+	'link',
+	'meta',
+	'param',
+	'source',
+	'track',
+	'wbr',
+	'command',
+	'keygen',
+	'menuitem',
+];
+
+
+/**
+ * 构建select节点，支持optgroup模式
+ * @param string $name
+ * @param array $options 选项数据，
+ * 如果是分组模式，格式为：[value=>text, label=>options, ...]
+ * 如果是普通模式，格式为：options: [value1=>text, value2=>text,...]
+ * @param string|array $current_value
+ * @param string $placeholder
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_select($name, array $options, $current_value = null, $placeholder = '', $attributes = []){
+	$attributes = array_merge($attributes, [
+		'name'        => $name ?: null,
+		'placeholder' => $placeholder ?: null
+	]);
+
+	//多选
+	if(is_array($current_value)){
+		$attributes['multiple'] = 'multiple';
+	}
+
+	$option_html = $placeholder ? html_tag_option($placeholder, '') : '';
+
+	//单层option
+	if(count($options, COUNT_RECURSIVE) == count($options, COUNT_NORMAL)){
+		$option_html .= html_tag_options($options, $current_value);
+	}
+
+	//optgroup支持
+	else{
+		foreach($options as $var1 => $var2){
+			if(is_array($var2)){
+				$option_html .= html_tag_option_group($var1, $var2, $current_value);
+			} else {
+				$option_html .= html_tag_option($var2, $var1, $current_value);
+			}
+		}
+	}
+	return html_tag('select', $attributes, $option_html);
+}
+
+/**
+ * 构建select选项
+ * @param array $options [value=>text,...] option data 选项数组
+ * @param string|array $current_value 当前值
+ * @return string
+ */
+function html_tag_options(array $options, $current_value = null){
+	$html = '';
+	foreach($options as $val => $ti){
+		$html .= html_tag_option($ti, $val, html_value_compare($val, $current_value));
+	}
+	return $html;
+}
+
+/**
+ * 构建option节点
+ * @param string $text 文本，空白将被转义成&nbsp;
+ * @param string $value
+ * @param bool $selected
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_option($text, $value = '', $selected = false, $attributes = []){
+	return html_tag('option', array_merge([
+		'selected' => $selected ? 'selected' : null,
+		'value'    => $value,
+	], $attributes), text_to_html($text));
+}
+
+/**
+ * 构建optgroup节点
+ * @param string $label
+ * @param array $options
+ * @param string|array $current_value 当前值
+ * @return string
+ */
+function html_tag_option_group($label, $options, $current_value = null){
+	$option_html = html_tag_options($options, $current_value);
+	return html_tag('optgroup', ['label' => $label], $option_html);
+}
+
+/**
+ * 构建textarea
+ * @param string $name
+ * @param string $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_textarea($name, $value = '', $attributes = []){
+	$attributes['name'] = $name;
+	return html_tag('textarea', $attributes, htmlspecialchars($value));
+}
+
+/**
+ * 构建hidden表单节点
+ * @param string $name
+ * @param string $value
+ * @return string
+ */
+function html_tag_hidden($name, $value = ''){
+	return html_tag('input', ['type' => 'hidden', 'name' => $name, 'value' => $value]);
+}
+
+/**
+ * 构建数据hidden列表
+ * @param array $data_list 数据列表（可以多维数组）
+ * @return string
+ */
+function html_tag_hidden_list($data_list){
+	$html = '';
+	$entries = explode('&', http_build_query($data_list));
+	foreach($entries as $entry){
+		$tmp = explode('=', $entry);
+		$key = $tmp[0];
+		$value = isset($tmp[1]) ? $tmp[1] : null;
+		$html .= html_tag_hidden(urldecode($key), urldecode($value)).PHP_EOL;
+	}
+	return $html;
+}
+
+/**
+ * 构建Html数字输入
+ * @param string $name
+ * @param string $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_number_input($name, $value = '', $attributes = []){
+	$attributes['type'] = 'number';
+	$attributes['name'] = $name;
+	$attributes['value'] = $value;
+	return html_tag('input', $attributes);
+}
+
+/**
+ * @param string $name
+ * @param array $options 选项[value=>title,...]格式
+ * @param string $current_value
+ * @param string $wrapper_tag 每个选项外部包裹标签，例如li、div等
+ * @param array $radio_extra_attributes 每个radio额外定制属性
+ * @return string
+ */
+function html_tag_radio_group($name, $options, $current_value = '', $wrapper_tag = '', $radio_extra_attributes = []){
+	$html = [];
+	foreach($options as $val=>$ti){
+		$html[] = html_tag_radio($name, $val, $ti, html_value_compare($val, $current_value), $radio_extra_attributes);
+	}
+
+	if($wrapper_tag){
+		$rst = '';
+		foreach($html as $h){
+			$rst .= ' '.html_tag($wrapper_tag, [], $h);
+		}
+		return $rst;
+	} else {
+		return join(' ', $html);
+	}
+}
+
+/**
+ * 构建 radio按钮
+ * 使用 label>(input:radio+{text}) 结构
+ * @param string $name
+ * @param mixed $value
+ * @param string $title
+ * @param bool $checked
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_radio($name, $value, $title = '', $checked = false, $attributes = []){
+	$attributes['type'] = 'radio';
+	$attributes['name'] = $name;
+	$attributes['value'] = $value;
+	if($checked){
+		$attributes['checked'] = 'checked';
+	}
+	return html_tag('label', [], html_tag('input', $attributes).$title);
+}
+
+/**
+ * @param string $name
+ * @param array $options 选项[value=>title,...]格式
+ * @param string|array $current_value
+ * @param string $wrapper_tag 每个选项外部包裹标签，例如li、div等
+ * @param array $checkbox_extra_attributes 每个checkbox额外定制属性
+ * @return string
+ */
+function html_tag_checkbox_group($name, $options, $current_value = null, $wrapper_tag = '', $checkbox_extra_attributes = []){
+	$html = [];
+	foreach($options as $val=>$ti){
+		$html[] = html_tag_checkbox($name, $val, $ti, html_value_compare($val, $current_value), $checkbox_extra_attributes);
+	}
+	if($wrapper_tag){
+		$rst = '';
+		foreach($html as $h){
+			$rst .= ' '.html_tag($wrapper_tag, [], $h);
+		}
+		return $rst;
+	} else {
+		return join(' ', $html);
+	}
+}
+
+/**
+ * 构建 checkbox按钮
+ * 使用 label>(input:checkbox+{text}) 结构
+ * @param string $name
+ * @param mixed $value
+ * @param string $title
+ * @param bool $checked
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_checkbox($name, $value, $title = '', $checked = false, $attributes = []){
+	$attributes['type'] = 'checkbox';
+	$attributes['name'] = $name;
+	$attributes['value'] = $value;
+	if($checked){
+		$attributes['checked'] = 'checked';
+	}
+	$checkbox = html_tag('input', $attributes);
+	if(!$title){
+		return $checkbox;
+	}
+	return html_tag('label', [], $checkbox.$title);
+}
+
+/**
+ * 构建进度条（如果没有设置value，可充当loading效果使用）
+ * @param null|number $value
+ * @param null|number $max
+ * @param array $attributes
+ * @return string
+ * @throws \Exception
+ */
+function html_tag_progress($value = null, $max = null, $attributes = []){
+	//如果有max，必须大于0
+	if(isset($max) && floatval($max) <= 0){
+		throw new Exception('Progress max should bigger or equal to zero');
+	}
+	if(isset($value)){
+		//有设置max，value范围必须在0~max
+		if(isset($max) && $value > $max){
+			throw new Exception('Progress value should less or equal than max');
+		}
+		//没有设置max，value范围必须在0~1
+		if(!isset($value) && ($value > 1 || $value < 0)){
+			throw new Exception('Progress value should between 0 to 1');
+		}
+	}
+	$attributes['max'] = $max;
+	$attributes['value'] = $value;
+	return html_tag('progress', $attributes);
+}
+
+/**
+ * Html循环滚动进度条
+ * alias to htmlProgress
+ * @param array $attributes
+ * @return string
+ */
+function html_loading_bar($attributes = []){
+	return html_tag_progress(null, null, $attributes);
+}
+
+/**
+ * Html范围选择器
+ * @param $name
+ * @param string $value 当前值
+ * @param int $min 最小值
+ * @param int $max 最大值
+ * @param int $step 步长
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_range($name, $value, $min = 0, $max = 100, $step = 1, $attributes = []){
+	$attributes['type'] = 'range';
+	$attributes['name'] = $name;
+	$attributes['value'] = $value;
+	$attributes['min'] = $min;
+	$attributes['max'] = $max;
+	$attributes['step'] = $step;
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 获取HTML摘要信息
+ * @param string $html_content
+ * @param int $len
+ * @return string
+ */
+function html_abstract($html_content, $len = 200){
+	$str = str_replace(array("\n", "\r"), "", $html_content);
+	$str = preg_replace('/<br([^>]*)>/i', '$$NL', $str);
+	$str = strip_tags($str);
+	$str = html_entity_decode($str, ENT_QUOTES);
+	$str = h($str, $len);
+	$str = str_replace('$$NL', '<br/>', $str);
+
+	//移除头尾空白行
+	$str = preg_replace('/^(<br[^>]*>)*/i', '', $str);
+	$str = preg_replace('/(<br[^>]*>)*$/i', '', $str);
+	return $str;
+}
+
+/**
+ * 构建Html input:text文本输入框
+ * @param string $name
+ * @param string $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_input_text($name, $value = '', $attributes = []){
+	$attributes['type'] = 'text';
+	$attributes['name'] = $name;
+	$attributes['value'] = $value;
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 构建Html日期输入框
+ * @param string $name
+ * @param string $date_or_timestamp
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
+	$attributes['type'] = 'date';
+	$attributes['name'] = $name;
+	$attributes['value'] = is_numeric($date_or_timestamp) ? date('Y-m-d', $date_or_timestamp) :
+		date('Y-m-d', strtotime($date_or_timestamp));
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 构建Html日期+时间输入框
+ * @param string $name
+ * @param string $datetime_or_timestamp
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_datetime($name, $datetime_or_timestamp = '', $attributes = []){
+	$attributes['type'] = 'datetime-local';
+	$attributes['name'] = $name;
+	$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-dTH:i', $datetime_or_timestamp) :
+		date('Y-m-d', strtotime($datetime_or_timestamp));
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 构建Html月份选择器
+ * @param string $name
+ * @param int|null $current_month 当前月份，范围1~12表示
+ * @param string $format 月份格式，与date函数接受格式一致
+ * @param array $attributes 属性
+ * @return string
+ */
+function html_tag_month_select($name, $current_month = null, $format = 'm', $attributes = []){
+	$opts = [];
+	$format = $format ?: 'm';
+	for($i=1; $i<=12; $i++){
+		$opts[$i] = date($format, strtotime('1970-'.$current_month.'-01'));
+	}
+	return html_tag_select($name, $opts, $current_month, $attributes['placeholder'], $attributes);
+}
+
+/**
+ * 构建Html年份选择器
+ * @param string $name
+ * @param int|null $current_year 当前年份
+ * @param int $start_year 开始年份（缺省为1970）
+ * @param string $end_year 结束年份（缺省为今年）
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_year_select($name, $current_year = null, $start_year = 1970, $end_year = '', $attributes = []){
+	$start_year = $start_year ?: 1970;
+	$end_year = $end_year ?: date('Y');
+	$opts = [];
+	for($i = $start_year; $i<=$end_year; $i++){
+		$opts[$i] = $i;
+	}
+	return html_tag_select($name, $opts, $current_year, $attributes['placeholder'], $attributes);
+}
+
+/**
+ * 构建HTML节点
+ * @param string $tag
+ * @param array $attributes
+ * @param string $inner_html
+ * @return string
+ */
+function html_tag($tag, $attributes = [], $inner_html = ''){
+	$tag = strtolower($tag);
+	$single_tag = in_array($tag, HTML_SELF_CLOSING_TAGS);
+	$html = "<$tag ";
+
+	//针对textarea标签，识别value填充到inner_html中
+	if($tag === 'textarea' && isset($attributes['value'])){
+		$inner_html = $inner_html ?: h($attributes['value']);
+		unset($attributes['value']);
+	}
+
+	$html .= html_attributes($attributes);
+	$html .= $single_tag ? "/>" : ">".$inner_html."</$tag>";
+	return $html;
+}
+
+/**
+ * 构建HTML链接
+ * @param string $inner_html
+ * @param string $href
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_link($inner_html, $href = '', $attributes = []){
+	$attributes['href'] = $href;
+	return html_tag('a', $attributes, $inner_html);
+}
+
+/***
+ * 构建css节点
+ * @param string $href
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_css($href, $attributes = []){
+	return html_tag('link', array_merge([
+		'type'  => 'text/css',
+		'rel'   => 'stylesheet',
+		'media' => 'all',
+		'href'  => $href
+	], $attributes));
+}
+
+/***
+ * 构建js节点
+ * @param string $src
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_js($src, $attributes = []){
+	return html_tag('script', array_merge([
+		'type'    => 'text/javascript',
+		'charset' => 'utf-8',
+		'src'     => $src,
+	], $attributes));
+}
+
+/**
+ * 构建Html日期输入
+ * @param string $name
+ * @param string $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_date_input($name, $value = '', $attributes = []){
+	$attributes['type'] = 'date';
+	$attributes['name'] = $name;
+	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Y-m-d', strtotime($value)) : '';
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 构建Html时间输入
+ * @param string $name
+ * @param string $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_date_time_input($name, $value = '', $attributes = []){
+	$attributes['type'] = 'datetime-local';
+	$attributes['name'] = $name;
+	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Y-m-d H:i:s', strtotime($value)) : '';
+	return html_tag('input', $attributes);
+}
+
+/**
+ * 构建DataList
+ * @param string $id
+ * @param array $data [val=>title,...]
+ * @return string
+ */
+function html_tag_data_list($id, $data = []){
+	$opts = '';
+	foreach($data as $value=>$label){
+		$opts .= '<option value="'.ha($value).'" label="'.ha($label).'">';
+	}
+	return html_tag('datalist', ['id' => $id], $opts);
+}
+
+/**
+ * submit input
+ * @param mixed $value
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_input_submit($value, $attributes=[]){
+	$attributes['type'] ='submit';
+	$attributes['value'] = $value;
+	return html_tag('input', $attributes);
+}
+
+/**
+ * no script support html
+ * @param $html
+ * @return string
+ */
+function html_tag_no_script($html){
+	return '<noscript>'.$html.'</noscript>';
+}
+
+/**
+ * submit button
+ * @param string $inner_html
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_button_submit($inner_html, $attributes=[]){
+	$attributes['type'] ='submit';
+	return html_tag('button', $attributes, $inner_html);
+}
+
+/**
+ * 构建table节点
+ * @param $data
+ * @param array|false $headers 表头列表 [字段名 => 别名, ...]，如为false，表示不显示表头
+ * @param string $caption
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_table($data, $headers = [], $caption = '', $attributes = []){
+	$html = $caption ? html_tag('caption', [], $caption) : '';
+	if(is_array($headers) && $data){
+		$all_fields = array_keys(array_first($data));
+		$headers = $headers ?: array_combine($all_fields, $all_fields);
+		$html .= '<thead><tr>';
+		foreach($headers as $field => $alias){
+			$html .= "<th>$alias</th>";
+		}
+		$html .= '</tr></thead>';
+	}
+
+	$html .= '<tbody>';
+	foreach($data ?: [] as $row){
+		$html .= '<tr>';
+		if($headers){
+			foreach($headers as $field => $alias){
+				$html .= "<td>{$row[$field]}</td>";
+			}
+		}
+		$html .= '</tr>';
+	}
+	$html .= '</tbody>';
+	return html_tag('table', $attributes, $html);
+}
+
+/**
+ * 构建HTML节点属性
+ * 修正pattern，disabled在false情况下HTML表现
+ * @param array $attributes
+ * @return string
+ */
+function html_attributes(array $attributes = []){
+	$attributes = array_clear_null($attributes);
+	$html = [];
+	foreach($attributes as $k => $v){
+		if($k == 'disabled' && $v === false){
+			continue;
+		}
+		if($k == 'pattern'){
+			$html[] = "$k=\"".$v."\"";
+		} else{
+			$html[] = "$k=\"".ha($v)."\"";
+		}
+	}
+	return join(' ', $html);
+}
+
+/**
+ * 转化明文文本到HTML
+ * @param string $text
+ * @param null $len
+ * @param string $tail
+ * @param bool $over_length
+ * @return mixed
+ */
+function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
+	if($len){
+		$text = substr_utf8($text, $len, $tail, $over_length);
+	}
+	$html = htmlspecialchars($text);
+	$html = str_replace("\r", '', $html);
+	$html = str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
+	return $html;
+}
+
+/**
+ * HTML数值比较（通过转换成字符串之后进行严格比较）
+ * @param string|number $str1
+ * @param string|number|array $data
+ * @return bool 是否相等
+ */
+function html_value_compare($str1, $data){
+	$str1 = (string)$str1;
+	if(is_array($data)){
+		foreach($data as $val){
+			if((string)$val === $str1){
+				return true;
+			}
+		}
+		return false;
+	}
+	return $str1 === (string)$data;
+}
