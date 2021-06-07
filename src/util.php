@@ -5,6 +5,7 @@
 namespace LFPhp\Func;
 
 use Closure;
+use ErrorException;
 
 /**
  * 步进方式调试
@@ -83,6 +84,7 @@ function print_trace($trace, $with_callee = false, $with_index = false, $as_retu
 		return $str;
 	}
 	echo $str;
+	return null;
 }
 
 /**
@@ -180,6 +182,42 @@ function string2error($string){
 		}
 	}
 	return $value;
+}
+
+/**
+ * 注册将PHP错误转换异常抛出
+ * @param int $error_levels
+ * @param \ErrorException|null $exception_class
+ * @return callable|null
+ */
+function register_error2exception($error_levels = E_ALL, ErrorException $exception_class = null){
+	return set_error_handler(function($err_severity, $err_str, $err_file, $err_line) use ($exception_class){
+		if(error_reporting() === 0){
+			return false;
+		}
+		if($exception_class){
+			throw new $exception_class($err_str, 0, $err_severity, $err_file, $err_line);
+		}
+		$err_severity_map = [
+			E_ERROR             => ErrorException::class,
+			E_WARNING           => WarningException::class,
+			E_PARSE             => ParseException::class,
+			E_NOTICE            => NoticeException::class,
+			E_CORE_ERROR        => CoreErrorException::class,
+			E_CORE_WARNING      => CoreWarningException::class,
+			E_COMPILE_ERROR     => CompileErrorException::class,
+			E_COMPILE_WARNING   => CoreWarningException::class,
+			E_USER_ERROR        => UserErrorException::class,
+			E_USER_WARNING      => UserWarningException::class,
+			E_USER_NOTICE       => UserNoticeException::class,
+			E_STRICT            => StrictException::class,
+			E_RECOVERABLE_ERROR => RecoverableErrorException::class,
+			E_DEPRECATED        => DeprecatedException::class,
+			E_USER_DEPRECATED   => UserDeprecatedException::class,
+		];
+		$exp_class = isset($err_severity_map[$err_severity]) ? $err_severity_map[$err_severity] : ErrorException::class;
+		throw new $exp_class($err_str, 0, $err_severity, $err_file, $err_line);
+	}, $error_levels);
 }
 
 /**
@@ -333,3 +371,19 @@ function debug_mark_output($as_return = false){
 	echo $str;
 	return null;
 }
+
+/** Error mapping to exception class */
+class WarningException              extends ErrorException {}
+class ParseException                extends ErrorException {}
+class NoticeException               extends ErrorException {}
+class CoreErrorException            extends ErrorException {}
+class CoreWarningException          extends ErrorException {}
+class CompileErrorException         extends ErrorException {}
+class CompileWarningException       extends ErrorException {}
+class UserErrorException            extends ErrorException {}
+class UserWarningException          extends ErrorException {}
+class UserNoticeException           extends ErrorException {}
+class StrictException               extends ErrorException {}
+class RecoverableErrorException     extends ErrorException {}
+class DeprecatedException           extends ErrorException {}
+class UserDeprecatedException       extends ErrorException {}

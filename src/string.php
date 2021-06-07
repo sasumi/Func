@@ -305,7 +305,7 @@ function get_traditional_currency($num){
 	$num = round($num, 2);
 	$num = $num*100;
 	if(strlen($num) > 10){
-		throw new \Exception('currency number overflow');
+		throw new Exception('currency number overflow');
 	}
 	$i = 0;
 	$c = "";
@@ -378,7 +378,7 @@ function password_check($password, $rules = array()){
 	);
 
 	if($rules['MIN_LEN'] && strlen($password) < $rules['MIN_LEN']){
-		throw new \Exception("密码长度至少{$rules['MIN_LEN']}位");
+		throw new Exception("密码长度至少{$rules['MIN_LEN']}位");
 	}
 	unset($rules['MIN_LEN']);
 
@@ -386,7 +386,7 @@ function password_check($password, $rules = array()){
 		if($set !== null){
 			if(str_contains($password, $str_map[$k][0]) != $set){
 				$ex = $set ? "密码必须包含{$str_map[$k][1]}" : "密码不允许包含{$str_map[$k][1]}";
-				throw new \Exception($ex);
+				throw new Exception($ex);
 			}
 		}
 	}
