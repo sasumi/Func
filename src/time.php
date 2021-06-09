@@ -187,17 +187,34 @@ function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
  * convert microtime format to date
  * @param $microtime
  * @param string $format
- * @param int $patch_microtime_precision
+ * @param int $precision
  * @return false|string
  */
-function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $patch_microtime_precision = 3){
+function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
 	list($usec, $sec) = explode(' ', $microtime);
 	$usec_str = '';
-	if($patch_microtime_precision){
+	if($precision){
 		$usec_str = '.';
-		$usec_str .= round($usec, $patch_microtime_precision)*pow(10, $patch_microtime_precision);
+		$usec_str .= round($usec, $precision)*pow(10, $precision);
 	}
 	return date($format, $sec).$usec_str;
+}
+
+/**
+ * convert time float to date string
+ * @param $float_time
+ * @param string $format
+ * @param int $precision
+ * @return string
+ */
+function float_time_to_date($float_time, $format = 'Y-m-d H:i:s', $precision = 3){
+	list($timestamp, $decimals) = explode('.', $float_time.'');
+	if($precision){
+		$decimals = $decimals ? $decimals : '0';
+		$decimals = substr($decimals, 0, $precision);
+		$decimals = str_pad($decimals, $precision, '0', STR_PAD_RIGHT);
+	}
+	return date($format, $timestamp).($decimals ? '.'.$decimals : '');
 }
 
 /**

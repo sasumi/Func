@@ -350,7 +350,7 @@ function debug_mark_output($as_return = false){
 	$last_time = null;
 	foreach($GLOBALS[$k] as $idx=>list($tag, $tm, $trace, $mem)){
 		$t = explode(' ', $tm);
-		$time_txt = date('Y/m/d H:i:s', $t[1]).substr($t[0], 1,4);
+		$time_txt = date('Y-m-d H:i:s', $t[1]).substr($t[0], 1,4);
 		if($last_time){
 			$time_txt .= '('.microtime_diff($last_time, $t).')';
 		}
