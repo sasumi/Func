@@ -644,3 +644,57 @@ function html_value_compare($str1, $data){
 	}
 	return $str1 === (string)$data;
 }
+
+/**
+ * 设置静态资源版本控制项
+ * @param array $patch_config 版本配置表，格式如：abc/foo.js => '2020'，优先匹配长度短的规则
+ * @return array 所有配置
+ */
+function static_version_set(array $patch_config = []){
+	static $_config = [];
+	if($patch_config){
+		foreach($patch_config as $k=>$v){
+			$_config[$k] = $v;
+		}
+		uksort($_config, function($k1, $k2){
+			return strlen($k1) < strlen($k2);
+		});
+	}
+	return $_config;
+}
+
+/**
+ * 静态资源版本补丁
+ * @param string $src
+ * @param bool $matched
+ * @return string
+ */
+function static_version_patch($src, &$matched = false){
+	$config = static_version_set();
+	foreach($config as $k=>$version){
+		$reg = static_version_statement_quote($k);
+		if(preg_match($reg, $src)){
+			$matched = true;
+			if(is_callable($version)){
+				return call_user_func($version, $src);
+			}
+			return $src.(stripos($src, '?') !== false ? '&' : '?').$version;
+		}
+	}
+	return $src;
+}
+
+/**
+ * 静态资源版本通配符转义
+ * @param $str
+ * @return string
+ */
+function static_version_statement_quote($str){
+	$map = array(
+		':' => '\\:',
+		'.' => '\\.',
+		'*' => '.*?',
+	);
+	$str = str_replace(array_keys($map), array_values($map), $str);
+	return "|$str|";
+}

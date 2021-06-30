@@ -7,7 +7,7 @@
   "homepage": "http://blog.yikepi.com/",
   "type": "library",
   "license": "Apache-2.0",
-  "authors":  [
+  "authors": [
 	{
 	  "name": "Sasumi.H",
 	  "email": "cnsasumi@outlook.com",
@@ -24,7 +24,7 @@
 	"ext-curl": "*",
 	"ext-pdo": "*",
 	"ext-ssh2": "*",
-    "lfphp/logger": "^1.0"
+	"lfphp/logger": "^1.0"
   },
   "require-dev": {
 	"phpunit/phpunit": "8.5.8"
@@ -46,6 +46,20 @@
 	]
   },
   "autoload-dev": {
+	"files": [
+	  "src/array.php",
+	  "src/env.php",
+	  "src/file.php",
+	  "src/util.php",
+	  "src/string.php",
+	  "src/string.php",
+	  "src/sheet.php",
+	  "src/time.php",
+	  "src/html.php",
+	  "src/cron.php",
+	  "src/db.php",
+	  "src/curl.php"
+	],
 	"psr-4": {
 	  "LFPhp\\Func\\TestCase\\": "test"
 	}
