@@ -447,7 +447,7 @@ function format_size($size, $dot = 2){
  * @return int
  */
 function resolve_size($val){
-	$last = strtolower($val{strlen($val) - 1});
+	$last = strtolower($val[strlen($val) - 1]);
 	switch($last){
 		case 'g':
 			$val *= 1024;
