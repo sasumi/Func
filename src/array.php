@@ -265,29 +265,32 @@ function array_move_item($arr, $item_index_key, $dir){
 	}else if($dir == ARRAY_POSING_BEFORE){
 		$keys = array_keys($arr);
 		$values = array_values($arr);
-		$nidx = array_index($keys, $item_index_key);
-		if($nidx == 0){
+		$new_idx = array_index($keys, $item_index_key);
+		if($new_idx == 0){
 			return $arr;
 		}
-		$before = array_combine(array_slice($keys, 0, $nidx - 1), array_slice($values, 0, $nidx - 1));
+		$before = array_combine(array_slice($keys, 0, $new_idx - 1), array_slice($values, 0, $new_idx - 1));
 		$before[$item_index_key] = $arr[$item_index_key]; //當前
-		$before[$keys[$nidx - 1]] = $values[$nidx - 1]; //上一個
-		$after = array_combine(array_slice($keys, $nidx + 1), array_slice($values, $nidx + 1));
+		$before[$keys[$new_idx - 1]] = $values[$new_idx - 1]; //上一個
+		$after = array_combine(array_slice($keys, $new_idx + 1), array_slice($values, $new_idx + 1));
 		return array_merge($before, $after);
 	}else if($dir == ARRAY_POSING_AFTER){
 		$keys = array_keys($arr);
+
 		$values = array_values($arr);
-		$nidx = array_index($keys, $item_index_key);
-		if($nidx == count($arr) - 1){
+		$new_idx = array_index($keys, $item_index_key);
+		if($new_idx == count($arr) - 1){
 			return $arr;
 		}
-		$before = array_combine(array_slice($keys, 0, $nidx), array_slice($values, 0, $nidx));
-		$before[$keys[$nidx + 1]] = $values[$nidx + 1]; //下一個
+		/** @var array $tmp */
+		$tmp = array_slice($values, 0, $new_idx);
+		$before = array_combine(array_slice($keys, 0, $new_idx), $tmp);
+		$before[$keys[$new_idx + 1]] = $values[$new_idx + 1]; //下一個
 		$before[$item_index_key] = $arr[$item_index_key]; //當前
-		$after = array_combine(array_slice($keys, $nidx + 2), array_slice($values, $nidx + 2));
+		$after = array_combine(array_slice($keys, $new_idx + 2), array_slice($values, $new_idx + 2));
 		return array_merge($before, $after);
 	}else{
-		throw new \Exception('Array move direction no support:'.$dir);
+		throw new Exception('Array move direction no support:'.$dir);
 	}
 }
 
