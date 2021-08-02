@@ -53,6 +53,30 @@ function dump(){
 }
 
 /**
+ * 检测变量是否可以打印输出（如字符串、数字、包含toString方法对象等）
+ * 布尔值、资源等属于不可打印输出变量
+ * @param mixed $var
+ * @param string $print_str 可打印字符串
+ * @return bool 是否可打印
+ */
+function printable($var, &$print_str = ''){
+	$type = gettype($var);
+	if(in_array($type, ['integer', 'double', 'float', 'string'])){
+		$print_str = $var.'';
+		return true;
+	}
+	if(is_object($var) && method_exists($var, '__toString')){
+		$print_str = call_user_func([$var, '__toString']);
+		return true;
+	}
+	if(is_callable($var)){
+		$ret = call_user_func($var);
+		return printable($ret, $print_str);
+	}
+	return false;
+}
+
+/**
  * 打印trace信息
  * @param $trace
  * @param bool $with_callee

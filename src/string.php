@@ -7,7 +7,7 @@
  */
 namespace LFPhp\Func;
 
-use \Exception;
+use Exception;
 
 /**
  * utf-8中英文截断（两个英文一个数量单位）
@@ -457,6 +457,26 @@ function resolve_size($val){
 			$val *= 1024;
 	}
 	return $val;
+}
+
+/**
+ * 文字混淆
+ * @param string $text 文字模板，占位符采用 {VAR.SUB_VAR} 格式
+ * @param array $param 混淆变量 ,key => $var 格式
+ * @return string
+ */
+function str_mixing($text, $param = []){
+	if(!$param){
+		return $text;
+	}
+	return preg_replace_callback('/{([^}]+)}/', function($matches) use ($param){
+		$var_key = $matches[1];
+		$var = array_fetch_by_path($param, $var_key, null, '.');
+		if(printable($var, $str)){
+			return $str;
+		}
+		throw new Exception('Parameter no printable(key:'.$var_key.').');
+	}, $text);
 }
 
 /**

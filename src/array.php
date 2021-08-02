@@ -7,6 +7,7 @@
  */
 namespace LFPhp\Func;
 
+use ArrayAccess;
 use Exception;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
@@ -116,7 +117,7 @@ function array_keys_exists(array $keys, array $arr){
 
 /**
  * 将多重数组值取出来
- * @param $arr
+ * @param array $arr
  * @param string $original_key
  * @param string $original_key_name
  * @return array
@@ -430,9 +431,9 @@ function array_last(array $data = [], &$key = null){
 
 /**
  * 在数组开始位置压入关联数据
- * @param &$arr
- * @param $key
- * @param $val
+ * @param array &$arr
+ * @param string $key
+ * @param mixed $val
  * @return int
  */
 function array_unshift_assoc(&$arr, $key, $val){
@@ -444,8 +445,8 @@ function array_unshift_assoc(&$arr, $key, $val){
 
 /**
  * array sort by specified key
- * @param mixed
- * @return mixed
+ * @param array $src_arr
+ * @return array
  * @example: array_orderby($data, 'volume', SORT_DESC, 'edition', SORT_ASC);
  */
 function array_orderby($src_arr){
@@ -471,8 +472,8 @@ function array_orderby($src_arr){
 
 /**
  * 数组按照指定key排序
- * @param $src_arr
- * @param $keys
+ * @param array $src_arr
+ * @param string[] $keys 键值数组
  * @param bool $miss_match_in_head 未命中值是否排列在头部
  * @return array
  */
@@ -495,8 +496,8 @@ function array_orderby_keys($src_arr, $keys, $miss_match_in_head = false){
 
 /**
  * 获取数组元素key
- * @param $array
- * @param $compare_fn_or_value
+ * @param array $array
+ * @param callable|mixed $compare_fn_or_value
  * @return bool|int|string
  */
 function array_index($array, $compare_fn_or_value){
@@ -515,7 +516,7 @@ function array_index($array, $compare_fn_or_value){
 }
 
 /**
- * array sum by key
+ * 根据指定数组下标进行求和
  * @param $arr
  * @param string $key
  * @return mixed
@@ -600,24 +601,61 @@ function array_make_spreadsheet_columns($column_size){
 /**
  * 根据xpath，将数据压入数组
  * @param array $data
- * @param string $path
- * @param $value
+ * @param string $path_str
+ * @param mixed $value
  * @param string $glue
  */
-function array_push_by_path(&$data, $path, $value, $glue = '.'){
-	$path = $path[0] == $glue ? $path : $glue.$path;
-	$path = preg_replace_callback('/'.preg_quote($glue).'(\w+)?/', function($matches){
+function array_push_by_path(&$data, $path_str, $value, $glue = '.'){
+	$path_str = $path_str[0] == $glue ? $path_str : $glue.$path_str;
+	$path_str = preg_replace_callback('/'.preg_quote($glue).'(\w+)?/', function($matches){
 		return "['$matches[1]']";
-	}, $path);
+	}, $path_str);
 	$val = var_export($value, true);
-	$statement = "\$data{$path} = $val;";
+	$statement = "\$data{$path_str} = $val;";
 	eval($statement);
 }
 
 /**
+ * 根据路径获取数组中的数据
+ * @param array $data 源数据
+ * @param string $path_str 路径
+ * @param mixed $default 缺省值
+ * @param string $delimiter 分隔符
+ * @return mixed
+ */
+function array_fetch_by_path($data, $path_str, $default = null, $delimiter = '.'){
+	if(!$path_str){
+		return $data;
+	}
+	if(isset($data[$path_str])){
+		return $data[$path_str];
+	}
+	foreach(explode($delimiter, $path_str) as $segment){
+		if((!is_array($data) || !array_key_exists($segment, $data)) && (!$data instanceof ArrayAccess || !$data->offsetExists($segment))){
+			return $default;
+		}
+		$data = $data[$segment];
+	}
+	return $data;
+}
+
+/**
+ * 根据路径获取数组中的数据
+ * @alias for array_fetch_by_path
+ * @param array $data 源数据
+ * @param string $path_str 路径
+ * @param mixed $default 缺省值
+ * @param string $delimiter 分隔符
+ * @return mixed
+ */
+function array_get($data, $path_str, $default = null, $delimiter = '.'){
+	return array_fetch_by_path($data, $path_str, $default, $delimiter);
+}
+
+/**
  * 断言数组是否用拥有指定键名
- * @param $arr
- * @param $keys
+ * @param array $arr
+ * @param array $keys
  * @throws \Exception
  */
 function assert_array_has_keys($arr, $keys){
@@ -630,8 +668,8 @@ function assert_array_has_keys($arr, $keys){
 
 /**
  * 过滤子节点，以目录树方式返回
- * @param $parent_id
- * @param $all
+ * @param string|int $parent_id
+ * @param array $all
  * @param array $opt
  * @param int $level
  * @param array $group_by_parents
@@ -682,7 +720,7 @@ function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by
 /**
  * 插入指定数组在指定位置
  * @param array $src_array
- * @param $data
+ * @param mixed $data
  * @param string $rel_key
  * @return array|int
  */
@@ -741,11 +779,9 @@ function is_assoc_array($array){
 }
 
 /**
- * 函数  支持嵌套转换
+ * array_transform 支持嵌套转换
  * @param array $data
- * @param array $rules = array(
- * 'dddd' => array('aaaa', 'bbbb')
- *                        ）,
+ * @param array $rules = array('dddd' => array('aaaa', 'bbbb'))
  * 转换为 : array['aaaaa']['bbb'] =  xxxx
  * @return mixed
  */
@@ -778,8 +814,9 @@ function array_transform(array $data, array $rules){
 function array_value_recursive(array $arr, $key = ''){
 	$val = [];
 	array_walk_recursive($arr, function($v, $k) use ($key, &$val){
-		if(!$key || $k == $key)
+		if(!$key || $k == $key){
 			array_push($val, $v);
+		}
 	});
 	return $val;
 }
