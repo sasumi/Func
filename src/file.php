@@ -19,7 +19,7 @@ function glob_recursive($pattern, $flags = 0){
 	foreach(glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir){
 		$files = array_merge($files, glob_recursive($dir.'/'.basename($pattern), $flags));
 	}
-	
+
 	//修正目录分隔符
 	array_walk($files, function(&$file){
 		$file = str_replace(array('/', '\\'), array(DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR), $file);
@@ -275,44 +275,35 @@ function tail($file, callable $callback, $line_limit = 0, $line_separator = "\n"
 /**
  * read file by line
  * @param string $file
- * @param callable $handle
+ * @param callable $handle ($line_str, $line), break on return FALSE
  * @param int $buff_size
  * @return bool
  */
 function read_line($file, callable $handle, $buff_size = 1024){
-	$hd = fopen($file, 'r') or die('file open fail');
+	if(!($hd = fopen($file, 'r'))){
+		throw new \Exception('file open fail');
+	}
 	$stop = false;
-	$line_buff = '';
+	$last_line_buff = '';
 	$read_line_counter = 0;
 	while(!feof($hd) && !$stop){
-		$buff = fgets($hd, $buff_size);
-		$break_count = substr_count($buff, "\n");
-		if($break_count){
-			$tmp = explode("\n", $buff);
-			$c = count($tmp);
-			for($i = 0; $i<$c; $i++){
-				//tail
-				if($i == ($c-1)){
-					$line_buff = $tmp[$i];
-				} else{
-					//start
-					if($i == 0){
-						$line_buff .= $tmp[$i];
-					} //middle
-					else{
-						$line_buff = $tmp[$i];
-					}
-					$read_line_counter++;
-					if($handle($line_buff, $read_line_counter) === false){
-						return false;
-					}
+		$buff = $last_line_buff.fgets($hd, $buff_size);
+		$buff = str_replace("\r", "", $buff);
+		$lines = explode("\n", $buff);
+		$last_line_buff = array_pop($lines);
+		if($lines){
+			foreach($lines as $text){
+				if($handle($text, ++$read_line_counter) === false){
+					fclose($hd);
+					return false;
 				}
 			}
-		} else{
-			$line_buff .= $buff;
 		}
 	}
 	fclose($hd);
+	if($last_line_buff && $handle($last_line_buff, ++$read_line_counter) === false){
+		return false;
+	}
 	return true;
 }
 
@@ -353,7 +344,7 @@ function log($file, $content, $max_size = 10*1024*1024, $max_files = 5, $pad_str
 	}
 	$content = date('Y-m-d H:i:s')."  ".$content."\n";
 	$pad_str = isset($pad_str) ? $pad_str : '-'.date('YmdHis');
-	
+
 	if(is_file($file) && $max_size && $max_size<filesize($file)){
 		rename($file, $file.$pad_str);
 		if($max_files>1){
