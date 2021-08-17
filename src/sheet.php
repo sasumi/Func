@@ -72,13 +72,19 @@ function read_csv($file, $keys = [], $ignore_head_lines = 0){
  */
 function read_csv_chunk(callable $output, $file, $keys = [], $ignore_head_lines = 0){
 	$delimiter = ',';
-	read_line($file, function($text, $line_num) use ($delimiter, $output, $keys, $ignore_head_lines){
+	$key_size = count($keys);
+	read_line($file, function($text, $line_num) use ($delimiter, $output, $keys, $key_size, $ignore_head_lines){
 		if($ignore_head_lines && $line_num <= $ignore_head_lines){
 			return;
 		}
 		$data = explode($delimiter, $text);
 		if($keys){
-			$data = array_pad($data, count($keys), '');
+			$data_size = count($data);
+			if($data_size > $key_size){
+				$data = array_slice($data, 0, $key_size);
+			} else if($data_size < $key_size){
+				$data = array_pad($data, count($keys), '');
+			}
 			$output(array_combine($keys, $data));
 		}else{
 			$output($data);
