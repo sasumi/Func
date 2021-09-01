@@ -6,12 +6,13 @@ namespace LFPhp\Func;
 
 use Closure;
 use ErrorException;
+use Exception;
 
 /**
  * 步进方式调试
- * @deprecated PHP 7.2 已被官方禁用跨文件调用
  * @param int $step 步长
  * @param string $fun 调试函数，默认使用dump
+ * @deprecated PHP 7.2 已被官方禁用跨文件调用
  */
 function tick_dump($step = 1, $fun = '\dump'){
 	register_tick_function($fun);
@@ -36,16 +37,16 @@ function dump(){
 		foreach($params as $var){
 			echo $comma;
 			var_dump($var);
-			$comma = str_repeat('-',80).PHP_EOL;
+			$comma = str_repeat('-', 80).PHP_EOL;
 		}
 	}
 
 	//remove closure calling & print out location.
 	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 	if(isset($GLOBALS['DUMP_WITH_TRACE']) && $GLOBALS['DUMP_WITH_TRACE']){
-		echo "[trace]",PHP_EOL;
+		echo "[trace]", PHP_EOL;
 		print_trace($trace, true, true);
-	} else {
+	}else{
 		print_trace([$trace[0]]);
 	}
 	echo str_repeat('=', 80), PHP_EOL, (!$cli ? '</pre>' : '');
@@ -87,7 +88,7 @@ function printable($var, &$print_str = ''){
 function print_trace($trace, $with_callee = false, $with_index = false, $as_return = false){
 	$ct = count($trace);
 	$str = '';
-	foreach($trace as $k=>$item){
+	foreach($trace as $k => $item){
 		$callee = '';
 		if($with_callee){
 			$vs = [];
@@ -99,7 +100,7 @@ function print_trace($trace, $with_callee = false, $with_index = false, $as_retu
 			$callee = $item['class'] ? "\t{$item['class']}{$item['type']}{$item['function']}($arg_statement)" : "\t{$item['function']}($arg_statement)";
 		}
 		if($with_index){
-			$str .= "[". ($ct - $k). "] ";
+			$str .= "[".($ct - $k)."] ";
 		}
 		$loc = $item['file'] ? "{$item['file']} #{$item['line']} " : '';
 		$str .= "{$loc}{$callee}".PHP_EOL;
@@ -129,10 +130,10 @@ function print_sys_error($code, $msg, $file = null, $line = null, $trace_string 
 		$bs = debug_backtrace();
 		array_shift($bs);
 		foreach($bs as $k => $b){
-			echo count($bs)-$k." {$b['class']}{$b['type']}{$b['function']}\n";
+			echo count($bs) - $k." {$b['class']}{$b['type']}{$b['function']}\n";
 			echo "  {$b['file']}  #{$b['line']} \n\n";
 		}
-	} else{
+	}else{
 		echo $trace_string;
 	}
 	die;
@@ -155,7 +156,7 @@ function error2string($value){
 		E_COMPILE_WARNING => 'E_COMPILE_WARNING',
 		E_USER_ERROR      => 'E_USER_ERROR',
 		E_USER_WARNING    => 'E_USER_WARNING',
-		E_USER_NOTICE     => 'E_USER_NOTICE'
+		E_USER_NOTICE     => 'E_USER_NOTICE',
 	);
 	if(defined('E_STRICT')){
 		$level_names[E_STRICT] = 'E_STRICT';
@@ -191,7 +192,7 @@ function string2error($string){
 		'E_USER_ERROR',
 		'E_USER_WARNING',
 		'E_USER_NOTICE',
-		'E_ALL'
+		'E_ALL',
 	);
 	if(defined('E_STRICT')){
 		$level_names[] = 'E_STRICT';
@@ -285,13 +286,25 @@ function trait_uses_recursive($trait){
 }
 
 /**
+ * assert and throw exception
+ * @param mixed $expression
+ * @param string $err_msg
+ * @param string $exception_class
+ */
+function assert_via_exception($expression, $err_msg, $exception_class = Exception::class){
+	if(!$expression){
+		throw new $exception_class($err_msg);
+	}
+}
+
+/**
  * pdog
- * @deprecated ticks no triggered in PHP 7.0+
  * @param $fun
  * @param $handler
+ * @deprecated ticks no triggered in PHP 7.0+
  */
 function pdog($fun, $handler){
-	declare(ticks = 1);
+	declare(ticks=1);
 	register_tick_function(function() use ($fun, $handler){
 		$debug_list = debug_backtrace();
 		foreach($debug_list as $info){
@@ -372,9 +385,9 @@ function debug_mark_output($as_return = false){
 	}
 	$str = '';
 	$last_time = null;
-	foreach($GLOBALS[$k] as $idx=>list($tag, $tm, $trace, $mem)){
+	foreach($GLOBALS[$k] as $idx => list($tag, $tm, $trace, $mem)){
 		$t = explode(' ', $tm);
-		$time_txt = date('Y-m-d H:i:s', $t[1]).substr($t[0], 1,4);
+		$time_txt = date('Y-m-d H:i:s', $t[1]).substr($t[0], 1, 4);
 		if($last_time){
 			$time_txt .= '('.microtime_diff($last_time, $t).')';
 		}
@@ -397,17 +410,44 @@ function debug_mark_output($as_return = false){
 }
 
 /** Error mapping to exception class */
-class WarningException              extends ErrorException {}
-class ParseException                extends ErrorException {}
-class NoticeException               extends ErrorException {}
-class CoreErrorException            extends ErrorException {}
-class CoreWarningException          extends ErrorException {}
-class CompileErrorException         extends ErrorException {}
-class CompileWarningException       extends ErrorException {}
-class UserErrorException            extends ErrorException {}
-class UserWarningException          extends ErrorException {}
-class UserNoticeException           extends ErrorException {}
-class StrictException               extends ErrorException {}
-class RecoverableErrorException     extends ErrorException {}
-class DeprecatedException           extends ErrorException {}
-class UserDeprecatedException       extends ErrorException {}
+class WarningException extends ErrorException {
+}
+
+class ParseException extends ErrorException {
+}
+
+class NoticeException extends ErrorException {
+}
+
+class CoreErrorException extends ErrorException {
+}
+
+class CoreWarningException extends ErrorException {
+}
+
+class CompileErrorException extends ErrorException {
+}
+
+class CompileWarningException extends ErrorException {
+}
+
+class UserErrorException extends ErrorException {
+}
+
+class UserWarningException extends ErrorException {
+}
+
+class UserNoticeException extends ErrorException {
+}
+
+class StrictException extends ErrorException {
+}
+
+class RecoverableErrorException extends ErrorException {
+}
+
+class DeprecatedException extends ErrorException {
+}
+
+class UserDeprecatedException extends ErrorException {
+}

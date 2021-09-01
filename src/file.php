@@ -7,6 +7,8 @@
  */
 namespace LFPhp\Func;
 
+use Exception;
+
 /**
  * 递归的glob
  * Does not support flag GLOB_BRACE
@@ -49,6 +51,28 @@ function file_exists_case_sensitive($file){
 }
 
 /**
+ * 断言文件包含于指定文件夹中
+ * @param string $file
+ * @param string $dir
+ * @param string $exception_class
+ */
+function assert_file_in_dir($file, $dir, $exception_class = Exception::class){
+	assert_via_exception(file_in_dir($file, $dir), 'File access deny', $exception_class);
+}
+
+/**
+ * 判断文件是否包含于指定文件夹中
+ * @param string $file
+ * @param string $dir
+ * @return bool
+ */
+function file_in_dir($file, $dir){
+	$dir = realpath($dir);
+	$file = realpath($file);
+	return strpos($file, $dir) === 0;
+}
+
+/**
  * 解析路径字符串真实路径，去除相对路径信息
  * 相对于realpath，该函数不需要检查文件是否存在
  * <pre>
@@ -57,15 +81,16 @@ function file_exists_case_sensitive($file){
  * @param string $path 路径字符串
  * @return string
  */
-function resolve_absolute_path($path) {
+function resolve_absolute_path($path){
 	$path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
 	$parts = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
 	$absolutes = array();
-	foreach ($parts as $part) {
-		if ('.' == $part) continue;
-		if ('..' == $part) {
+	foreach($parts as $part){
+		if('.' == $part)
+			continue;
+		if('..' == $part){
 			array_pop($absolutes);
-		} else {
+		}else{
 			$absolutes[] = $part;
 		}
 	}
@@ -91,7 +116,7 @@ function resolve_file_extension($filename){
  * @param null $parent
  * @return bool
  */
-function file_exists_case_insensitive($file, $parent=null){
+function file_exists_case_insensitive($file, $parent = null){
 	if(is_file($file)){
 		return $file;
 	}
@@ -100,7 +125,7 @@ function file_exists_case_insensitive($file, $parent=null){
 	if($parent){
 		$parent = str_replace('\\', '/', $parent);
 		$parent = rtrim($parent, '/');
-	} else {
+	}else{
 		$tmp = explode('/', $file);
 		array_pop($tmp);
 		$parent = join('/', $tmp);
@@ -131,7 +156,7 @@ function copy_recursive($src, $dst){
 		if(($file != '.') && ($file != '..')){
 			if(is_dir($src.'/'.$file)){
 				copy_recursive($src.'/'.$file, $dst.'/'.$file);
-			} else{
+			}else{
 				copy($src.'/'.$file, $dst.'/'.$file);
 			}
 		}
@@ -165,9 +190,7 @@ function get_dirs($dir){
  * @return bool
  */
 function session_start_once(){
-	if(php_sapi_name() === 'cli' ||
-		session_status() === PHP_SESSION_DISABLED ||
-		headers_sent()){
+	if(php_sapi_name() === 'cli' || session_status() === PHP_SESSION_DISABLED || headers_sent()){
 		return false;
 	}
 	$initialized = session_status() === PHP_SESSION_ACTIVE;
@@ -211,7 +234,8 @@ function session_write_scope(callable $handler){
  * 立即提交session数据，同时根据上下文环境，选择性关闭session
  */
 function session_write_once(){
-	session_write_scope(function(){});
+	session_write_scope(function(){
+	});
 }
 
 /**
@@ -223,7 +247,7 @@ function session_write_once(){
 function file_lines($file, $line_separator = "\n"){
 	if(is_string($file)){
 		$fp = fopen($file, 'rb');
-	} else {
+	}else{
 		$fp = $file;
 	}
 	$lines = 0;
@@ -281,7 +305,7 @@ function tail($file, callable $callback, $line_limit = 0, $line_separator = "\n"
  */
 function read_line($file, callable $handle, $buff_size = 1024){
 	if(!($hd = fopen($file, 'r'))){
-		throw new \Exception('file open fail');
+		throw new Exception('file open fail');
 	}
 	$stop = false;
 	$last_line_buff = '';
@@ -321,7 +345,7 @@ function get_folder_size($path){
 				$size = get_folder_size(rtrim($path, '/').'/'.$t);
 				$total_size += $size;
 			}
-		} else{
+		}else{
 			$size = filesize(rtrim($path, '/').'/'.$t);
 			$total_size += $size;
 		}
@@ -340,21 +364,21 @@ function get_folder_size($path){
  */
 function log($file, $content, $max_size = 10*1024*1024, $max_files = 5, $pad_str = null){
 	if(!is_string($content)){
-		$content = json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		$content = json_encode($content, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
 	}
 	$content = date('Y-m-d H:i:s')."  ".$content."\n";
 	$pad_str = isset($pad_str) ? $pad_str : '-'.date('YmdHis');
 
-	if(is_file($file) && $max_size && $max_size<filesize($file)){
+	if(is_file($file) && $max_size && $max_size < filesize($file)){
 		rename($file, $file.$pad_str);
-		if($max_files>1){
+		if($max_files > 1){
 			$fs = glob($file.'*');
-			if(count($fs)>=$max_files){
+			if(count($fs) >= $max_files){
 				usort($fs, function($a, $b){
-					return filemtime($a)>filemtime($b) ? 1 : -1;
+					return filemtime($a) > filemtime($b) ? 1 : -1;
 				});
 				foreach($fs as $k => $f){
-					if($k<(count($fs)-$max_files+1)){
+					if($k < (count($fs) - $max_files + 1)){
 						unlink($f);
 					}
 				}
