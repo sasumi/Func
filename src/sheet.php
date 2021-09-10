@@ -64,32 +64,46 @@ function read_csv($file, $keys = [], $ignore_head_lines = 0){
 }
 
 /**
- * read csv chunk
- * @param callable $output
- * @param $file
- * @param array $keys
- * @param int $ignore_head_lines
+ * 分块读取CSV文件
+ * @param callable $output 数据输出处理函数，传入参数：chunks， 返回参数若为false，则中断读取
+ * @param string $file 文件名称
+ * @param array $fields 映射字段名
+ * @param int $chunk_size 分块大小
+ * @param int $ignore_head_lines 忽略开始头部标题行数
+ * @throws \Exception
  */
-function read_csv_chunk(callable $output, $file, $keys = [], $ignore_head_lines = 0){
+function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100, $ignore_head_lines = 0){
 	$delimiter = ',';
-	$key_size = count($keys);
-	read_line($file, function($text, $line_num) use ($delimiter, $output, $keys, $key_size, $ignore_head_lines){
+	$key_size = count($fields);
+	$chunk_tmp = [];
+	assert_via_exception($chunk_size > 0, 'Chunk size must bigger than 0');
+	read_line($file, function($text, $line_num) use ($delimiter, $output, &$chunk_tmp, $chunk_size, $fields, $key_size, $ignore_head_lines){
 		if($ignore_head_lines && $line_num <= $ignore_head_lines){
-			return;
+			return null;
 		}
 		$data = explode($delimiter, $text);
-		if($keys){
+		if($fields){
 			$data_size = count($data);
 			if($data_size > $key_size){
 				$data = array_slice($data, 0, $key_size);
 			} else if($data_size < $key_size){
-				$data = array_pad($data, count($keys), '');
+				$data = array_pad($data, count($fields), '');
 			}
-			$output(array_combine($keys, $data));
-		}else{
-			$output($data);
+			$data = array_combine($fields, $data);
 		}
+		$chunk_tmp[] = $data;
+		if(count($chunk_tmp) >= $chunk_size){
+			if($output($chunk_tmp) === false){
+				return false;
+			}
+			$chunk_tmp = [];
+		}
+		return null;
 	});
+	if($chunk_tmp){
+		$output($chunk_tmp);
+	}
+	unset($chunk_tmp);
 }
 
 /**

@@ -185,60 +185,6 @@ function get_dirs($dir){
 }
 
 /**
- * 开启session一次
- * 如原session状态未开启，则读取完session自动关闭，避免session锁定
- * @return bool
- */
-function session_start_once(){
-	if(php_sapi_name() === 'cli' || session_status() === PHP_SESSION_DISABLED || headers_sent()){
-		return false;
-	}
-	$initialized = session_status() === PHP_SESSION_ACTIVE;
-	if(!$initialized && !headers_sent()){
-		session_start();
-		session_write_close();
-	};
-	return true;
-}
-
-/**
- * 自动判断当前session状态，将$_SESSION写入数据到session中
- * 如原session状态时未开启，则写入操作完毕自动关闭session避免session锁定，否则保持不变
- * 调用方法：
- * session_write_scope(function(){
- *      $_SESSION['hello'] = 'world';
- *      unset($_SESSION['info']);
- * });
- * @param $handler
- * @return bool
- */
-function session_write_scope(callable $handler){
-	if(php_sapi_name() === 'cli' || session_status() === PHP_SESSION_DISABLED){
-		call_user_func($handler);
-		return false;
-	}
-	$initialized = session_status() === PHP_SESSION_ACTIVE;
-	if(!$initialized && !headers_sent()){
-		$exists_session = $_SESSION; //原PHP session_start()方法会覆盖 $_SESSION 变量，这里需要做一次恢复。
-		session_start();
-		$_SESSION = $exists_session;
-	}
-	call_user_func($handler);
-	if(!$initialized){
-		session_write_close();
-	}
-	return true;
-}
-
-/**
- * 立即提交session数据，同时根据上下文环境，选择性关闭session
- */
-function session_write_once(){
-	session_write_scope(function(){
-	});
-}
-
-/**
  * 获取文件行数
  * @param string|resource $file 文件路径或文件句柄
  * @param string $line_separator 换行符
@@ -297,11 +243,11 @@ function tail($file, callable $callback, $line_limit = 0, $line_separator = "\n"
 }
 
 /**
- * read file by line
- * @param string $file
- * @param callable $handle ($line_str, $line), break on return FALSE
- * @param int $buff_size
- * @return bool
+ * 逐行读取文件
+ * @param string $file 文件名称
+ * @param callable $handle 处理函数，传入参数：($line_str, $line), 若函数返回false，则中断处理
+ * @param int $buff_size 缓冲区大小
+ * @return bool 是否为处理函数中断返回
  */
 function read_line($file, callable $handle, $buff_size = 1024){
 	if(!($hd = fopen($file, 'r'))){

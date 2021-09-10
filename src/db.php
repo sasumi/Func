@@ -280,9 +280,9 @@ function db_query_paginate(PDO $pdo, $sql, $page, $page_size){
  * 分块读取
  * @param \PDO $pdo
  * @param string $sql
- * @param callable $handler
+ * @param callable $handler 批次处理函数，传入参数($rows, $page, $finish)，如返回false，则中断执行
  * @param int $chunk_size
- * @return bool
+ * @return bool 是否为正常结束，false表示为批处理函数中断导致
  * @throws \Exception
  */
 function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
@@ -298,12 +298,13 @@ function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
 }
 
 /**
+ * 数据监听
  * @param \PDO $pdo
  * @param string $sql
- * @param callable $watcher
- * @param int $chunk_size
- * @param int $sleep_interval
- * @return bool
+ * @param callable $watcher 批次处理函数，传入参数($rows)，如返回false，则中断执行
+ * @param int $chunk_size 分块大小
+ * @param int $sleep_interval 睡眠间隔时间（秒）
+ * @return bool 是否为正常结束，false表示为批处理函数中断导致
  * @throws \Exception
  */
 function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_interval = 3){
@@ -311,12 +312,10 @@ function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_in
 		$hit = false;
 		$keep = db_query_chunk($pdo, $sql, function($rows) use ($watcher, &$hit){
 			$hit = true;
-			foreach($rows as $item){
-				if(call_user_func($watcher, $item) === false){
-					return false;
-				}
+			if(call_user_func($watcher, $rows) === false){
+				return false;
 			}
-			return null;
+			return true;
 		}, $chunk_size);
 		if($keep === false){
 			return false;
@@ -325,12 +324,12 @@ function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_in
 			sleep($sleep_interval);
 		}
 	}
-	return null;
+	return true;
 }
 
 /**
- * quote value
- * @param $data
+ * 字段转义，目前仅支持字符串
+ * @param array|string|int $data
  * @return array|string
  */
 function db_quote_value($data){
@@ -345,7 +344,7 @@ function db_quote_value($data){
 }
 
 /**
- * quote field
+ * 数据库表字段转义
  * @param string|array $fields
  * @return array|string
  * @throws \Exception
@@ -366,7 +365,7 @@ function db_quote_field($fields){
 }
 
 /**
- * get query affect rows
+ * 获取查询影响行数
  * @param \PDOStatement $result
  * @return int|false
  */
@@ -404,7 +403,7 @@ function db_sql_prepare(...$args){
 }
 
 /**
- * database delete
+ * 删除数据
  * @param \PDO $pdo
  * @param $limit
  * @param $table
@@ -421,7 +420,7 @@ function db_delete(PDO $pdo, $limit, $table, ...$statement){
 }
 
 /**
- * insert data
+ * 插入数据
  * @param \PDO $pdo
  * @param $table
  * @param array $data
@@ -446,13 +445,8 @@ function db_insert(PDO $pdo, $table, array $data){
 	return db_affect_rows($result);
 }
 
-function db_replace(PDO $pdo, array $data, $table, ...$statement){
-	$sql = db_sql_prepare("REPLACE FROM `$table` ", $statement);
-
-}
-
 /**
- * database update
+ * 更新数据
  * @param \PDO $pdo
  * @param array $data
  * @param string $table
