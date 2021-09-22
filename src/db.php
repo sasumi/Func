@@ -57,7 +57,7 @@ function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
 
 	if(!ssh2_auth_password($ssh_conn, $ssh_config['user'], $ssh_config['password'])){
 		$logger->error('ssh connect fail');
-		throw new \Exception('SSH connect fail');
+		throw new Exception('SSH connect fail');
 	}
 	$logger->info('ssh authorized', $ssh_config);
 	$proxy_config = array_merge($proxy_config, [
@@ -72,13 +72,12 @@ function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
 	}
 
 	$logger->info('ssh tunnel created', $tunnel, $proxy_config);
-	$db_conn = db_connect($db_config['type'],
+	return db_connect($db_config['type'],
 		$proxy_config['host'],
 		$db_config['user'],
 		$proxy_config['password'],
 		$db_config['database'],
 		$proxy_config['port']);
-	return $db_conn;
 }
 
 function db_auto_ssh_port($db_config, $port_init = 9999){
@@ -291,7 +290,7 @@ function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
 	while($rows = db_query_all($pdo, db_sql_patch_limit($sql, ($page - 1)*$chunk_size, $chunk_size))){
 		if($handler($rows, $page, ceil($total/$chunk_size), $total) === false){
 			return false;
-		};
+		}
 		$page++;
 	}
 	return true;
