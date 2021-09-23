@@ -210,11 +210,11 @@ function array_clear_null($data, $recursive = true){
 		return $data;
 	}
 	foreach($data as $k => $item){
-		if($item === null){
-			unset($data[$k]);
-		}
 		if($recursive && is_array($item)){
 			$data[$k] = array_clear_null($item);
+		}
+		if($data[$k] === null){
+			unset($data[$k]);
 		}
 	}
 	return $data;
@@ -231,14 +231,11 @@ function array_clear_empty($data, $recursive = true){
 		return $data;
 	}
 	foreach($data as $k => $item){
-		if(empty($item)){
-			unset($data[$k]);
-		}
 		if($recursive && is_array($item)){
 			$data[$k] = array_clear_empty($item);
-			if(empty($data[$k])){
-				unset($data[$k]);
-			}
+		}
+		if(empty($data[$k])){
+			unset($data[$k]);
 		}
 	}
 	return $data;
