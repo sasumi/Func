@@ -3,7 +3,6 @@
 namespace LFPhp\Func\db;
 
 use Exception;
-use LFPhp\Logger\Logger;
 use PDO;
 use PDOException;
 use function LFPhp\Func\array_first;
@@ -13,15 +12,6 @@ use function LFPhp\Func\array_last;
  * 数据库类型，当前只支持MySQL
  */
 const DB_TYPE_MYSQL = 'mysql';
-
-/**
- * get db logger
- * @param string $fn function name
- * @return \LFPhp\Logger\Logger
- */
-function __get_db_logger($fn){
-	return Logger::instance($fn);
-}
 
 /**
  * PDO connect
@@ -50,16 +40,10 @@ function db_connect($db_type, $host, $user, $password, $database, $port = null, 
  * @throws \Exception
  */
 function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
-	$logger = __get_db_logger(__FUNCTION__);
-
 	$ssh_conn = ssh2_connect($ssh_config['host'], $ssh_config['port']);
-	$logger->info('ssh connected', $ssh_config);
-
 	if(!ssh2_auth_password($ssh_conn, $ssh_config['user'], $ssh_config['password'])){
-		$logger->error('ssh connect fail');
 		throw new Exception('SSH connect fail');
 	}
-	$logger->info('ssh authorized', $ssh_config);
 	$proxy_config = array_merge($proxy_config, [
 		'host' => 'localhost',
 		'port' => db_auto_ssh_port($db_config),
@@ -67,11 +51,8 @@ function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
 
 	$tunnel = ssh2_tunnel($ssh_conn, $proxy_config['host'], $proxy_config['port']);
 	if(!is_resource($tunnel)){
-		$logger->error('ssh tunnel bind fail', $proxy_config);
 		throw new Exception('SSH tunnel bind error('.$proxy_config['host'].':'.$proxy_config['port'].')');
 	}
-
-	$logger->info('ssh tunnel created', $tunnel, $proxy_config);
 	return db_connect($db_config['type'],
 		$proxy_config['host'],
 		$db_config['user'],
@@ -118,7 +99,6 @@ function db_connect_dsn($dsn, $user, $password, $persistence_connect = false){
 	if($persistence_connect){
 		$opt[PDO::ATTR_PERSISTENT] = true;
 	}
-	__get_db_logger(__FUNCTION__)->info('DB connect', $dsn, $user);
 	try {
 		$conn = new PDO($dsn, $user, $password, $opt);
 	} catch(PDOException $e){
@@ -159,7 +139,6 @@ function db_build_dsn($db_type, $host, $database, $port = '', $charsets = ''){
  * @return false|\PDOStatement
  */
 function db_query(PDO $pdo, $sql){
-	__get_db_logger(__FUNCTION__)->debug($sql);
 	try{
 		return $pdo->query($sql);
 	}catch(PDOException $e){
