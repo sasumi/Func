@@ -614,7 +614,7 @@ function html_attributes(array $attributes = []){
  * @param null $len
  * @param string $tail
  * @param bool $over_length
- * @return mixed
+ * @return string
  */
 function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 	if($len){
@@ -624,6 +624,44 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 	$html = str_replace("\r", '', $html);
 	$html = str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
 	return $html;
+}
+
+/**
+ * 构建HTML meta标签
+ * @param string $equiv
+ * @param string $content
+ * @return string
+ */
+function html_tag_meta($equiv, $content = ''){
+	return '<meta http-equiv="'.$equiv.'" content="'.$content.'" />';
+}
+
+/**
+ * 使用 html meta 进行页面跳转
+ * @param string $url 跳转目标路径
+ * @param int $timeout_sec 超时时间
+ * @return string html
+ */
+function html_meta_redirect($url, $timeout_sec = 0){
+	return html_tag_meta('refresh', $timeout_sec.'; URL='.$url);
+}
+
+/**
+ * 构建 CSP meta标签
+ * @param array $csp_rules
+ * @param string $report_uri
+ * @param bool $report_only
+ * @return string
+ * @throws \Exception
+ */
+function html_meta_csp(array $csp_rules, $report_uri = '', $report_only = false){
+	if($report_only && !$report_uri){
+		throw new Exception('CSP report uri required.');
+	}
+	$equiv = $report_only ? CSP_REPORT_ONLY_PREFIX : CSP_PREFIX;
+	$content = join('; ', $csp_rules).';';
+	$content .= $report_uri ? csp_report_uri($report_uri).';' : '';
+	return html_tag_meta($equiv, $content);
 }
 
 /**
