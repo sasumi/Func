@@ -4,8 +4,8 @@ namespace LFPhp\Func;
 
 /**
  * 获取Excel等电子表格中列名
- * @param string $column 列序号，由1开始
- * @return string
+ * @param integer $column 列序号，由1开始
+ * @return string 电子表格中的列名，格式如：A1、E3
  */
 function get_spreadsheet_column($column){
 	$numeric = ($column - 1)%26;
@@ -19,10 +19,10 @@ function get_spreadsheet_column($column){
 }
 
 /**
- * export csv download
- * @param $download_name
- * @param $data
- * @param array $fields
+ * 输出CSV文件到浏览器下载
+ * @param string $download_name 下载文件名
+ * @param array $data
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
  * @param string $mime_type
  */
 function download_sheet($download_name, $data, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
@@ -31,6 +31,13 @@ function download_sheet($download_name, $data, array $fields = [], $mime_type = 
 	csv_output('echo', $data, $fields);
 }
 
+/**
+ * 分块输出CSV文件到浏览器下载
+ * @param string $download_name 下载文件名
+ * @param callable $batch_fetcher
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
+ * @param string $mime_type
+ */
 function download_sheet_chunk($download_name, callable $batch_fetcher, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
 	header("Content-Disposition: attachment; filename=\"$download_name\"");
 	header("Content-Type: $mime_type");
@@ -38,10 +45,11 @@ function download_sheet_chunk($download_name, callable $batch_fetcher, array $fi
 }
 
 /**
- * @param $file
+ * CSV 读取
+  * @param string $file 文件路径
  * @param array $keys
  * @param int $ignore_head_lines
- * @return array
+ * @return array 数据，格式为：[[字段1,字段2,...],...]
  */
 function read_csv($file, $keys = [], $ignore_head_lines = 0){
 	$fp = fopen($file, 'r');
@@ -67,7 +75,7 @@ function read_csv($file, $keys = [], $ignore_head_lines = 0){
  * 分块读取CSV文件
  * @param callable $output 数据输出处理函数，传入参数：chunks， 返回参数若为false，则中断读取
  * @param string $file 文件名称
- * @param array $fields 映射字段名
+ * @param array $fields 字段列表，格式为：[field=>alias,...] 映射字段名
  * @param int $chunk_size 分块大小
  * @param int $ignore_head_lines 忽略开始头部标题行数
  * @throws \Exception
@@ -107,10 +115,10 @@ function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100
 }
 
 /**
- * save csv file
- * @param $file
- * @param $data
- * @param array $fields
+ * 保存CSV文件
+  * @param string $file 文件路径
+ * @param array $data
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
  */
 function save_csv($file, $data, array $fields = []){
 	$fh = fopen($file, 'x');
@@ -121,10 +129,10 @@ function save_csv($file, $data, array $fields = []){
 }
 
 /**
- * save csv chunk
- * @param $file
+ * 分块保存CSV文件
+ * @param string $file 文件路径
  * @param callable $batch_fetcher
- * @param array $fields
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
  */
 function save_csv_chunk($file, callable $batch_fetcher, $fields = []){
 	$fh = fopen($file, 'x');
@@ -135,12 +143,12 @@ function save_csv_chunk($file, callable $batch_fetcher, $fields = []){
 }
 
 /**
- * csv output chunk
+ * 分块输出CSV数据
  * @param callable $output
  * @param callable $batch_fetcher
- * @param array $fields
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
  * @param int $uniq_seed
- * @return bool|int
+ * @return int 数据行数
  */
 function csv_output_chunk(callable $output, callable $batch_fetcher, array $fields = [], &$uniq_seed = 0){
 	$comma = "\t";
@@ -178,8 +186,8 @@ function csv_output_chunk(callable $output, callable $batch_fetcher, array $fiel
 /**
  * 输出CSV
  * @param callable $output
- * @param $data
- * @param array $fields
+ * @param array $data 二维数组
+ * @param array $fields 字段列表，格式为：[field=>alias,...]
  * @return bool|int
  */
 function csv_output(callable $output, array $data, array $fields = []){
@@ -190,9 +198,9 @@ function csv_output(callable $output, array $data, array $fields = []){
 }
 
 /**
- * format csv cell data
- * @param $str
- * @return array|string|string[]|null
+ * 格式化CSV单元格内容
+ * @param mixed $str
+ * @return string
  */
 function format_csv_ceil($str){
 	if(is_array($str)){

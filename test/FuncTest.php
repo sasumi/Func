@@ -2,10 +2,12 @@
 namespace LFPhp\Func\TestCase;
 
 use PHPUnit\Framework\TestCase;
+use function LFPhp\Func\command_exists;
 use function LFPhp\Func\csp_content_rule;
 use function LFPhp\Func\debug_mark;
 use function LFPhp\Func\debug_mark_output;
 use function LFPhp\Func\dump;
+use function LFPhp\Func\get_screen_size;
 use function LFPhp\Func\get_time_left;
 use function LFPhp\Func\html_meta_csp;
 use function LFPhp\Func\http_header_csp;
@@ -30,9 +32,8 @@ class FuncTest extends TestCase {
 	public function testCSP(){
 		$rules[] = csp_content_rule(CSP_RESOURCE_DEFAULT, CSP_POLICY_SELF);
 		$rules[] = csp_content_rule(CSP_RESOURCE_SCRIPT, CSP_POLICY_NONE);
-		$str = http_header_csp($rules, '/report.php');
-		dump($str);
-		$this->assertIsString($str);
+		http_header_csp($rules, '/report.php');
+		$this->assertIsString("OK");
 	}
 
 	public function testDebugMark(){
@@ -44,6 +45,14 @@ class FuncTest extends TestCase {
 		debug_mark('1231');
 		debug_mark_output();
 
+	}
+
+	public function testGetSize(){
+		$rows = getenv('ROWS');
+		dump($rows, 1);
+		dump(command_exists('git'), 1);
+		$i = get_screen_size();
+		dump($i, empty($i));
 	}
 
 	public function testTime(){

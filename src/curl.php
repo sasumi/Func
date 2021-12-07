@@ -109,7 +109,7 @@ function curl_execute($ch){
  */
 function curl_instance($url, array $curl_option){
 	//use ssl
-	$ssl = substr($url, 0, 8) == 'https://' ? true : false;
+	$as_ssl = substr($url, 0, 8) == 'https://';
 
 	$opt = array(
 		CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //在HTTP请求中包含一个"User-Agent: "头的字符串。
@@ -120,7 +120,7 @@ function curl_instance($url, array $curl_option){
 		CURLOPT_URL            => $url,
 	);
 
-	if($ssl){
+	if($as_ssl){
 		$opt[CURLOPT_SSL_VERIFYPEER] = false;                   //对认证证书来源的检查
 		$opt[CURLOPT_SSL_VERIFYHOST] = true;                    //从证书中检查SSL加密算法是否存在
 	}

@@ -1,6 +1,8 @@
 <?php
 namespace LFPhp\Func;
 
+use Exception;
+
 /**
  * 检测服务器是否在视窗系统中运行
  * @return bool
@@ -35,8 +37,7 @@ function get_upload_max_size($human_readable = false){
 function get_max_socket_timeout($ttf = 0){
 	$max_execute_timeout = ini_get('max_execution_time') ?: 0;
 	$max_socket_timeout = ini_get('default_socket_timeout') ?: 0;
-	$max = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) :
-		min($max_execute_timeout, $max_socket_timeout);
+	$max = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) : min($max_execute_timeout, $max_socket_timeout);
 	if($ttf && $max){
 		return max($max - $ttf, 1); //最低保持1s，避免0值
 	}
@@ -78,7 +79,7 @@ function get_php_info(){
 	$input = $matches[1];
 	$matches = array();
 
-	if(preg_match_all('#(?:<h2.*?>(?:<a.*?>)?(.*?)(?:<\/a>)?<\/h2>)|'.'(?:<tr.*?><t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>)?)?</tr>)#s', $input, $matches, PREG_SET_ORDER)){
+	if(preg_match_all('#(?:<h2.*?>(?:<a.*?>)?(.*?)(?:</a>)?</h2>)|'.'(?:<tr.*?><t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>)?)?</tr>)#s', $input, $matches, PREG_SET_ORDER)){
 		foreach($matches as $match){
 			$fn = strpos($match[0], '<th') === false ? $plainText : $titlePlainText;
 			if(strlen($match[1])){
@@ -93,7 +94,6 @@ function get_php_info(){
 				$keys1 = array_keys($phpinfo);
 				$phpinfo[end($keys1)][] = $fn($match[2]);
 			}
-
 		}
 	}
 	return $phpinfo;
@@ -200,7 +200,7 @@ function run_command($command, array $param = [], $async = false){
 	//WINDOWS环境：必须传递 $_SERVER给子进程，否则子进程内数据库连接可能出错 ？？
 	$process = proc_open(build_command($command, $param), $descriptors_pec, $pipes, realpath('./'), $_SERVER);
 	if($process === false || $process === null){
-		throw new \Exception('Process create fail:'.$command);
+		throw new Exception('Process create fail:'.$command);
 	}
 	if($async){
 		return true;
@@ -234,13 +234,54 @@ function build_command($cmd_line, array $param = []){
 				$vi = escapeshellarg($vi);
 				$cmd_line .= " --{$k}[{$i}]={$vi}";
 			}
-		} else if(strlen($k)>0){
+		}else if(strlen($k) > 0){
 			$val = escapeshellarg($val);
 			$cmd_line .= " --$k=$val";
-		} else{
+		}else{
 			$val = escapeshellarg($val);
 			$cmd_line .= " -$k=$val";
 		}
 	}
 	return $cmd_line;
+}
+
+/**
+ * 检查命令是否存在
+ * @param string $command
+ * @return bool
+ */
+function command_exists($command){
+	$where_is_command = server_in_windows() ? 'where' : 'which';
+	$process = proc_open("$where_is_command $command", array(
+		0 => array("pipe", "r"), //STDIN
+		1 => array("pipe", "w"), //STDOUT
+		2 => array("pipe", "w"), //STDERR
+	), $pipes);
+	if($process !== false){
+		$stdout = stream_get_contents($pipes[1]);
+//		$stderr = stream_get_contents($pipes[2]);
+		fclose($pipes[1]);
+		fclose($pipes[2]);
+		proc_close($process);
+		return $stdout != '';
+	}
+	return false;
+}
+
+/**
+ * 获取控制台屏幕宽度及高度
+ * @return array [列数，行数】
+ */
+function get_screen_size(){
+	if(command_exists('tput')){
+		return [
+			exec('tput cols'),
+			exec('tput cols'),
+		];
+	}
+	$cols = getenv('COLUMNS');
+	if(isset($cols)){
+		return [getenv('COLUMNS'), getenv('ROWS')];
+	}
+	return null;
 }

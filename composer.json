@@ -28,6 +28,9 @@
 	"require-dev": {
 		"phpunit/phpunit": "8.5.8"
 	},
+	"suggested": {
+		"ext-openssl": "*"
+	},
 	"autoload": {
 		"files": [
 			"src/array.php",

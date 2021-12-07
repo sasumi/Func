@@ -1,1 +1,1 @@
-C:37:"PHPUnit\Runner\DefaultTestResultCache":146:{a:2:{s:7:"defects";a:1:{s:37:"LFPhp\Func\TestCase\FuncTest::testCSP";i:4;}s:5:"times";a:1:{s:37:"LFPhp\Func\TestCase\FuncTest::testCSP";d:0.009;}}}
+C:37:"PHPUnit\Runner\DefaultTestResultCache":307:{a:2:{s:7:"defects";a:2:{s:37:"LFPhp\Func\TestCase\FuncTest::testCSP";i:4;s:41:"LFPhp\Func\TestCase\FuncTest::testGetSize";i:5;}s:5:"times";a:3:{s:37:"LFPhp\Func\TestCase\FuncTest::testCSP";d:0.009;s:41:"LFPhp\Func\TestCase\FuncTest::testGetSize";d:0.163;s:36:"LFPhp\Func\TestCase\CSPTest::testCSP";d:0.01;}}}

@@ -2295,10 +2295,9 @@ function generate_guid($trim = true){
 
 	// Fallback (PHP 4.2+)
 	mt_srand((double)microtime()*10000);
-	$charid = strtolower(md5(uniqid(rand(), true)));
+	$char_id = strtolower(md5(uniqid(rand(), true)));
 	$hyphen = chr(45);                  // "-"
 	$lbrace = $trim ? "" : chr(123);    // "{"
 	$rbrace = $trim ? "" : chr(125);    // "}"
-	$guidv4 = $lbrace.substr($charid, 0, 8).$hyphen.substr($charid, 8, 4).$hyphen.substr($charid, 12, 4).$hyphen.substr($charid, 16, 4).$hyphen.substr($charid, 20, 12).$rbrace;
-	return $guidv4;
+	return $lbrace.substr($char_id, 0, 8).$hyphen.substr($char_id, 8, 4).$hyphen.substr($char_id, 12, 4).$hyphen.substr($char_id, 16, 4).$hyphen.substr($char_id, 20, 12).$rbrace;
 }
