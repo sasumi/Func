@@ -441,6 +441,19 @@ function array_unshift_assoc(&$arr, $key, $val){
 }
 
 /**
+ * 获取数组第一个项键值对
+ * @param array $arr
+ * @return array|bool [value, key] 键值对，不存在则返回false
+ */
+function array_shift_assoc(array &$arr){
+	foreach($arr as $key=>$val){
+		unset($arr[$key]);
+		return [$val, $key];
+	}
+	return false;
+}
+
+/**
  * array sort by specified key
  * @param array $src_arr
  * @return array

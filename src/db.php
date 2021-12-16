@@ -1,12 +1,10 @@
 <?php
 
-namespace LFPhp\Func\db;
+namespace LFPhp\Func;
 
 use Exception;
 use PDO;
 use PDOException;
-use function LFPhp\Func\array_first;
-use function LFPhp\Func\array_last;
 
 /**
  * 数据库类型，当前只支持MySQL
