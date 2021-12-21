@@ -289,6 +289,17 @@ function __h($str, $len = null, $tail = '...', &$over_length = false, $type = nu
 	return htmlspecialchars($str, $type);
 }
 
+/**
+ * XML字符转义
+ * @param string $val
+ * @return string
+ */
+function xml_special_chars($val){
+	//note, bad_chars does not include \t\n\r (\x09\x0a\x0d)
+	static $bad_chars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
+	static $good_chars = "                              ";
+	return strtr(htmlspecialchars($val, ENT_QUOTES|ENT_XML1), $bad_chars, $good_chars);//strtr appears to be faster than str_replace
+}
 
 /**
  * 数字金额转换成中文大写金额的函数
@@ -502,6 +513,19 @@ function url_safe_b64decode($str){
 		$data .= substr('====', $mod4);
 	}
 	return base64_decode($data);
+}
+
+/**
+ * 文件名清洗（根据Windows标准）
+ * @param string $filename
+ * @return string|string[]
+ * @see http://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx
+ */
+function filename_sanitize($filename){
+	$non_printing = array_map('chr', range(0, 31));
+	$invalid_chars = array('<', '>', '?', '"', ':', '|', '\\', '/', '*', '&');
+	$all_invalids = array_merge($non_printing, $invalid_chars);
+	return str_replace($all_invalids, "", $filename);
 }
 
 /**
