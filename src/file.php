@@ -98,16 +98,17 @@ function resolve_absolute_path($path){
 }
 
 /**
- * 解析文件扩展名
- * @param $filename
- * @return string
+ * 根据文件名获取文件扩展
+ * @param string $filename 文件名
+ * @param bool $to_lower_case 是否转换成小写，缺省为转换为小写
+ * @return string|null string or null,no extension detected
  */
-function resolve_file_extension($filename){
+function resolve_file_extension($filename, $to_lower_case = true){
 	if(strpos($filename, '.') <= 0){
-		return '';
+		return null;
 	}
 	$tmp = explode('.', $filename);
-	return strtolower(end($tmp));
+	return $to_lower_case ? strtolower(end($tmp)) : end($tmp);
 }
 
 /**

@@ -94,7 +94,7 @@ function time_get_month_period_ranges($start_str, $end_str){
 function get_timezone_offset_min_between_gmt($timezone_title) {
 	$dtz = new DateTimeZone($timezone_title);
 	$dt = new DateTime("now", $dtz);
-	return $dtz->getOffset($dt)/60;
+	return $dtz->getOffset($dt)/ONE_MINUTE;
 }
 
 /**
@@ -162,13 +162,13 @@ function microtime_diff($start, $end = null){
  */
 function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 	$tks = [
-		31536000 => ['year', 'year'],
-		2592000 => ['month', 'mon'],
-		604800 => ['week', 'wk'],
-		86400 => ['day', 'day'],
-		3600 => ['hour', 'hr'],
-		60 => ['minute', 'min'],
-		1 => ['second', 'sec'],
+		ONE_YEAR365 => ['year', 'year'],
+		ONE_MONTH30 => ['month', 'mon'],
+		ONE_WEEK    => ['week', 'wk'],
+		ONE_DAY     => ['day', 'day'],
+		ONE_HOUR    => ['hour', 'hr'],
+		ONE_MINUTE  => ['minute', 'min'],
+		1           => ['second', 'sec'],
 	];
 	$text = '';
 	foreach($tks as $s => list($fd, $sd)){
@@ -238,11 +238,11 @@ function pretty_time($timestamp, $as_html = false){
 	$before = $offset > 0;
 	$offset = abs($offset);
 	$unit_cal = array(
-		'年'  => 31104000,
-		'个月' => 2592000,
-		'天'  => 86400,
-		'小时' => 3600,
-		'分钟' => 60,
+		'年'  => ONE_YEAR365,
+		'个月' => ONE_MONTH30,
+		'天'  => ONE_DAY,
+		'小时' => ONE_HOUR,
+		'分钟' => ONE_MINUTE,
 	);
 	if($offset > 30 && $offset < 60){
 		$str = $before ? '刚才' : '等下';
@@ -301,7 +301,7 @@ function calc_actual_date($start, $days){
 		$thisWeekWork = (6 - $t) > 0 ? (6 - $t) : 0;//本周的工作日
 		$weeks = ($days - $thisWeekWork)%5 ? floor(($days - $thisWeekWork)/5)*2 : ((($days - $thisWeekWork)/5) - 1)*2;//从下周一开始算的总周末数
 		$diff_days = $weeks + $days + 1;//周末数+工作日+加上本周末-1
-		$expect = date("Y-m-d", strtotime($start) + $diff_days*24*3600);
+		$expect = date("Y-m-d", strtotime($start) + $diff_days*ONE_DAY);
 	}else{
 		$days = abs($days);
 		//逆推
@@ -309,7 +309,7 @@ function calc_actual_date($start, $days){
 		$thisWeekends = $t > 5 ? ($t - 5) : 0;//本周周末天数
 		$weeks = ceil(($days - $thisWeekWork)/5)*2;//剩下的周末数
 		$diff_days = $thisWeekends + $weeks + $days - 1;//本周周末天数+剩余周末天数+工作日-1
-		$expect = date("Y-m-d", strtotime($start) - $diff_days*24*3600);
+		$expect = date("Y-m-d", strtotime($start) - $diff_days*ONE_DAY);
 	}
 	return $expect;
 }
@@ -334,12 +334,12 @@ function time_range($start, $end){
  * @return string
  */
 function time_range_v($seconds){
-	$d = floor($seconds/86400);
-	$seconds = $seconds - $d*86400;
-	$h = floor($seconds/3600);
-	$seconds = $seconds - $h*3600;
-	$m = floor($seconds/60);
-	$seconds = $seconds - $m*60;
+	$d = floor($seconds/ONE_DAY);
+	$seconds = $seconds - $d*ONE_DAY;
+	$h = floor($seconds/ONE_HOUR);
+	$seconds = $seconds - $h*ONE_HOUR;
+	$m = floor($seconds/ONE_MINUTE);
+	$seconds = $seconds - $m*ONE_MINUTE;
 	$s = (int)$seconds;
 	$str = '';
 	$str .= $d ? $d.'d' : '';

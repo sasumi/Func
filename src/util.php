@@ -141,10 +141,10 @@ function print_sys_error($code, $msg, $file = null, $line = null, $trace_string 
 
 /**
  * error code to string
- * @param $value
+ * @param int $code
  * @return string
  */
-function error2string($value){
+function error2string($code){
 	$level_names = array(
 		E_ERROR           => 'E_ERROR',
 		E_WARNING         => 'E_WARNING',
@@ -162,12 +162,12 @@ function error2string($value){
 		$level_names[E_STRICT] = 'E_STRICT';
 	}
 	$levels = array();
-	if(($value&E_ALL) == E_ALL){
+	if(($code&E_ALL) == E_ALL){
 		$levels[] = 'E_ALL';
-		$value &= ~E_ALL;
+		$code &= ~E_ALL;
 	}
 	foreach($level_names as $level => $name){
-		if(($value&$level) == $level){
+		if(($code&$level) == $level){
 			$levels[] = $name;
 		}
 	}
