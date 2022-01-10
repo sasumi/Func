@@ -349,6 +349,29 @@ function var_export_min($var, $return = false){
 }
 
 /**
+ * 检测内存溢出，正式运行代码不建议开启该项检查，避免损失性能
+ * @param int $threshold
+ * @param callable|string $leak_payload 内存泄露时调用函数
+ */
+function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
+	static $last_usage;
+	$current_usage = memory_get_usage(true);
+	if(isset($last_usage) && ($current_usage - $last_usage > $threshold)){
+		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+		$msg = sprintf("Memory Leak:+%s(%s)\n%s#%s %s%s%s()\n",
+			format_size($current_usage - $last_usage),
+			format_size($current_usage),
+			$trace[1]['file'],
+			$trace[1]['line'],
+			$trace[1]['class'],
+			$trace[1]['type'],
+			$trace[1]['function']);
+		$leak_payload($msg);
+	}
+	$last_usage = $current_usage;
+}
+
+/**
  * 代码打点
  * @param string $tag
  * @param bool $trace_location
