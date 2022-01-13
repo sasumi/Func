@@ -31,8 +31,8 @@ function db_connect($db_type, $host, $user, $password, $database, $port = null, 
 /**
  * connect database via ssh proxy
  * @desc ssh2 extension required
- * @param $db_config ['type', 'host', 'user', 'password', 'database', 'port']
- * @param $ssh_config ['host', 'user', 'password'', 'port']
+ * @param array $db_config ['type', 'host', 'user', 'password', 'database', 'port']
+ * @param array $ssh_config ['host', 'user', 'password'', 'port']
  * @param array $proxy_config ['host', 'port']
  * @return \PDO
  * @throws \Exception
@@ -84,9 +84,9 @@ function db_mysql_connect($host, $user, $password, $database, $port = null, $cha
 }
 
 /**
- * @param $dsn
- * @param $user
- * @param $password
+ * @param string $dsn
+ * @param string $user
+ * @param string $password
  * @param bool $persistence_connect
  * @return \PDO
  */
@@ -381,8 +381,8 @@ function db_sql_prepare(...$args){
 /**
  * 删除数据
  * @param \PDO $pdo
- * @param $limit
- * @param $table
+ * @param int $limit
+ * @param string $table
  * @param mixed ...$statement
  * @return false|int
  * @throws \Exception
@@ -398,7 +398,7 @@ function db_delete(PDO $pdo, $limit, $table, ...$statement){
 /**
  * 插入数据
  * @param \PDO $pdo
- * @param $table
+ * @param string $table
  * @param array $data
  * @return false|int
  * @throws \Exception
@@ -452,8 +452,8 @@ function db_update(PDO $pdo, array $data, $table, ...$statement){
  * increase specified field
  * @todo to be test
  * @param \PDO $pdo
- * @param $table
- * @param $increase_field
+ * @param string $table
+ * @param string $increase_field
  * @param int $increment_count
  * @param mixed ...$statement
  * @return false|\PDOStatement

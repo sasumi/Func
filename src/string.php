@@ -1,9 +1,6 @@
 <?php
 /**
  * 字符串相关操作函数
- * User: sasumi
- * Date: 2015/3/30
- * Time: 11:19
  */
 namespace LFPhp\Func;
 
@@ -46,7 +43,7 @@ function substr_utf8($string, $length, $tail = '...', &$over_length = false){
 /**
  * 按照指定边界字符列表，拆分字符串
  * @param array|string $delimiters eg: [',', '-'] or ",-"
- * @param $str
+ * @param string $str
  * @param bool $trim_and_clear 去除空白及空值
  * @return array
  */
@@ -67,7 +64,7 @@ function explode_by($delimiters, $str, $trim_and_clear = true){
 
 /**
  * 突破 max_input_vars 限制，通过解析字符串方式获取变量
- * @param $string
+ * @param string $string
  * @param bool $extra_to_post
  * @return array
  */
@@ -105,7 +102,7 @@ function parse_str_without_limitation($string, $extra_to_post = false){
  * merge data
  * @param array $array1
  * @param array $array2
- * @param $dynamicKey
+ * @param string $dynamicKey
  * @return array
  */
 function __array_merge_distinct_with_dynamic_key(array &$array1, array &$array2, $dynamicKey){
@@ -134,7 +131,7 @@ function __array_merge_distinct_with_dynamic_key(array &$array1, array &$array2,
 
 /**
  * 按照指定字符编码拆分字符串
- * @param $str
+ * @param string $str
  * @param int $len
  * @param string $charset
  * @return array
@@ -170,7 +167,7 @@ function str_start_with($str, $starts, $case_sensitive = false){
 
 /**
  * 转换整型（整型数组）到字符串（字符串数组）
- * @param $data
+ * @param mixed $data
  * @return array|string
  */
 function int2str($data){
@@ -262,7 +259,7 @@ function ha($str, $len = null, $tail = '...', &$over_length = false){
 }
 
 /**
- * @param $str
+ * @param string $str
  * @param null $len
  * @param string $tail
  * @param bool $over_length
@@ -303,10 +300,7 @@ function xml_special_chars($val){
 
 /**
  * 数字金额转换成中文大写金额的函数
- * String Int  $num  要转换的小写数字或小写字符串
- * return 大写字母
- * 小数位为两位
- * @param $num
+ * @param int $num 要转换的小写数字或小写字符串（单位：元）
  * @return string
  * @throws \Exception
  */
@@ -366,7 +360,7 @@ function get_traditional_currency($num){
 
 /**
  * 密码检测
- * @param $password
+ * @param string $password
  * @param array $rules
  * @throws \Exception
  */
@@ -405,8 +399,8 @@ function password_check($password, $rules = array()){
 
 /**
  * 检测字符串中是否包含指定字符集
- * @param $str
- * @param $char_list
+ * @param string $str
+ * @param string $char_list
  * @return bool
  */
 function str_contains($str, $char_list){
@@ -434,8 +428,8 @@ function rand_string($len = 6, $source = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPR
 
 /**
  * 格式化大小
- * @param $size
- * @param int $dot
+ * @param int $size 比特值
+ * @param int $dot 预留小数点位数
  * @return string
  */
 function format_size($size, $dot = 2){
@@ -491,7 +485,7 @@ function str_mixing($text, $param = []){
 }
 
 /**
- * @param $str
+ * @param string $str
  * @return mixed|string
  * base64编码
  */
@@ -502,7 +496,7 @@ function url_safe_b64encode($str){
 }
 
 /**
- * @param $str
+ * @param string $str
  * @return string
  * base64解码
  */
@@ -532,7 +526,7 @@ function filename_sanitize($filename){
  * PHP URL encoding/decoding functions for Javascript interaction V3.0
  * (C) 2006 www.captain.at - all rights reserved
  * License: GPL
- * @param $string
+ * @param string $string
  * @return string
  */
 function encodeURIComponent($string){
@@ -685,7 +679,7 @@ function encodeURIComponentByCharacter($char){
 }
 
 /**
- * @param $string
+ * @param string $string
  * @return string
  */
 function decodeURIComponent($string){
@@ -703,7 +697,7 @@ function decodeURIComponent($string){
 }
 
 /**
- * @param $str
+ * @param string $str
  * @return array
  */
 function decodeURIComponentByCharacter($str){
@@ -1138,7 +1132,7 @@ function encodeURI($string){
 }
 
 /**
- * @param $char
+ * @param string $char
  * @return string
  */
 function encodeURIByCharacter($char){
@@ -1584,7 +1578,7 @@ function encodeURIByCharacter($char){
 }
 
 /**
- * @param $string
+ * @param string $string
  * @return string
  */
 function decodeURI($string){
@@ -2166,7 +2160,7 @@ function escapeByCharacter($char){
 }
 
 /**
- * @param $string
+ * @param string $string
  * @return string
  */
 function unescape($string){

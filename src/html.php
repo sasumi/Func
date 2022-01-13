@@ -296,7 +296,7 @@ function html_loading_bar($attributes = []){
 
 /**
  * Html范围选择器
- * @param $name
+ * @param string $name
  * @param string $value 当前值
  * @param int $min 最小值
  * @param int $max 最大值
@@ -534,7 +534,7 @@ function html_tag_input_submit($value, $attributes=[]){
 
 /**
  * no script support html
- * @param $html
+ * @param string $html
  * @return string
  */
 function html_tag_no_script($html){
@@ -554,7 +554,7 @@ function html_tag_button_submit($inner_html, $attributes=[]){
 
 /**
  * 构建table节点
- * @param $data
+ * @param array $data
  * @param array|false $headers 表头列表 [字段名 => 别名, ...]，如为false，表示不显示表头
  * @param string $caption
  * @param array $attributes
@@ -724,7 +724,7 @@ function static_version_patch($src, &$matched = false){
 
 /**
  * 静态资源版本通配符转义
- * @param $str
+ * @param string $str
  * @return string
  */
 function static_version_statement_quote($str){

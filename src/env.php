@@ -101,7 +101,7 @@ function get_php_info(){
 
 /**
  * get console text colorize
- * @param $text
+ * @param string $text
  * @param null $fore_color
  * @param null $back_color
  * @return string
@@ -359,7 +359,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 
 /**
  * 构建命令行
- * @param $cmd_line
+ * @param string $cmd_line
  * @param array $param
  * @return string
  */

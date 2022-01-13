@@ -39,7 +39,7 @@ function http_send_charset($charset){
 
 /**
  * 获取HTTP状态码对应描述
- * @param $status
+ * @param int $status
  * @return string|null
  */
 function http_get_status_message($status){

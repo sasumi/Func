@@ -79,7 +79,7 @@ function printable($var, &$print_str = ''){
 
 /**
  * 打印trace信息
- * @param $trace
+ * @param array $trace
  * @param bool $with_callee
  * @param bool $with_index
  * @param bool $as_return
@@ -114,10 +114,10 @@ function print_trace($trace, $with_callee = false, $with_index = false, $as_retu
 
 /**
  * 打印系统错误及trace跟踪信息
- * @param $code
- * @param $msg
- * @param $file
- * @param $line
+ * @param integer $code
+ * @param string $msg
+ * @param string $file
+ * @param integer $line
  * @param string $trace_string
  */
 function print_sys_error($code, $msg, $file = null, $line = null, $trace_string = ''){
@@ -140,7 +140,7 @@ function print_sys_error($code, $msg, $file = null, $line = null, $trace_string 
 }
 
 /**
- * error code to string
+ * 转换错误码值到字符串
  * @param int $code
  * @return string
  */
@@ -175,8 +175,8 @@ function error2string($code){
 }
 
 /**
- * string to error code
- * @param $string
+ * 转换错误码到具体的码值
+ * @param string $string
  * @return int
  */
 function string2error($string){
@@ -246,7 +246,7 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
 }
 
 /**
- * check is function
+ * 检测是否为函数
  * @param mixed $f
  * @return boolean
  */
@@ -255,9 +255,9 @@ function is_function($f){
 }
 
 /**
- * get class(also trait) uses recursive
- * @param $class_or_object
- * @return array
+ * 获取对象、类的所有继承的父类
+ * @param string|object $class_or_object
+ * @return string[]
  */
 function class_uses_recursive($class_or_object){
 	if(is_object($class_or_object)){
@@ -273,8 +273,8 @@ function class_uses_recursive($class_or_object){
 }
 
 /**
- * get trait uses recursive
- * @param $trait
+ * 递归方式获取trait
+ * @param string $trait
  * @return array
  */
 function trait_uses_recursive($trait){
@@ -286,10 +286,10 @@ function trait_uses_recursive($trait){
 }
 
 /**
- * assert and throw exception
- * @param mixed $expression
+ * 通过抛异常方式处理断言
+ * @param mixed $expression 断言值
  * @param string $err_msg
- * @param string $exception_class
+ * @param string $exception_class 异常类，缺省使用 \Exception
  */
 function assert_via_exception($expression, $err_msg, $exception_class = Exception::class){
 	if(!$expression){
@@ -299,8 +299,8 @@ function assert_via_exception($expression, $err_msg, $exception_class = Exceptio
 
 /**
  * pdog
- * @param $fun
- * @param $handler
+ * @param string $fun
+ * @param callable|string $handler
  * @deprecated ticks no triggered in PHP 7.0+
  */
 function pdog($fun, $handler){
@@ -316,7 +316,7 @@ function pdog($fun, $handler){
 }
 
 /**
- * get GUID
+ * 获取当前上下文GUID
  * @return mixed
  */
 function guid(){
@@ -325,10 +325,10 @@ function guid(){
 }
 
 /**
- * var_export in minimal format
- * @param $var
- * @param bool $return
- * @return mixed|string|null
+ * 使用最小格式导出变量（类似var_export）
+ * @param mixed $var
+ * @param bool $return 是否以返回方式返回，缺省为输出到终端
+ * @return string|null
  */
 function var_export_min($var, $return = false){
 	if(is_array($var)){

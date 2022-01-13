@@ -11,6 +11,7 @@ use ArrayAccess;
 use Exception;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
+use stdClass;
 
 /**
  * 數組位置操作
@@ -116,7 +117,7 @@ function array_keys_exists(array $keys, array $arr){
 }
 
 /**
- * 将多重数组值取出来
+ * 将多重数组值取出来，平铺成一维数组
  * @param array $arr
  * @param string $original_key
  * @param string $original_key_name
@@ -133,6 +134,41 @@ function plain_items($arr, $original_key = '', $original_key_name = 'original_ke
 		}
 		return $ret;
 	}
+}
+
+/**
+ * 将数组转换成对象
+ * @param array $arr
+ * @return \stdClass
+ */
+function array2object($arr){
+	if (is_array($arr)) {
+		$obj = new StdClass();
+		foreach($arr as $key => $val){
+			$obj->$key = $val;
+		}
+	}else{
+		$obj = $arr;
+	}
+	return $obj;
+}
+
+/**
+ * 将对象转换成数组
+ * @param object $obj
+ * @return array
+ */
+function object2array($obj){
+	$obj = (array)$obj;
+	foreach ($obj as $k => $v) {
+		if (gettype($v) == 'resource') {
+			return [];
+		}
+		if (gettype($v) == 'object' || gettype($v) == 'array') {
+			$obj[$k] = (array)object2array($v);
+		}
+	}
+	return $obj;
 }
 
 /**
@@ -527,11 +563,11 @@ function array_index($array, $compare_fn_or_value){
 
 /**
  * 根据指定数组下标进行求和
- * @param $arr
+ * @param array $arr
  * @param string $key
  * @return mixed
  */
-function array_sumby($arr, $key = ''){
+function array_sumby(array $arr, $key = ''){
 	if(!$key){
 		return array_sum($arr);
 	}
@@ -579,8 +615,8 @@ function null_in_array(array $arr){
 
 /**
  * filter array by specified keys
- * @param $arr
- * @param $keys
+ * @param array $arr
+ * @param array $keys
  * @return array
  * @example array_filter_by_keys($data, array('key1','key2'));
  * array_filter_by_keys($data, 'key1', 'key2');
@@ -817,7 +853,7 @@ function array_transform(array $data, array $rules){
 
 /**
  * 根据指定下标获取多维数组所有值，无下标时获取所有
- * @param $key
+ * @param string $key
  * @param array $arr
  * @return array|mixed
  */

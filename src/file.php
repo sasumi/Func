@@ -12,7 +12,7 @@ use Exception;
 /**
  * 递归的glob
  * Does not support flag GLOB_BRACE
- * @param $pattern
+ * @param string $pattern
  * @param int $flags
  * @return array
  */
@@ -31,7 +31,7 @@ function glob_recursive($pattern, $flags = 0){
 
 /**
  * 检查文件是否存在，且名称严格匹配大小写
- * @param $file
+ * @param string $file
  * @return bool|null
  * true：文件存在，false：文件不存在，null：文件存在但大小写不一致
  */
@@ -113,7 +113,7 @@ function resolve_file_extension($filename, $to_lower_case = true){
 
 /**
  * 检查文件是否存在，且名称允许大小写混淆
- * @param $file
+ * @param string $file
  * @param null $parent
  * @return bool
  */
@@ -146,8 +146,8 @@ function file_exists_case_insensitive($file, $parent = null){
 
 /**
  * 递归拷贝目录
- * @param $src
- * @param $dst
+ * @param string $src
+ * @param string $dst
  * @throw Exception
  */
 function copy_recursive($src, $dst){
@@ -280,7 +280,7 @@ function read_line($file, callable $handle, $buff_size = 1024){
 
 /**
  * 递归查询文件夹大小
- * @param $path
+ * @param string $path
  * @return int
  */
 function get_folder_size($path){

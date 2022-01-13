@@ -26,7 +26,7 @@ function session_start_once(){
  *      $_SESSION['hello'] = 'world';
  *      unset($_SESSION['info']);
  * });
- * @param $handler
+ * @param callable $handler
  * @return bool
  */
 function session_write_scope(callable $handler){

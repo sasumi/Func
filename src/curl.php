@@ -6,7 +6,7 @@ use Exception;
 
 /**
  * CURL GET请求
- * @param $url
+ * @param string $url
  * @param mixed|null $data
  * @param array|null|callable $curl_option 额外CURL选项，如果是闭包函数，传入第一个参数为ch
  * @return array [head, body, ...] curl_getinfo信息
@@ -22,7 +22,7 @@ function curl_get($url, $data = null, array $curl_option = []){
 
 /**
  * POST请求
- * @param $url
+ * @param string $url
  * @param mixed|null $data
  * @param array $curl_option
  * @return array
@@ -38,7 +38,7 @@ function curl_post($url, $data = null, array $curl_option = []){
 
 /**
  * JSON方式POST请求
- * @param $url
+ * @param string $url
  * @param null $data
  * @param array $curl_option
  * @return array
@@ -57,8 +57,8 @@ function curl_post_json($url, $data = null, array $curl_option = []){
 
 /**
  * PUT请求
- * @param $url
- * @param $data
+ * @param string $url
+ * @param array $data
  * @param array $curl_option
  * @return array
  * @throws \Exception
@@ -73,8 +73,8 @@ function curl_put($url, $data, array $curl_option = []){
 
 /**
  * DELETE请求
- * @param $url
- * @param $data
+ * @param string $url
+ * @param array $data
  * @param array $curl_option
  * @return array
  * @throws \Exception
@@ -101,7 +101,7 @@ function curl_execute($ch){
 }
 
 /**
- * get curl instance by options
+ * 获取CURL实例对象
  * @param string $url
  * @param array $curl_option
  * @return false|resource
@@ -177,7 +177,7 @@ function curl_data2str($data){
 
 /**
  * 打印CURL选项
- * @param $options
+ * @param array $options
  * @param bool $as_return
  * @return array|null
  */

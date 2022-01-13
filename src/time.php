@@ -23,8 +23,8 @@ const ONE_YEAR366 = 31622400; //one year, 366 days
 
 /**
  * 获取制定开始时间、结束时间的上中下旬分段数组
- * @param $start_str
- * @param $end_str
+ * @param string $start_str
+ * @param string $end_str
  * @return array [[period_th, start_time, end_time],...]
  * @throws \Exception
  */
@@ -87,7 +87,7 @@ function time_get_month_period_ranges($start_str, $end_str){
 }
 
 /**
- * @param $timezone_title
+ * @param string $timezone_title
  * @return float|int
  * @throws \Exception
  */
@@ -184,10 +184,10 @@ function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 }
 
 /**
- * convert microtime format to date
- * @param $microtime
- * @param string $format
- * @param int $precision
+ * 转换微秒到指定时间格式
+ * @param string $microtime 微秒字符串，通过 microtime(false) 产生
+ * @param string $format 时间格式
+ * @param int $precision 精度（秒之后）
  * @return false|string
  */
 function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
@@ -201,10 +201,10 @@ function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
 }
 
 /**
- * convert time float to date string
- * @param $float_time
- * @param string $format
- * @param int $precision
+ * 转换秒（浮点数）到指定时间格式
+ * @param float $float_time 时间，通过 microtime(true) 产生
+ * @param string $format 时间格式
+ * @param int $precision 精度（秒之后）
  * @return string
  */
 function float_time_to_date($float_time, $format = 'Y-m-d H:i:s', $precision = 3){
@@ -219,7 +219,7 @@ function float_time_to_date($float_time, $format = 'Y-m-d H:i:s', $precision = 3
 
 /**
  * check time string is empty (cmp to 1970)
- * @param $time_str
+ * @param string $time_str
  * @return bool
  */
 function time_empty($time_str){
@@ -228,7 +228,7 @@ function time_empty($time_str){
 
 /**
  * 格式化友好显示时间
- * @param $timestamp
+ * @param int $timestamp
  * @param bool $as_html 是否使用span包裹
  * @return string
  */
@@ -267,8 +267,8 @@ function pretty_time($timestamp, $as_html = false){
 
 /**
  * 补充日期范围，填充中间空白天数
- * @param $start
- * @param $end
+ * @param string|int $start
+ * @param string|int $end
  * @param string $format
  * @return array
  */
