@@ -12,7 +12,7 @@ use Exception;
  * @throws \Exception
  */
 function color_hex2rgb($hex_color){
-	$hex_color = ltrim('#', $hex_color);
+	$hex_color = ltrim($hex_color, '#');
 	if(strlen($hex_color) === 3){
 		$hex = [$hex_color[0].$hex_color[0], $hex_color[1].$hex_color[1], $hex_color[2].$hex_color[2]];
 	}else if(strlen($hex_color) === 6){
