@@ -53,6 +53,7 @@
 	"autoload-dev": {
 		"files": [
 			"src/array.php",
+			"src/color.php",
 			"src/cron.php",
 			"src/csp.php",
 			"src/curl.php",
