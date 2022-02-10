@@ -405,6 +405,83 @@ function command_exists($command){
 }
 
 /**
+ * 获取Windows进程网络占用情况
+ * 暂不支持
+ * @param bool $include_process_info 是否包含进程信息（标题、程序文件名），该功能需要Windows管理员模式 @todo
+ * @return array
+ */
+function windows_get_port_usage($include_process_info = false){
+	$str = run_command('netstat -ano'.($include_process_info?'b':''));
+	$str = preg_replace("/.*\s{2}PID\n/s", '', trim(str_replace("\r", '', ($str))));
+	$rows = explode_by("\n", $str);
+	$ret = [];
+
+	$patch_last_process_info = function($ret, $process_name, $process_file_id){
+		for($i = count($ret) - 1; $i >= 0; $i--){
+			if(isset($ret[$i]['process_name'])){
+				break;
+			}
+			$ret[$i]['process_name'] = $process_name;
+			$ret[$i]['process_file_id'] = $process_file_id;
+		}
+		return $ret;
+	};
+
+	$match_process_info = function($r){
+		$id_matched = preg_match("/^\[([^\]]+)\]$/", $r, $id_ms);
+		$name_matched = preg_match("/^(\S+)$/", $r, $name_ms);
+		if(preg_match("/^\[([^\]]+)\]$/", $r, $id_ms)){
+			return [null, $id_ms[1]];
+		}
+		if(preg_match("/^(\S+)$/", $r, $name_ms)){
+			return [$name_ms[1], null];
+		}
+		return [];
+	};
+
+	for($row_idx=0; $row_idx<count($rows); $row_idx++){
+		$r = trim($rows[$row_idx]);
+		if(!$r){
+			continue;
+		}
+		if(preg_match("/([\S]+)\s+([\S]+)\s+([\S]+)\s+([\S]+)\s+([\S]+)/", $r, $matches)){
+			$ret[] = [
+				'protocol'    => $matches[1],
+				'local_ip'     => substr($matches[2], 0, strrpos($matches[2], ':', -1)),
+				'local_port'   => substr($matches[2], strrpos($matches[2], ':', -1) + 1),
+				'foreign_ip'   => substr($matches[3], 0, strrpos($matches[3], ':', -1)),
+				'foreign_port' => substr($matches[3], strrpos($matches[3], ':', -1) + 1),
+				'state'       => $matches[4],
+				'pid'         => $matches[5],
+			];
+			continue;
+		}
+		if(preg_match("/([\S]+)\s+([\S]+)\s+([\S]+)\s+([\d]+)/", $r, $matches)){
+			$ret[] = [
+				'protocol'    => $matches[1],
+				'local_ip'     => substr($matches[2], 0, strrpos($matches[2], ':', -1)),
+				'local_port'   => substr($matches[2], strrpos($matches[2], ':', -1) + 1),
+				'foreign_ip'   => substr($matches[3], 0, strrpos($matches[3], ':', -1)),
+				'foreign_port' => substr($matches[3], strrpos($matches[3], ':', -1) + 1),
+				'state'       => null,
+				'pid'         => $matches[4],
+			];
+		}
+
+		//process info mode
+		if($include_process_info && $current_ms = $match_process_info($r)){
+			$next_row_ms = $match_process_info(trim($row[$row_idx+1]));
+			$ret = $patch_last_process_info($ret, $current_ms[0] ?: $next_row_ms[0], $current_ms[1] ?: $next_row_ms[1]);
+			if($next_row_ms){
+				$row_idx++;
+			}
+			continue;
+		}
+	}
+	return $ret;
+}
+
+/**
  * 获取控制台屏幕宽度及高度
  * @return array|null 返回格式：[列数，行数】，当前环境不支持则返回 null
  */
