@@ -523,7 +523,7 @@ function filename_sanitize($filename){
 }
 
 /**
- * 帕斯卡式（大驼峰）转化成下划线格式
+ * 帕斯卡式转化成下划线格式
  * @param string $str
  * @return string
  */
@@ -532,17 +532,17 @@ function pascalcase_to_underscores($str){
 }
 
 /**
- * 下划线格式转化成帕斯卡式（大驼峰）
+ * 下划线格式转化成帕斯卡式
  * @param string $str
+ * @param bool $capitalize_first 是否使用大驼峰格式
  * @return string
  */
-function underscores_to_pascalcase($str){
-	preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $str, $matches);
-	$ret = $matches[0];
-	foreach ($ret as &$match) {
-		$match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
+function underscores_to_pascalcase($str, $capitalize_first = false){
+	$str = str_replace(' ', '', ucwords(str_replace(['-', '_'], [' ',' '], $str)));
+	if(!$capitalize_first){
+		$str[0] = strtolower($str[0]);
 	}
-	return implode('_', $ret);
+	return $str;
 }
 
 /**

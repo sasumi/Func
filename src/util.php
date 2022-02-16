@@ -285,6 +285,24 @@ function trait_uses_recursive($trait){
 }
 
 /**
+ * 获取指定类常量名称
+ * @param string $class 类名
+ * @param mixed $const_val 常量值
+ * @return string|null
+ * @throws \ReflectionException
+ */
+function get_constant_name($class, $const_val){
+	$class = new \ReflectionClass($class);
+	$constants = $class->getConstants();
+	foreach($constants as $name=>$value){
+		if($value === $const_val){
+			return $name;
+		}
+	}
+	return null;
+}
+
+/**
  * 通过抛异常方式处理断言
  * @param mixed $expression 断言值
  * @param string $err_msg

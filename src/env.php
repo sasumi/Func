@@ -1,6 +1,7 @@
 <?php
 namespace LFPhp\Func;
 
+use Error;
 use Exception;
 
 /**
@@ -42,6 +43,30 @@ function get_max_socket_timeout($ttf = 0){
 		return max($max - $ttf, 1); //最低保持1s，避免0值
 	}
 	return $max;
+}
+
+/**
+ * 获取所有命令行选项，格式规则与 getopt 一致
+ * @return array
+ */
+function get_all_opt(){
+	$opts = [];
+	foreach($_SERVER['argv'] as $idx => $arg){
+		//long option
+		if(preg_match('/--(\S+)=(\S+)/', $arg, $matches)){
+			$opts[$matches[1]] = trim($matches[2], '"');
+			continue;
+		}
+		//short option
+		if(preg_match('/-(\S+)/', $arg, $matches)){
+			for($i = 0; $i < strlen($matches[1]); $i++){
+				$opts[$matches[1][$i]] = false;
+			}
+			continue;
+		}
+		$opts[$idx] = $arg;
+	}
+	return $opts;
 }
 
 /**
@@ -213,7 +238,7 @@ function run_command($command, array $param = [], $async = false){
 		$has_error = false;
 		while($e = fgets($pipes[2])){
 			$has_error = true;
-			$error_str .= $e;;
+			$error_str .= $e;
 		}
 		return $has_error ? $error_str : $result_str;
 	}
@@ -234,7 +259,7 @@ function run_command_parallel_width_progress($command, array $param_batches, arr
 	$total = count($param_batches);
 	$start_time = time();
 	$done = 0;
-	$on_finish = function($param, $param_index, $output, $cost_time, $status_code, $error) use ($command, $options, $total,$start_time, &$done){
+	$on_finish = function($param, $param_index, $output, $cost_time, $status_code, $error) use ($command, $options, $total, $start_time, &$done){
 		$done++;
 		if($options['on_start']){
 			return call_user_func_array($options['on_finish'], func_get_args());
@@ -266,6 +291,7 @@ function run_command_parallel_width_progress($command, array $param_batches, arr
  * - int $check_interval 状态检测间隔（单位：毫秒），缺省为100ms
  * - int $process_max_execution_time 进程最大执行时间（单位：毫秒），缺省为不设置
  * @return bool 是否正常结束
+ * @throws \Exception
  */
 function run_command_parallel($command, array $param_batches, array $options = []){
 	$parallel_num = isset($options['parallel_num']) ? $options['parallel_num'] : 20;
@@ -282,7 +308,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 		fclose($stderr);
 		if($as_terminate){
 			return proc_terminate($process);
-		} else {
+		}else{
 			return proc_close($process);
 		}
 	};
@@ -382,6 +408,81 @@ function build_command($cmd_line, array $param = []){
 }
 
 /**
+ * 转义window下argv参数
+ * @param string|int $value
+ * @return string
+ * @throws \Exception
+ */
+function escape_win32_argv($value){
+	static $expr = '(
+        [\x00-\x20\x7F"] # control chars, whitespace or double quote
+      | \\\\++ (?=("|$)) # backslashes followed by a quote or at the end
+    )ux';
+
+	if($value === ''){
+		return '""';
+	}
+
+	$quote = false;
+	$replacer = function($match) use ($value, &$quote){
+		switch($match[0][0]){ // only inspect the first byte of the match
+			case '"': // double quotes are escaped and must be quoted
+				$match[0] = '\\"';
+			case ' ':
+			case "\t": // spaces and tabs are ok but must be quoted
+				$quote = true;
+				return $match[0];
+
+			case '\\': // matching backslashes are escaped if quoted
+				return $match[0].$match[0];
+
+			default:
+				throw new Exception(sprintf("Invalid byte at offset %d: 0x%02X", strpos($value, $match[0]), ord($match[0])));
+		}
+	};
+
+	$escaped = preg_replace_callback($expr, $replacer, (string)$value);
+
+	if($escaped === null){
+		throw preg_last_error() === PREG_BAD_UTF8_ERROR ? new Exception("Invalid UTF-8 string") : new Error("PCRE error: ".preg_last_error());
+	}
+
+	return $quote // only quote when needed
+		? '"'.$escaped.'"' : $value;
+}
+
+/**
+ * Escape cmd.exe metacharacters with ^
+ * @param $value
+ * @return string|string[]|null
+ */
+function escape_win32_cmd($value){
+	return preg_replace('([()%!^"<>&|])', '^$0', $value);
+}
+
+/**
+ * Like shell_exec() but bypass cmd.exe
+ * @param string $command
+ * @return false|string
+ */
+function noshell_exec($command){
+	static $descriptors = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $options = ['bypass_shell' => true];
+
+	if(!$proc = proc_open($command, $descriptors, $pipes, null, null, $options)){
+		throw new Error('Creating child process failed');
+	}
+
+	fclose($pipes[0]);
+	$result = stream_get_contents($pipes[1]);
+	fclose($pipes[1]);
+	stream_get_contents($pipes[2]);
+	fclose($pipes[2]);
+	proc_close($proc);
+
+	return $result;
+}
+
+/**
  * 检查命令是否存在
  * @param string $command
  * @return bool
@@ -395,7 +496,7 @@ function command_exists($command){
 	), $pipes);
 	if($process !== false){
 		$stdout = stream_get_contents($pipes[1]);
-//		$stderr = stream_get_contents($pipes[2]);
+		//		$stderr = stream_get_contents($pipes[2]);
 		fclose($pipes[1]);
 		fclose($pipes[2]);
 		proc_close($process);
@@ -406,12 +507,15 @@ function command_exists($command){
 
 /**
  * 获取Windows进程网络占用情况
- * 暂不支持
- * @param bool $include_process_info 是否包含进程信息（标题、程序文件名），该功能需要Windows管理员模式 @todo
- * @return array
+ * @param bool $include_process_info 是否包含进程信息（标题、程序文件名），该功能需要Windows管理员模式
+ * @return array 格式:[protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
+ * @throws \Exception
  */
 function windows_get_port_usage($include_process_info = false){
-	$str = run_command('netstat -ano'.($include_process_info?'b':''));
+	if(!server_in_windows()){
+		throw new Exception(__FUNCTION__.'() only run in windows server');
+	}
+	$str = run_command('netstat -ano'.($include_process_info ? 'b' : ''));
 	$str = preg_replace("/.*\s{2}PID\n/s", '', trim(str_replace("\r", '', ($str))));
 	$rows = explode_by("\n", $str);
 	$ret = [];
@@ -428,9 +532,7 @@ function windows_get_port_usage($include_process_info = false){
 	};
 
 	$match_process_info = function($r){
-		$id_matched = preg_match("/^\[([^\]]+)\]$/", $r, $id_ms);
-		$name_matched = preg_match("/^(\S+)$/", $r, $name_ms);
-		if(preg_match("/^\[([^\]]+)\]$/", $r, $id_ms)){
+		if(preg_match("/^\[([^]]+)]$/", $r, $id_ms)){
 			return [null, $id_ms[1]];
 		}
 		if(preg_match("/^(\S+)$/", $r, $name_ms)){
@@ -439,43 +541,105 @@ function windows_get_port_usage($include_process_info = false){
 		return [];
 	};
 
-	for($row_idx=0; $row_idx<count($rows); $row_idx++){
+	for($row_idx = 0; $row_idx < count($rows); $row_idx++){
 		$r = trim($rows[$row_idx]);
 		if(!$r){
 			continue;
 		}
 		if(preg_match("/([\S]+)\s+([\S]+)\s+([\S]+)\s+([\S]+)\s+([\S]+)/", $r, $matches)){
 			$ret[] = [
-				'protocol'    => $matches[1],
+				'protocol'     => $matches[1],
 				'local_ip'     => substr($matches[2], 0, strrpos($matches[2], ':', -1)),
 				'local_port'   => substr($matches[2], strrpos($matches[2], ':', -1) + 1),
 				'foreign_ip'   => substr($matches[3], 0, strrpos($matches[3], ':', -1)),
 				'foreign_port' => substr($matches[3], strrpos($matches[3], ':', -1) + 1),
-				'state'       => $matches[4],
-				'pid'         => $matches[5],
+				'state'        => $matches[4],
+				'pid'          => $matches[5],
 			];
 			continue;
 		}
 		if(preg_match("/([\S]+)\s+([\S]+)\s+([\S]+)\s+([\d]+)/", $r, $matches)){
 			$ret[] = [
-				'protocol'    => $matches[1],
+				'protocol'     => $matches[1],
 				'local_ip'     => substr($matches[2], 0, strrpos($matches[2], ':', -1)),
 				'local_port'   => substr($matches[2], strrpos($matches[2], ':', -1) + 1),
 				'foreign_ip'   => substr($matches[3], 0, strrpos($matches[3], ':', -1)),
 				'foreign_port' => substr($matches[3], strrpos($matches[3], ':', -1) + 1),
-				'state'       => null,
-				'pid'         => $matches[4],
+				'state'        => null,
+				'pid'          => $matches[4],
 			];
 		}
 
 		//process info mode
 		if($include_process_info && $current_ms = $match_process_info($r)){
-			$next_row_ms = $match_process_info(trim($row[$row_idx+1]));
+			$next_row_ms = $match_process_info(trim($r[$row_idx + 1]));
 			$ret = $patch_last_process_info($ret, $current_ms[0] ?: $next_row_ms[0], $current_ms[1] ?: $next_row_ms[1]);
 			if($next_row_ms){
 				$row_idx++;
 			}
 			continue;
+		}
+	}
+	return $ret;
+}
+
+/**
+ * 获取Linux下端口占用情况
+ * @return array 格式:[protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
+ * @throws \Exception
+ */
+function unix_get_port_usage(){
+	if(server_in_windows()){
+		throw new Exception(__FUNCTION__.'() only run in *nix server');
+	}
+	$str = run_command('netstat -anop');
+	$rows = explode_by("\n", $str);
+	$ret = [];
+	$rows = array_slice($rows, 2); //remove header lines
+	foreach($rows as $row){
+		$row = trim($row);
+		//               Pro     RecV     Send    LAddr   FAdd    State    PID/P tail
+		if(preg_match("/^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\w+)\s+(\S+).*$/", $row, $matches)){
+			$pid = $process_name = $process_file_id = null;
+			if(strpos($matches[7], '/')){
+				list($pid, $pif) = explode('/', $matches[7]);
+				list($process_file_id) = explode(':', $pif);
+				$process_name = $process_file_id;
+			}
+			$ret[] = [
+				'protocol'        => $matches[1],
+				'local_ip'        => substr($matches[4], 0, strrpos($matches[4], ':', -1)),
+				'local_port'      => substr($matches[4], strrpos($matches[4], ':', -1) + 1),
+				'foreign_ip'      => substr($matches[5], 0, strrpos($matches[5], ':', -1)),
+				'foreign_port'    => substr($matches[5], strrpos($matches[5], ':', -1) + 1),
+				'state'           => $matches[6],
+				'pid'             => $pid,
+				'process_file_id' => $process_file_id,
+				'process_name'    => $process_name,
+			];
+		}
+		//不包含State格式:     Pro     RecV     Send    LAddr   FAdd    PID/P tail
+		elseif(preg_match("/^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+).*$/", $row, $matches)){
+			$pid = $process_name = $process_file_id = null;
+			if(strpos($matches[6], '/')){
+				list($pid, $pif) = explode('/', $matches[6]);
+				list($process_file_id) = explode(':', $pif);
+				$process_name = $process_file_id;
+			}
+			$ret[] = [
+				'protocol'        => $matches[1],
+				'local_ip'        => substr($matches[4], 0, strrpos($matches[4], ':', -1)),
+				'local_port'      => substr($matches[4], strrpos($matches[4], ':', -1) + 1),
+				'foreign_ip'      => substr($matches[5], 0, strrpos($matches[5], ':', -1)),
+				'foreign_port'    => substr($matches[5], strrpos($matches[5], ':', -1) + 1),
+				'state'           => null,
+				'pid'             => $pid,
+				'process_file_id' => $process_file_id,
+				'process_name'    => $process_name,
+			];
+		}
+		else{
+			break;
 		}
 	}
 	return $ret;
