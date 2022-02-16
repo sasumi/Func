@@ -255,21 +255,20 @@ function is_function($f){
 }
 
 /**
- * 获取对象、类的所有继承的父类
+ * 获取对象、类的所有继承的父类(包含 trait 类)
+ * 如果无需trait,试用class_parents即可
  * @param string|object $class_or_object
  * @return string[]
  */
 function class_uses_recursive($class_or_object){
-	if(is_object($class_or_object)){
-		$class = get_class($class_or_object);
-	}else{
-		$class = $class_or_object;
+	$class = is_object($class_or_object) ? get_class($class_or_object) : $class_or_object;
+	$chains[] = $class;
+	$chains += class_parents($class);
+
+	foreach($chains as $cls){
+		$chains += trait_uses_recursive($cls);
 	}
-	$results = [];
-	foreach(array_reverse(class_parents($class)) + [$class => $class] as $class){
-		$results += trait_uses_recursive($class);
-	}
-	return array_unique($results);
+	return array_unique($chains);
 }
 
 /**

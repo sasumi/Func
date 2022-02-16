@@ -523,6 +523,29 @@ function filename_sanitize($filename){
 }
 
 /**
+ * 帕斯卡式（大驼峰）转化成下划线格式
+ * @param string $str
+ * @return string
+ */
+function pascalcase_to_underscores($str){
+	return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str));
+}
+
+/**
+ * 下划线格式转化成帕斯卡式（大驼峰）
+ * @param string $str
+ * @return string
+ */
+function underscores_to_pascalcase($str){
+	preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $str, $matches);
+	$ret = $matches[0];
+	foreach ($ret as &$match) {
+		$match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
+	}
+	return implode('_', $ret);
+}
+
+/**
  * PHP URL encoding/decoding functions for Javascript interaction V3.0
  * (C) 2006 www.captain.at - all rights reserved
  * License: GPL
