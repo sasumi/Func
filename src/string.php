@@ -538,10 +538,8 @@ function pascalcase_to_underscores($str){
  * @return string
  */
 function underscores_to_pascalcase($str, $capitalize_first = false){
-	$str = str_replace(' ', '', ucwords(str_replace(['-', '_'], [' ',' '], $str)));
-	if(!$capitalize_first){
-		$str[0] = strtolower($str[0]);
-	}
+	$str = str_replace(' ', '', ucwords(str_replace(['-', '_'], [' ', ' '], $str)));
+	$str[0] = $capitalize_first ? strtoupper($str[0]) : strtolower($str[0]);
 	return $str;
 }
 
