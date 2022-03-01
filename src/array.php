@@ -646,18 +646,19 @@ function array_make_spreadsheet_columns($column_size){
 
 /**
  * 根据xpath，将数据压入数组
- * @param array $data
- * @param string $path_str
- * @param mixed $value
- * @param string $glue
+ * @param array $data 目标数组
+ * @param string $path_str 路径表达式，如：企微.企业.正式企业数量
+ * @param mixed $value 项目值
+ * @param string $glue 分隔符
  */
 function array_push_by_path(&$data, $path_str, $value, $glue = '.'){
-	$path_str = $path_str[0] == $glue ? $path_str : $glue.$path_str;
-	$path_str = preg_replace_callback('/'.preg_quote($glue).'(\w+)?/', function($matches){
-		return "['$matches[1]']";
-	}, $path_str);
+	$paths = explode($glue, trim($path_str, $glue));
+	$path_stm = '';
+	foreach($paths as $path){
+		$path_stm .= "['".addslashes($path)."']";
+	}
 	$val = var_export($value, true);
-	$statement = "\$data{$path_str} = $val;";
+	$statement = "\$data{$path_stm} = $val;";
 	eval($statement);
 }
 
