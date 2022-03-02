@@ -100,6 +100,17 @@ function http_redirect($url, $permanently = false){
 }
 
 /**
+ * 获取当前页面地址
+ * @param bool $with_protocol 是否包含协议头
+ * @return string
+ */
+function http_get_current_page_url($with_protocol = true){
+	$port_str = $_SERVER['SERVER_PORT'] == '80' ? '' : ':'.$_SERVER['SERVER_PORT'];
+	$protocol_str = $with_protocol ? (server_in_https() ? 'https:' : 'http:') : '';
+	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].$port_str.$_SERVER['REQUEST_URI'];
+}
+
+/**
  * 文件流方式下载文件
  * @param string $file
  * @param string $download_name

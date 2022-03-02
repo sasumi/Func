@@ -13,6 +13,14 @@ function server_in_windows(){
 }
 
 /**
+ * 检测服务器是否在HTTPS协议中运行
+ * @return bool
+ */
+function server_in_https(){
+	return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+}
+
+/**
  * 获取PHP允许上传的最大文件尺寸
  * 依赖：最大上传文件尺寸，最大POST尺寸
  * @param bool $human_readable 是否以可读方式返回
