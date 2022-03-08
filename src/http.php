@@ -100,6 +100,57 @@ function http_redirect($url, $permanently = false){
 }
 
 /**
+ * 获取HTTP请求头信息数组
+ * @return array [key=>val]
+ */
+function http_get_request_headers(){
+	if(function_exists('\http_get_request_headers')){
+		return call_user_func('\http_get_request_headers');
+	}
+	$headers = array();
+	foreach($_SERVER as $key => $value){
+		if('HTTP_' == substr($key, 0, 5)){
+			$headers[str_replace('_', '-', substr($key, 5))] = $value;
+		}
+		if(isset($_SERVER['PHP_AUTH_DIGEST'])){
+			$header['AUTHORIZATION'] = $_SERVER['PHP_AUTH_DIGEST'];
+		}elseif(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
+			$header['AUTHORIZATION'] = base64_encode($_SERVER['PHP_AUTH_USER'].':'.$_SERVER['PHP_AUTH_PW']);
+		}
+		if(isset($_SERVER['CONTENT_LENGTH'])){
+			$header['CONTENT-LENGTH'] = $_SERVER['CONTENT_LENGTH'];
+		}
+		if(isset($_SERVER['CONTENT_TYPE'])){
+			$header['CONTENT-TYPE'] = $_SERVER['CONTENT_TYPE'];
+		}
+	}
+	return $headers;
+}
+
+/**
+ * 获取HTTP请求头中指定key值
+ * @param string $key 不区分大小写
+ * @return mixed|null
+ */
+function http_get_request_header($key){
+	$headers = http_get_request_headers();
+	foreach($headers as $k=>$val){
+		if(strcasecmp($k, $key) === 0){
+			return $val;
+		}
+	}
+	return null;
+}
+
+/**
+ * 判断 HTTP 请求是否包含 JSON定义
+ * @return bool
+ */
+function http_from_json_request(){
+	return http_get_request_header('Content-Type') == 'application/json';
+}
+
+/**
  * 获取当前页面地址
  * @param bool $with_protocol 是否包含协议头
  * @return string
