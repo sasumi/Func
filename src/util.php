@@ -78,6 +78,36 @@ function printable($var, &$print_str = ''){
 }
 
 /**
+ * 打印异常信息
+ * @param \Exception $ex
+ * @param bool $include_external_properties
+ * @param bool $as_return
+ * @return string
+ */
+function print_exception(Exception $ex, $include_external_properties = false, $as_return = false){
+	$class = get_class($ex);
+	$msg = "[$class]\n\t".$ex->getMessage()."\n\n";
+	$msg .= "[Location]\n\t".$ex->getFile().' #'.$ex->getLine()."\n\n";
+	$msg .= "[Trace]\n\t".str_replace("\n", "\n\t", $ex->getTraceAsString());
+
+	if($include_external_properties){
+		$ignore_properties = ['message', 'code', 'line', 'file', 'trace'];
+		$ro = new \ReflectionObject($ex);
+		foreach($ro->getProperties() as $property){
+			if(in_array($property->getName(), $ignore_properties)){
+				continue;
+			}
+			$msg .= "\n\n[".$property->getName()."]\n\t";
+			$msg .= $property->isPublic() ? var_export_min($property->getValue($ex), true) : $property->getDeclaringClass();
+		}
+	}
+	if(!$as_return){
+		echo $msg;
+	}
+	return $msg;
+}
+
+/**
  * 打印trace信息
  * @param array $trace
  * @param bool $with_callee
