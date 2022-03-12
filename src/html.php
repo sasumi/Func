@@ -627,6 +627,22 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 }
 
 /**
+ * 高亮文本
+ * @param string $text
+ * @param string $keyword
+ * @param string $template
+ * @return string 返回HTML转义过的字符串
+ */
+function html_text_highlight($text, $keyword, $template = '<span class="highlight">%s</span>'){
+	if(!$keyword){
+		return h($text);
+	}
+	return preg_replace_callback('/'.preg_quote(h($keyword)).'/', function($matches) use ($template){
+		return sprintf($template, $matches[0]);
+	}, h($text));
+}
+
+/**
  * 构建HTML meta标签
  * @param string $equiv
  * @param string $content

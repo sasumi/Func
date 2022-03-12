@@ -240,6 +240,24 @@ function string2error($string){
 }
 
 /**
+ * 获取客户端IP
+ * @return string 客户端IP，获取失败返回空字符串
+ */
+function get_client_ip(){
+	$ip = '';
+	if(getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")){
+		$ip = getenv("HTTP_CLIENT_IP");
+	}else if(getenv("HTTP_X_FORWARDED_FOR") && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown")){
+		$ip = getenv("HTTP_X_FORWARDED_FOR");
+	}else if(getenv("REMOTE_ADDR") && strcasecmp(getenv("REMOTE_ADDR"), "unknown")){
+		$ip = getenv("REMOTE_ADDR");
+	}else if(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown")){
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return ($ip);
+}
+
+/**
  * 注册将PHP错误转换异常抛出
  * @param int $error_levels
  * @param \ErrorException|null $exception_class
