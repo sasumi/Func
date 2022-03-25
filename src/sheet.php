@@ -56,13 +56,12 @@ function read_csv($file, $keys = [], $ignore_head_lines = 0){
 	$delimiter = ',';
 	$ret = [];
 	$ln = 0;
-	while($str = fgetcsv($fp, 0, $delimiter)){
+	while($data = fgetcsv($fp, 0, $delimiter)){
 		if($ignore_head_lines && $ignore_head_lines < $ln){
 			$ln++;
 			continue;
 		}
 		$ln++;
-		$data = explode($delimiter, $str);
 		if($keys && count($data) < count($keys)){
 			$data = array_pad($data, count($keys) - count($data), '');
 		}
