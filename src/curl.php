@@ -219,3 +219,29 @@ function curl_merge_options(...$options){
 	}
 	return $ret;
 }
+
+/**
+ * 解析 HTTP头信息
+ * @param string $header_str
+ * @return array
+ */
+function http_parse_headers ($header_str) {
+	$headers = [];
+	foreach (explode("\n", $header_str) as $i => $h) {
+		list($k, $v) = explode(':', $h, 2);
+		//由于HTTP HEADER没有约束大小写，这里为了避免传入数据不规范导致，全部格式化小写
+		$k = strtolower($k);
+		if (isset($v)) {
+			if(!isset($headers[$k])) {
+				$headers[$k] = trim($v);
+			} else if(is_array($headers[$k])) {
+				$tmp = array_merge($headers[$k],array(trim($v)));
+				$headers[$k] = $tmp;
+			} else {
+				$tmp = array_merge(array($headers[$k]),array(trim($v)));
+				$headers[$k] = $tmp;
+			}
+		}
+	}
+	return $headers;
+}
