@@ -1,13 +1,16 @@
 <?php
 
 namespace LFPhp\Func;
+
 /**
  * 开启session一次
  * 如原session状态未开启，则读取完session自动关闭，避免session锁定
  * @return bool
  */
 function session_start_once(){
-	if(php_sapi_name() === 'cli' || session_status() === PHP_SESSION_DISABLED || headers_sent()){
+	if(php_sapi_name() === 'cli' ||
+		session_status() === PHP_SESSION_DISABLED ||
+		headers_sent()){
 		return false;
 	}
 	$initialized = session_status() === PHP_SESSION_ACTIVE;
@@ -19,6 +22,13 @@ function session_start_once(){
 }
 
 /**
+ * 立即提交session数据，同时根据上下文环境，选择性关闭session
+ */
+function session_write_once(){
+	session_write_scope(function(){});
+}
+
+/**
  * 自动判断当前session状态，将$_SESSION写入数据到session中
  * 如原session状态时未开启，则写入操作完毕自动关闭session避免session锁定，否则保持不变
  * 调用方法：
@@ -26,7 +36,7 @@ function session_start_once(){
  *      $_SESSION['hello'] = 'world';
  *      unset($_SESSION['info']);
  * });
- * @param callable $handler
+ * @param $handler
  * @return bool
  */
 function session_write_scope(callable $handler){
