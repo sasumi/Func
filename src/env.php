@@ -1,7 +1,6 @@
 <?php
 namespace LFPhp\Func;
 
-use Error;
 use Exception;
 
 /**
@@ -51,6 +50,25 @@ function get_max_socket_timeout($ttf = 0){
 		return max($max - $ttf, 1); //最低保持1s，避免0值
 	}
 	return $max;
+}
+
+/**
+ * 获取客户端IP
+ * 优先获取定义的 x-forward-for 代理IP（可能有一定风险）
+ * @return string 客户端IP，获取失败返回空字符串
+ */
+function get_client_ip(){
+	$ip = '';
+	if(getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")){
+		$ip = getenv("HTTP_CLIENT_IP");
+	}else if(getenv("HTTP_X_FORWARDED_FOR") && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown")){
+		$ip = getenv("HTTP_X_FORWARDED_FOR");
+	}else if(getenv("REMOTE_ADDR") && strcasecmp(getenv("REMOTE_ADDR"), "unknown")){
+		$ip = getenv("REMOTE_ADDR");
+	}else if(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown")){
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
 }
 
 /**
@@ -452,7 +470,7 @@ function escape_win32_argv($value){
 	$escaped = preg_replace_callback($expr, $replacer, (string)$value);
 
 	if($escaped === null){
-		throw preg_last_error() === PREG_BAD_UTF8_ERROR ? new Exception("Invalid UTF-8 string") : new Error("PCRE error: ".preg_last_error());
+		throw preg_last_error() === PREG_BAD_UTF8_ERROR ? new Exception("Invalid UTF-8 string") : new Exception("PCRE error: ".preg_last_error());
 	}
 
 	return $quote // only quote when needed
@@ -477,7 +495,7 @@ function noshell_exec($command){
 	static $descriptors = [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $options = ['bypass_shell' => true];
 
 	if(!$proc = proc_open($command, $descriptors, $pipes, null, null, $options)){
-		throw new Error('Creating child process failed');
+		throw new Exception('Creating child process failed');
 	}
 
 	fclose($pipes[0]);

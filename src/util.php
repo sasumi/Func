@@ -7,6 +7,8 @@ namespace LFPhp\Func;
 use Closure;
 use ErrorException;
 use Exception;
+use ReflectionClass;
+use ReflectionObject;
 
 /**
  * 步进方式调试
@@ -92,7 +94,7 @@ function print_exception(Exception $ex, $include_external_properties = false, $a
 
 	if($include_external_properties){
 		$ignore_properties = ['message', 'code', 'line', 'file', 'trace'];
-		$ro = new \ReflectionObject($ex);
+		$ro = new ReflectionObject($ex);
 		foreach($ro->getProperties() as $property){
 			if(in_array($property->getName(), $ignore_properties)){
 				continue;
@@ -133,7 +135,7 @@ function print_trace($trace, $with_callee = false, $with_index = false, $as_retu
 			$str .= "[".($ct - $k)."] ";
 		}
 		$loc = $item['file'] ? "{$item['file']} #{$item['line']} " : '';
-		$str .= "{$loc}{$callee}".PHP_EOL;
+		$str .= $loc.$callee.PHP_EOL;
 	}
 	if($as_return){
 		return $str;
@@ -208,28 +210,11 @@ function error2string($code){
  * 转换错误码到具体的码值
  * @param string $string
  * @return int
+ * @example string2error('E_ALL')
  */
 function string2error($string){
-	$level_names = array(
-		'E_ERROR',
-		'E_WARNING',
-		'E_PARSE',
-		'E_NOTICE',
-		'E_CORE_ERROR',
-		'E_CORE_WARNING',
-		'E_COMPILE_ERROR',
-		'E_COMPILE_WARNING',
-		'E_USER_ERROR',
-		'E_USER_WARNING',
-		'E_USER_NOTICE',
-		'E_ALL',
-	);
-	if(defined('E_STRICT')){
-		$level_names[] = 'E_STRICT';
-	}
 	$value = 0;
 	$levels = explode('|', $string);
-
 	foreach($levels as $level){
 		$level = trim($level);
 		if(defined($level)){
@@ -237,24 +222,6 @@ function string2error($string){
 		}
 	}
 	return $value;
-}
-
-/**
- * 获取客户端IP
- * @return string 客户端IP，获取失败返回空字符串
- */
-function get_client_ip(){
-	$ip = '';
-	if(getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")){
-		$ip = getenv("HTTP_CLIENT_IP");
-	}else if(getenv("HTTP_X_FORWARDED_FOR") && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown")){
-		$ip = getenv("HTTP_X_FORWARDED_FOR");
-	}else if(getenv("REMOTE_ADDR") && strcasecmp(getenv("REMOTE_ADDR"), "unknown")){
-		$ip = getenv("REMOTE_ADDR");
-	}else if(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown")){
-		$ip = $_SERVER['REMOTE_ADDR'];
-	}
-	return ($ip);
 }
 
 /**
@@ -299,7 +266,7 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
  * @return boolean
  */
 function is_function($f){
-	return (is_string($f) && function_exists($f)) || (is_object($f) && ($f instanceof Closure));
+	return (is_string($f) && function_exists($f)) || ($f instanceof Closure);
 }
 
 /**
@@ -340,7 +307,7 @@ function trait_uses_recursive($trait){
  * @throws \ReflectionException
  */
 function get_constant_name($class, $const_val){
-	$class = new \ReflectionClass($class);
+	$class = new ReflectionClass($class);
 	$constants = $class->getConstants();
 	foreach($constants as $name=>$value){
 		if($value === $const_val){
