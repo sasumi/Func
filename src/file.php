@@ -343,6 +343,72 @@ function log($file, $content, $max_size = 10*1024*1024, $max_files = 5, $pad_str
 }
 
 /**
+ * 读取文件锁
+ * @param string $key
+ * @return false|string|null
+ */
+function read_file_lock($key){
+	$fp = init_file_lock($key, $new);
+	if($new){
+		return null;
+	}
+	return fgets($fp);
+}
+
+/**
+ * 写入文件锁
+ * @param string $key
+ * @param string $lock_flag
+ * @return string
+ */
+function write_file_lock($key, $lock_flag){
+	$fp = init_file_lock($key);
+	fwrite($fp, $lock_flag);
+	return $lock_flag;
+}
+
+/**
+ * remove file lock
+ * @param string $key
+ * @return bool
+ */
+function remove_file_lock($key){
+	$var_key = __NAMESPACE__.'\\FUNC_FILE_LOCK';
+	$lock_file_name = filename_sanitize($var_key);
+	$file = sys_get_temp_dir().'/'.$lock_file_name.'/'.$key.'.lock';
+	if(is_file($file)){
+		return unlink($file);
+	}
+	return true;
+}
+
+/**
+ * 初始化文件锁
+ * @param string $key
+ * @param bool $is_new
+ * @return resource 锁文件操作句柄
+ */
+function init_file_lock($key, &$is_new = false){
+	$var_key = __NAMESPACE__.'\\FUNC_FILE_LOCK';
+	$lock_file_name = filename_sanitize($var_key);
+	if(!isset($GLOBALS[$var_key])){
+		$GLOBALS[$var_key] = [];
+	}
+	if(!isset($GLOBALS[$var_key][$key])){
+		$dir = sys_get_temp_dir().'/'.$lock_file_name;
+		if(!is_dir($dir)){
+			mkdir($dir, 0777, true);
+		}
+		$f = $dir.'/'.$key.'.lock';
+		$is_new = !is_file($f);
+		$fp = fopen($f, 'a+');
+		$GLOBALS[$var_key][$key] = $fp;
+	}
+	rewind($GLOBALS[$var_key][$key]);
+	return $GLOBALS[$var_key][$key];
+}
+
+/**
  * Log in temporary directory
  * if high performance required, support to use logrotate programme to process your log file
  * @param string $filename
