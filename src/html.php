@@ -323,6 +323,7 @@ function html_tag_range($name, $value, $min = 0, $max = 100, $step = 1, $attribu
 function html_abstract($html_content, $len = 200){
 	$str = str_replace(array("\n", "\r"), "", $html_content);
 	$str = preg_replace('/<br([^>]*)>/i', '$$NL', $str);
+	//todo convert <p> <div> to line break
 	$str = strip_tags($str);
 	$str = html_entity_decode($str, ENT_QUOTES);
 	$str = h($str, $len);
