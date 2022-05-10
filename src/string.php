@@ -486,13 +486,12 @@ function str_mixing($text, $param = []){
 
 /**
  * @param string $str
- * @return mixed|string
+ * @return string
  * base64编码
  */
 function url_safe_b64encode($str){
 	$data = base64_encode($str);
-	$data = str_replace(array('+', '/', '='), array('-', '_', ''), $data);
-	return $data;
+	return str_replace(array('+', '/', '='), array('-', '_', ''), $data);
 }
 
 /**

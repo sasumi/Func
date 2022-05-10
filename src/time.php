@@ -188,7 +188,7 @@ function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
  * @param string $microtime 微秒字符串，通过 microtime(false) 产生
  * @param string $format 时间格式
  * @param int $precision 精度（秒之后）
- * @return false|string
+ * @return string
  */
 function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
 	list($usec, $sec) = explode(' ', $microtime);
@@ -210,7 +210,7 @@ function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
 function float_time_to_date($float_time, $format = 'Y-m-d H:i:s', $precision = 3){
 	list($timestamp, $decimals) = explode('.', $float_time.'');
 	if($precision){
-		$decimals = $decimals ? $decimals : '0';
+		$decimals = $decimals ?: '0';
 		$decimals = substr($decimals, 0, $precision);
 		$decimals = str_pad($decimals, $precision, '0', STR_PAD_RIGHT);
 	}
@@ -341,13 +341,11 @@ function time_range_v($seconds){
 	$m = floor($seconds/ONE_MINUTE);
 	$seconds = $seconds - $m*ONE_MINUTE;
 	$s = (int)$seconds;
-	$str = '';
-	$str .= $d ? $d.'d' : '';
+	$str = $d ? $d.'d' : '';
 	$str .= $h ? $h.'h' : ($str ? '0h' : '');
 	$str .= $m ? $m.'m' : ($str ? '0m' : '');
 	$str .= $s ? $s.'s' : ($str ? '0s' : '');
-	$str = $str ?: '0';
-	return $str;
+	return $str ?: '0';
 }
 
 function mk_utc($timestamp = null, $short = false){

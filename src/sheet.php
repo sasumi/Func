@@ -198,7 +198,7 @@ function csv_output(callable $output, array $data, array $fields = []){
 /**
  * 格式化CSV单元格内容
  * @param mixed $str
- * @return string
+ * @return string|array
  */
 function format_csv_ceil($str){
 	if(is_array($str)){
@@ -208,6 +208,5 @@ function format_csv_ceil($str){
 		return $str;
 	}
 	$str = preg_replace("/\t/", "\\t", $str);
-	$str = preg_replace("/\r?\n/", "\\n", $str);
-	return $str;
+	return preg_replace("/\r?\n/", "\\n", $str);
 }
