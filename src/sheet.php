@@ -79,8 +79,7 @@ function read_csv($file, $keys = [], $ignore_head_lines = 0){
  * @param int $ignore_head_lines 忽略开始头部标题行数
  * @throws \Exception
  */
-function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100, $ignore_head_lines = 0){
-	$delimiter = ',';
+function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100, $ignore_head_lines = 0, $delimiter = ','){
 	$key_size = count($fields);
 	$chunk_tmp = [];
 	assert_via_exception($chunk_size > 0, 'Chunk size must bigger than 0');

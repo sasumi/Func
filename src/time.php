@@ -162,13 +162,13 @@ function microtime_diff($start, $end = null){
  */
 function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 	$tks = [
-		ONE_YEAR365 => ['year', 'year'],
-		ONE_MONTH30 => ['month', 'mon'],
+		ONE_YEAR365 => ['year', 'yr'],
+		ONE_MONTH30 => ['month', 'mo'],
 		ONE_WEEK    => ['week', 'wk'],
-		ONE_DAY     => ['day', 'day'],
-		ONE_HOUR    => ['hour', 'hr'],
-		ONE_MINUTE  => ['minute', 'min'],
-		1           => ['second', 'sec'],
+		ONE_DAY     => ['day', 'd'],
+		ONE_HOUR    => ['hour', 'h'],
+		ONE_MINUTE  => ['minute', 'm'],
+		1           => ['second', 's'],
 	];
 	$text = '';
 	foreach($tks as $s => list($fd, $sd)){
