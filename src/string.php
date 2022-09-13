@@ -263,10 +263,10 @@ function ha($str, $len = null, $tail = '...', &$over_length = false){
  * @param null $len
  * @param string $tail
  * @param bool $over_length
- * @param null $type
+ * @param null $flags ENT_QUOTES|ENT_SUBSTITUTE
  * @return array|string
  */
-function __h($str, $len = null, $tail = '...', &$over_length = false, $type = null){
+function __h($str, $len = null, $tail = '...', &$over_length = false, $flags = null){
 	if(is_object($str)){
 		return $str;
 	}
@@ -283,7 +283,7 @@ function __h($str, $len = null, $tail = '...', &$over_length = false, $type = nu
 	if(is_numeric($str)){
 		return $str;
 	}
-	return htmlspecialchars($str, $type);
+	return htmlspecialchars($str, $flags);
 }
 
 /**

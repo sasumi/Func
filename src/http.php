@@ -211,3 +211,47 @@ function http_header_csp(array $csp_rules, $report_uri = '', $report_only = fals
 	$str .= $report_uri ? csp_report_uri($report_uri).';' : '';
 	header($str);
 }
+
+/**
+ * 生成 Report API
+ * @param string[] $endpoint_urls
+ * @param string $group
+ * @param number $max_age_sec
+ * @param bool $include_subdomains
+ * @return array
+ */
+function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
+	$endpoints_obj = [];
+	foreach($endpoint_urls as $url){
+		$endpoints_obj[] = ['url' => $url];
+	};
+	return [
+		'group'              => $group,
+		'max_age'            => $max_age_sec,
+		'include_subdomains' => $include_subdomains,
+		'endpoints'          => $endpoints_obj,
+	];
+}
+
+/**
+ * 发送浏览器设置 Report API
+ * @param string[] $endpoint_urls
+ * @param string $group
+ * @param number $max_age_sec
+ * @param bool $include_subdomains
+ */
+function http_header_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
+	header('Report-To: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
+}
+
+/**
+ * 发送浏览器错误日志上报 Report API
+ * @param string[] $endpoint_urls
+ * @param string $group
+ * @param number $max_age_sec
+ * @param bool $include_subdomains
+ * @return void
+ */
+function http_header_report_api_nel(array $endpoint_urls, $group = 'network-error', $max_age_sec = ONE_DAY, $include_subdomains = true){
+	header('NEL: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
+}
