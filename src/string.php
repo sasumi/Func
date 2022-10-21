@@ -130,6 +130,17 @@ function __array_merge_distinct_with_dynamic_key(array &$array1, array &$array2,
 }
 
 /**
+ * PHP 匹配通配符
+ * @param string $wildcard_pattern
+ * @param string $haystack
+ * @return boolean
+ */
+function match_wildcard($wildcard_pattern, $haystack){
+	$regex = str_replace(["\*", "\?"], ['.*', '.'], preg_quote($wildcard_pattern));
+	return !!preg_match('/^'.$regex.'$/is', $haystack);
+}
+
+/**
  * 按照指定字符编码拆分字符串
  * @param string $str
  * @param int $len
