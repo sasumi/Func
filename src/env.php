@@ -224,7 +224,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
 	$str = "\r".str_pad($index.'',strlen($total.''),'0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
-	$max_length = $max_length ?: strlen($str) + 10;
+	$max_length = $max_length ?: strlen($str) + 20;
 	$str = str_pad($str, $max_length, ' ', STR_PAD_RIGHT);
 	echo $str;
 	if($index >= $total){
