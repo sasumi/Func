@@ -359,8 +359,9 @@ function html_tag_input_text($name, $value = '', $attributes = []){
 function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'date';
 	$attributes['name'] = $name;
-	$attributes['value'] = is_numeric($date_or_timestamp) ? date('Y-m-d', $date_or_timestamp) :
-		date('Y-m-d', strtotime($date_or_timestamp));
+	if($date_or_timestamp){
+		$attributes['value'] = is_numeric($date_or_timestamp) ? date('Y-m-d', $date_or_timestamp) : date('Y-m-d', strtotime($date_or_timestamp));
+	}
 	return html_tag('input', $attributes);
 }
 
@@ -374,8 +375,9 @@ function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 function html_tag_datetime($name, $datetime_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'datetime-local';
 	$attributes['name'] = $name;
-	$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-dTH:i', $datetime_or_timestamp) :
-		date('Y-m-d', strtotime($datetime_or_timestamp));
+	if($datetime_or_timestamp){
+		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-dTH:i', $datetime_or_timestamp) : date('Y-m-d', strtotime($datetime_or_timestamp));
+	}
 	return html_tag('input', $attributes);
 }
 
