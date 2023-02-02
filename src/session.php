@@ -8,9 +8,7 @@ namespace LFPhp\Func;
  * @return bool
  */
 function session_start_once(){
-	if(php_sapi_name() === 'cli' ||
-		session_status() === PHP_SESSION_DISABLED ||
-		headers_sent()){
+	if(php_sapi_name() === 'cli' || session_status() === PHP_SESSION_DISABLED || headers_sent()){
 		return false;
 	}
 	$initialized = session_status() === PHP_SESSION_ACTIVE;
@@ -25,7 +23,8 @@ function session_start_once(){
  * 立即提交session数据，同时根据上下文环境，选择性关闭session
  */
 function session_write_once(){
-	session_write_scope(function(){});
+	session_write_scope(function(){
+	});
 }
 
 /**
@@ -36,7 +35,7 @@ function session_write_once(){
  *      $_SESSION['hello'] = 'world';
  *      unset($_SESSION['info']);
  * });
- * @param $handler
+ * @param callable $handler
  * @return bool
  */
 function session_write_scope(callable $handler){
@@ -55,4 +54,24 @@ function session_write_scope(callable $handler){
 		session_write_close();
 	}
 	return true;
+}
+
+/**
+ * 以指定时间启动session
+ * @param int $expire_seconds 秒
+ * @return void
+ */
+function session_start_in_time($expire_seconds = 0){
+	if($expire_seconds == 0){
+		$expire_seconds = ini_get('session.gc_maxlifetime');
+	}else{
+		ini_set('session.gc_maxlifetime', $expire_seconds);
+	}
+	if(empty($_COOKIE['PHPSESSID'])){
+		session_set_cookie_params($expire_seconds);
+		session_start();
+	}else{
+		session_start();
+		setcookie('PHPSESSID', session_id(), time() + $expire_seconds);
+	}
 }
