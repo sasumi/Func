@@ -375,8 +375,11 @@ function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 function html_tag_datetime($name, $datetime_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'datetime-local';
 	$attributes['name'] = $name;
+	$attributes['step'] = 1; //必须填充step 才能在空值情况出现秒的选择
 	if($datetime_or_timestamp){
-		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-dTH:i', $datetime_or_timestamp) : date('Y-m-d', strtotime($datetime_or_timestamp));
+		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-d\TH:i:s', $datetime_or_timestamp) : date('Y-m-d\TH:i:s', strtotime($datetime_or_timestamp));
+	} else {
+		$attributes['value'] = '0000-00-00T00:00:00';
 	}
 	return html_tag('input', $attributes);
 }
@@ -754,4 +757,8 @@ function static_version_statement_quote($str){
 	);
 	$str = str_replace(array_keys($map), array_values($map), $str);
 	return "|$str|";
+}
+
+function fix_browser_datetime($datetime_str_from_h5){
+	return $datetime_str_from_h5 ? (new \DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s') : null;
 }
