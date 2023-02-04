@@ -759,6 +759,12 @@ function static_version_statement_quote($str){
 	return "|$str|";
 }
 
+/**
+ * 修正浏览器 HTML5 中 input:datetime或者 input:datetime-local 提交过来的数据
+ * @param string $datetime_str_from_h5
+ * @return string|null
+ * @throws \Exception
+ */
 function fix_browser_datetime($datetime_str_from_h5){
 	return $datetime_str_from_h5 ? (new \DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s') : null;
 }
