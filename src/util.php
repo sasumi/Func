@@ -412,7 +412,7 @@ function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
  */
 function debug_mark($tag = '', $trace_location = true, $mem_usage = true){
 	$k = __FUNCTION__;
-	$tm = microtime();
+	$tm = microtime(true);
 	$trace = $mem = null;
 	if($mem_usage){
 		$mem = memory_get_usage(true);
@@ -435,21 +435,16 @@ function debug_mark($tag = '', $trace_location = true, $mem_usage = true){
  */
 function debug_mark_output($as_return = false){
 	$k = __NAMESPACE__.'\\debug_mark';
+	$list = $GLOBALS[$k];
+	//补上PHP服务开始时间
+	array_unshift($list, ['server request', $_SERVER['REQUEST_TIME_FLOAT'], null, 0]);
 	if($as_return){
-		return $GLOBALS[$k];
+		return $list;
 	}
 	$str = '';
-	$last_time = null;
-	foreach($GLOBALS[$k] as $idx => list($tag, $tm, $trace, $mem)){
-		$t = explode(' ', $tm);
-		$time_txt = date('Y-m-d H:i:s', $t[1]).substr($t[0], 1, 4);
-		if($last_time){
-			$time_txt .= '('.microtime_diff($last_time, $t).')';
-		}
-		$mem_txt = '';
-		if($mem){
-			$mem_txt = format_size($mem);
-		}
+	foreach($list as list($tag, $float_time, $trace, $mem)){
+		$time_txt = float_time_to_date($float_time);
+		$mem_txt = $mem ? format_size($mem) : '';
 		$callee = $file_loc = '';
 		if($trace){
 			$callee = $trace['class'] ? "{$trace['class']}{$trace['type']}{$trace['function']}()" : "{$trace['function']}()";
