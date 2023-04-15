@@ -1,6 +1,11 @@
 <?php
 
 namespace LFPhp\Func;
+/**
+ * CSV 相关操作函数
+ * 如果正常开放性业务，建议使用 XLSXBuilder (https://github.com/sasumi/XLSXBuilder)
+ * 或类似处理excel的其他技术方案。
+ */
 
 /**
  * 获取Excel等电子表格中列名
@@ -25,7 +30,7 @@ function get_spreadsheet_column($column){
  * @param array $fields 字段列表，格式为：[field=>alias,...]
  * @param string $mime_type
  */
-function download_sheet($download_name, $data, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
+function download_csv($download_name, $data, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
 	header("Content-Disposition: attachment; filename=\"$download_name\"");
 	header("Content-Type: $mime_type");
 	csv_output('echo', $data, $fields);
@@ -38,7 +43,7 @@ function download_sheet($download_name, $data, array $fields = [], $mime_type = 
  * @param array $fields 字段列表，格式为：[field=>alias,...]
  * @param string $mime_type
  */
-function download_sheet_chunk($download_name, callable $batch_fetcher, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
+function download_csv_chunk($download_name, callable $batch_fetcher, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
 	header("Content-Disposition: attachment; filename=\"$download_name\"");
 	header("Content-Type: $mime_type");
 	csv_output_chunk('echo', $batch_fetcher, $fields);
