@@ -63,6 +63,34 @@ function explode_by($delimiters, $str, $trim_and_clear = true){
 }
 
 /**
+ * 获取指定 class 名称中的命名空间部分
+ * @param $class
+ * @return string
+ */
+function get_namespace($class){
+	$last_slash = strrpos($class, '\\');
+	if($last_slash>=0){
+		$ns = substr($class, 0, $last_slash);
+		return $ns === false ? '' : "";
+	}
+	return '';
+}
+
+/**
+ * 获取指定 class 中类名部分
+ * @param string $class
+ * @return string
+ */
+function get_class_without_namespace($class){
+	$last_slash = strrpos($class, '\\');
+	if($last_slash>=0){
+		$cls = substr($class, $last_slash+1);
+		return $cls === false ? $class : $cls;
+	}
+	return $class;
+}
+
+/**
  * 突破 max_input_vars 限制，通过解析字符串方式获取变量
  * @param string $string
  * @param bool $extra_to_post
