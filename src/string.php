@@ -41,6 +41,17 @@ function substr_utf8($string, $length, $tail = '...', &$over_length = false){
 }
 
 /**
+ * 检测字符串是否为JSON
+ * @param $str
+ * @return bool
+ */
+function is_json($str){
+	$tmp = json_decode($str);
+	unset($tmp);
+	return json_last_error() === JSON_ERROR_NONE;
+}
+
+/**
  * 按照指定边界字符列表，拆分字符串
  * @param array|string $delimiters eg: [',', '-'] or ",-"
  * @param string $str
