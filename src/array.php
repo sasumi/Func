@@ -316,7 +316,6 @@ function array_move_item($arr, $item_index_key, $dir){
 		if($new_idx == count($arr) - 1){
 			return $arr;
 		}
-		/** @var array $tmp */
 		$tmp = array_slice($values, 0, $new_idx);
 		$before = array_combine(array_slice($keys, 0, $new_idx), $tmp);
 		$before[$keys[$new_idx + 1]] = $values[$new_idx + 1]; //下一個

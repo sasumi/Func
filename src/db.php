@@ -300,7 +300,6 @@ function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_in
 			sleep($sleep_interval);
 		}
 	}
-	return true;
 }
 
 /**

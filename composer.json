@@ -22,12 +22,11 @@
 		"ext-mbstring": "*",
 		"ext-json": "*",
 		"ext-curl": "*",
-		"ext-pdo": "*",
-		"ext-http": "*",
-		"ext-ssh2": "*"
+		"ext-pdo": "*"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "8.5.8"
+		"phpunit/phpunit": "8.5.8",
+		"ext-ssh2": "*"
 	},
 	"suggested": {
 		"ext-openssl": "*"

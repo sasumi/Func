@@ -275,7 +275,7 @@ function html_tag_progress($value = null, $max = null, $attributes = []){
 			throw new Exception('Progress value should less or equal than max');
 		}
 		//没有设置max，value范围必须在0~1
-		if(!isset($value) && ($value > 1 || $value < 0)){
+		if($value > 1 || $value < 0){
 			throw new Exception('Progress value should between 0 to 1');
 		}
 	}

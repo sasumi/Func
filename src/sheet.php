@@ -196,7 +196,7 @@ function csv_output_chunk(callable $output, callable $batch_fetcher, array $fiel
 function csv_output(callable $output, array $data, array $fields = []){
 	$tmp = $data;
 	return csv_output_chunk($output, function() use ($tmp, &$export_flag){
-		return array_unshift($tmp);
+		return array_shift($tmp);
 	}, $fields);
 }
 
