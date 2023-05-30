@@ -278,6 +278,21 @@ function read_line($file, callable $handle, $buff_size = 1024){
 }
 
 /**
+ * 渲染PHP文件
+ * @param $php_file
+ * @param array $vars
+ * @return false|string
+ */
+function render_php_file($php_file, $vars = []){
+	ob_start();
+	extract($vars);
+	include $php_file;
+	$str = ob_get_contents();
+	ob_end_clean();
+	return $str;
+}
+
+/**
  * 递归查询文件夹大小
  * @param string $path
  * @return int

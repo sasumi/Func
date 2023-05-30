@@ -62,11 +62,15 @@ function session_write_scope(callable $handler){
  * @return void
  */
 function session_start_in_time($expire_seconds = 0){
+	//设置 session.gc_maxlifetime
 	if($expire_seconds == 0){
 		$expire_seconds = ini_get('session.gc_maxlifetime');
 	}else{
 		ini_set('session.gc_maxlifetime', $expire_seconds);
 	}
+
+	//设置 session.cache_expire
+	session_cache_expire($expire_seconds);
 	if(empty($_COOKIE['PHPSESSID'])){
 		session_set_cookie_params($expire_seconds);
 		session_start();
