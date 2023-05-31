@@ -559,6 +559,15 @@ function url_safe_b64decode($str){
 }
 
 /**
+ * 检测字符串是否符合 PHP 变量命名规则
+ * @param string $str
+ * @return false|string
+ */
+function check_php_var_name_legal($str){
+	return preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $str) ? $str : false;
+}
+
+/**
  * 文件名清洗（根据Windows标准）
  * @param string $filename
  * @return string|string[]
