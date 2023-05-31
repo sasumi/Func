@@ -573,11 +573,12 @@ function filename_sanitize($filename){
 
 /**
  * 帕斯卡式转化成下划线格式
+ * (同时清理多个下划线连在一起的情况）
  * @param string $str
  * @return string
  */
 function pascalcase_to_underscores($str){
-	return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str));
+	return preg_replace('/_+/', '_', strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str)));
 }
 
 /**
