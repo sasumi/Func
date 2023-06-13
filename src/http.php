@@ -181,6 +181,14 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
 }
 
 /**
+ * 响应JSON返回头
+ * @param string $charset
+ */
+function http_header_json_response($charset = 'utf-8'){
+	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
+}
+
+/**
  * 发送文件下载头信息
  * @param string $download_name
  * @param string $disposition
