@@ -25,7 +25,6 @@
 		"ext-pdo": "*"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "8.5.8",
 		"ext-ssh2": "*"
 	},
 	"suggested": {

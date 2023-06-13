@@ -2,7 +2,6 @@
 error_reporting(0);
 
 use function LFPhp\Func\array_orderby;
-use function LFPhp\Func\dump;
 use function LFPhp\Func\get_windows_fonts;
 use function LFPhp\Func\ha;
 use function LFPhp\Func\ttf_info;
