@@ -25,6 +25,39 @@ function http_send_status($status){
 }
 
 /**
+ * 发送CORS响应
+ * @param string[] $allow_hosts 允许白名单（格式必须遵循为：https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Access-Control-Allow-Origin）
+ * @param string $request_host 是否指定请求域名，默认从 $_SERVER['REMOTE_HOST'] 中获取
+ * @return false 是否设置成功
+ * @throws \Exception
+ */
+function http_send_cors($allow_hosts = [], $request_host = null){
+	$request_host = $request_host ?: $_SERVER['REMOTE_HOST'];
+	if($allow_hosts){
+		$matched = false;
+		foreach($allow_hosts as $host){
+			//格式检查
+			if(!preg_match("/^http[s]*:\/\/(.*)/i", $host, $matches)){
+				throw new Exception('CORS host format error');
+			}
+			//与请求域名比较
+			$h = rtrim($matches[1], '/');
+			if(strcasecmp($h, $request_host) !== 0){
+				$matched = true;
+			}
+		}
+		if(!$matched){
+			return false;
+		}
+	}
+	$origin_host = ($_SERVER['REMOTE_PORT'] === 443 ? 'https' : 'http')."://$request_host";
+	header("Access-Control-Allow-Origin: $origin_host"); //为允许cookie，这里不设置为 *
+	header('Access-Control-Allow-Credentials: true');
+	header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+	return true;
+}
+
+/**
  * 发送 HTTP 头部字符集
  * @param string $charset
  * @return bool 是否成功
@@ -95,7 +128,7 @@ function http_get_status_message($status){
  * @param bool $permanently 是否为长期资源重定向
  */
 function http_redirect($url, $permanently = false){
-	http_send_status($permanently ? 301: 302);
+	http_send_status($permanently ? 301 : 302);
 	header('Location:'.$url);
 }
 
@@ -134,7 +167,7 @@ function http_get_request_headers(){
  */
 function http_get_request_header($key){
 	$headers = http_get_request_headers();
-	foreach($headers as $k=>$val){
+	foreach($headers as $k => $val){
 		if(strcasecmp($k, $key) === 0){
 			return $val;
 		}
