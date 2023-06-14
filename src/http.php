@@ -5,6 +5,7 @@
 namespace LFPhp\Func;
 
 use Exception;
+use LFPhp\Logger\Logger;
 
 /**
  * 发送HTTP状态码
@@ -25,29 +26,28 @@ function http_send_status($status){
 }
 
 /**
- * 发送CORS响应
- * @param string[] $allow_hosts 允许白名单（格式为host全域名，如 www.abc.com，img.abc.com）
- * @param string $request_host 是否指定请求域名，默认从 $_SERVER['REMOTE_HOST'] 中获取
- * @return false 是否设置成功
- * @throws \Exception
+ * 返回跨域CORS头信息
+ * @param string[] $allow_hosts 允许通过的域名列表，为空表示允许所有来源域名
+ * @param string $http_origin 来源请求，格式为：http://www.abc.com，缺省从 HTTP_ORIGIN 或 HTTP_REFERER获取
+ * @return bool 是否设置成功
  */
-function http_send_cors($allow_hosts = [], $request_host = null){
-	$request_host = $request_host ?: $_SERVER['REMOTE_HOST'];
+function http_send_cors($allow_hosts = [], $http_origin = null){
+	$http_origin = $http_origin ?: $_SERVER['HTTP_ORIGIN'] ?: $_SERVER['HTTP_REFERER'];
+	if(!$http_origin){
+		return false;
+	}
+
+	$ret = parse_url($http_origin);
+	$request_host = $ret['host'];
+	$http_scheme = $ret['scheme'];
+
 	if($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))){
 		return false;
 	}
-	switch($_SERVER['REMOTE_PORT']){
-		case 443:
-			$origin_host = "https://$request_host";
-			break;
-		case 80:
-			$origin_host = "http://$request_host";
-			break;
-		default:
-			$origin_host = "http://$request_host:{$_SERVER['REMOTE_PORT']}";
-			break;
+	if(headers_sent()){
+		return false;
 	}
-	header("Access-Control-Allow-Origin: $origin_host");
+	header("Access-Control-Allow-Origin: $http_scheme://$request_host");
 	header('Access-Control-Allow-Credentials: true');
 	header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 	return true;
