@@ -26,32 +26,28 @@ function http_send_status($status){
 
 /**
  * 发送CORS响应
- * @param string[] $allow_hosts 允许白名单（格式必须遵循为：https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Access-Control-Allow-Origin）
+ * @param string[] $allow_hosts 允许白名单（格式为host全域名，如 www.abc.com，img.abc.com）
  * @param string $request_host 是否指定请求域名，默认从 $_SERVER['REMOTE_HOST'] 中获取
  * @return false 是否设置成功
  * @throws \Exception
  */
 function http_send_cors($allow_hosts = [], $request_host = null){
 	$request_host = $request_host ?: $_SERVER['REMOTE_HOST'];
-	if($allow_hosts){
-		$matched = false;
-		foreach($allow_hosts as $host){
-			//格式检查
-			if(!preg_match("/^http[s]*:\/\/(.*)/i", $host, $matches)){
-				throw new Exception('CORS host format error');
-			}
-			//与请求域名比较
-			$h = rtrim($matches[1], '/');
-			if(strcasecmp($h, $request_host) !== 0){
-				$matched = true;
-			}
-		}
-		if(!$matched){
-			return false;
-		}
+	if($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))){
+		return false;
 	}
-	$origin_host = ($_SERVER['REMOTE_PORT'] === 443 ? 'https' : 'http')."://$request_host";
-	header("Access-Control-Allow-Origin: $origin_host"); //为允许cookie，这里不设置为 *
+	switch($_SERVER['REMOTE_PORT']){
+		case 443:
+			$origin_host = "https://$request_host";
+			break;
+		case 80:
+			$origin_host = "http://$request_host";
+			break;
+		default:
+			$origin_host = "http://$request_host:{$_SERVER['REMOTE_PORT']}";
+			break;
+	}
+	header("Access-Control-Allow-Origin: $origin_host");
 	header('Access-Control-Allow-Credentials: true');
 	header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 	return true;
@@ -242,6 +238,7 @@ function http_header_download($download_name = '', $disposition = 'attachment'){
  * @param string[] $csp_rules 建议使用csp_content_rule()方法产生的规则
  * @param string $report_uri
  * @param bool $report_only
+ * @throws \Exception
  */
 function http_header_csp(array $csp_rules, $report_uri = '', $report_only = false){
 	if($report_only && !$report_uri){
