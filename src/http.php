@@ -172,11 +172,19 @@ function http_get_request_header($key){
 }
 
 /**
- * 判断 HTTP 请求是否包含 JSON定义
+ * 判断请求方式是否为 JSON 方式
  * @return bool
  */
 function http_from_json_request(){
 	return http_get_request_header('Content-Type') == 'application/json';
+}
+
+/**
+ * 判断请求接受格式是否为 JSON
+ * @return bool
+ */
+function http_request_accept_json(){
+	return http_get_request_header('Accept') == 'application/json';
 }
 
 /**
