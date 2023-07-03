@@ -5,7 +5,6 @@
 namespace LFPhp\Func;
 
 use Exception;
-use LFPhp\Logger\Logger;
 
 /**
  * 发送HTTP状态码
@@ -223,6 +222,17 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
  */
 function http_header_json_response($charset = 'utf-8'){
 	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
+}
+
+/**
+ * 响应json数据
+ * @param mixed $json
+ * @param int $json_option
+ * @return void
+ */
+function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
+	http_header_json_response();
+	echo json_encode($json, $json_option);
 }
 
 /**
