@@ -51,7 +51,7 @@ function file_exists_case_sensitive($file){
 }
 
 /**
- * 断言文件包含于指定文件夹中
+ * 断言文件包含于指定文件夹中（文件必须存在）
  * @param string $file
  * @param string $dir
  * @param string $exception_class
@@ -62,14 +62,23 @@ function assert_file_in_dir($file, $dir, $exception_class = Exception::class){
 
 /**
  * 判断文件是否包含于指定文件夹中
- * @param string $file
- * @param string $dir
- * @return bool
+ * @param string $file_path 文件路径
+ * @param string $dir_path 目录路径
+ * @return bool 文件不存在目录当中，或文件实际不存在
  */
-function file_in_dir($file, $dir){
-	$dir = realpath($dir);
-	$file = realpath($file);
-	return strpos($file, $dir) === 0;
+function file_in_dir($file_path, $dir_path, $ignore_file_and_dir_exists = false){
+	if(!$ignore_file_and_dir_exists){
+		$file_path = realpath($file_path);
+		$dir_path = realpath($dir_path);
+	}else{
+		$file_path = resolve_absolute_path($file_path);
+		$dir_path = resolve_absolute_path($dir_path);
+	}
+	//windows 平台不区分文件名称大小写
+	if(stripos(PHP_OS, 'win') !== false){
+		return stripos($file_path, $dir_path) === 0;
+	}
+	return strpos($file_path, $dir_path) === 0;
 }
 
 /**
@@ -78,12 +87,12 @@ function file_in_dir($file, $dir){
  * <pre>
  * 调用格式：resolve_absolute_path("c:/a/b/./../../windows/system32");
  * 返回：c:/windows/system32
- * @param string $path 路径字符串
+ * @param string $file_or_path 目录路径或文件路径字符串
  * @return string
  */
-function resolve_absolute_path($path){
-	$path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
-	$parts = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
+function resolve_absolute_path($file_or_path){
+	$file_or_path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $file_or_path);
+	$parts = array_filter(explode(DIRECTORY_SEPARATOR, $file_or_path), 'strlen');
 	$absolutes = array();
 	foreach($parts as $part){
 		if('.' == $part)
