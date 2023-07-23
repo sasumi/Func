@@ -25,6 +25,22 @@ function http_send_status($status){
 }
 
 /**
+ * 请求来自POST
+ * @return bool
+ */
+function request_in_post(){
+	return $_SERVER['REQUEST_METHOD'] === 'POST';
+}
+
+/**
+ * 请求来自于GET
+ * @return bool
+ */
+function request_in_get(){
+	return $_SERVER['REQUEST_METHOD'] === 'GET';
+}
+
+/**
  * 返回跨域CORS头信息
  * @param string[] $allow_hosts 允许通过的域名列表，为空表示允许所有来源域名
  * @param string $http_origin 来源请求，格式为：http://www.abc.com，缺省从 HTTP_ORIGIN 或 HTTP_REFERER获取
