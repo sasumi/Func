@@ -229,6 +229,7 @@ function string2error($string){
  * @param int $error_levels
  * @param \ErrorException|null $exception_class
  * @return callable|null
+ * @throws \ErrorException
  */
 function register_error2exception($error_levels = E_ALL, ErrorException $exception_class = null){
 	return set_error_handler(function($err_severity, $err_str, $err_file, $err_line) use ($exception_class){

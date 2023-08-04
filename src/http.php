@@ -28,28 +28,26 @@ function http_send_status($status){
  * 返回跨域CORS头信息
  * @param string[] $allow_hosts 允许通过的域名列表，为空表示允许所有来源域名
  * @param string $http_origin 来源请求，格式为：http://www.abc.com，缺省从 HTTP_ORIGIN 或 HTTP_REFERER获取
- * @return bool 是否设置成功
+ * @throws \Exception
  */
 function http_send_cors($allow_hosts = [], $http_origin = null){
 	$http_origin = $http_origin ?: $_SERVER['HTTP_ORIGIN'] ?: $_SERVER['HTTP_REFERER'];
 	if(!$http_origin){
-		return false;
+		throw new Exception('no http origin detected');
 	}
-
 	$ret = parse_url($http_origin);
 	$request_host = $ret['host'];
 	$http_scheme = $ret['scheme'];
 
 	if($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))){
-		return false;
+		throw new Exception('request host:'.$request_host.' no in allow host list('.json_encode($allow_hosts).')');
 	}
 	if(headers_sent()){
-		return false;
+		throw new Exception('header already sent');
 	}
 	header("Access-Control-Allow-Origin: $http_scheme://$request_host");
 	header('Access-Control-Allow-Credentials: true');
 	header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-	return true;
 }
 
 /**
@@ -171,19 +169,11 @@ function http_get_request_header($key){
 }
 
 /**
- * 判断请求方式是否为 JSON 方式
+ * 判断 HTTP 请求是否包含 JSON定义
  * @return bool
  */
 function http_from_json_request(){
 	return http_get_request_header('Content-Type') == 'application/json';
-}
-
-/**
- * 判断请求接受格式是否为 JSON
- * @return bool
- */
-function http_request_accept_json(){
-	return http_get_request_header('Accept') == 'application/json';
 }
 
 /**
@@ -222,17 +212,6 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
  */
 function http_header_json_response($charset = 'utf-8'){
 	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
-}
-
-/**
- * 响应json数据
- * @param mixed $json
- * @param int $json_option
- * @return void
- */
-function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
-	http_header_json_response();
-	echo json_encode($json, $json_option);
 }
 
 /**
