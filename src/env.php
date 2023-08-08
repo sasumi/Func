@@ -247,6 +247,10 @@ function run_command($command, array $param = [], $async = false){
 		2 => array("pipe", "w")    // stderr is a pipe that the child will write to
 	);
 
+	if(!function_exists('proc_open') || !function_exists('proc_close') || !function_exists('fgets')){
+		throw new Exception('run_command required: proc_open, proc_close, fgets function.');
+	}
+
 	//WINDOWS环境：必须传递 $_SERVER给子进程，否则子进程内数据库连接可能出错 ？？
 	$process = proc_open(build_command($command, $param), $descriptors_pec, $pipes, realpath('./'), $_SERVER);
 	if($process === false || $process === null){
