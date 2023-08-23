@@ -255,24 +255,31 @@ function tail($file, callable $callback, $line_limit = 0, $line_separator = "\n"
 /**
  * 逐行读取文件
  * @param string $file 文件名称
- * @param callable $handle 处理函数，传入参数：($line_str, $line), 若函数返回 false，则中断处理
+ * @param callable $handle 处理函数，传入参数：($line_str, $line), 若函数返回false，则中断处理
+ * @param int $start_line 开始读取行数（由 1 开始）
  * @param int $buff_size 缓冲区大小
  * @return bool 是否为处理函数中断返回
+ * @throws \Exception
  */
-function read_line($file, callable $handle, $buff_size = 1024){
+function read_line($file, $handle, $start_line = 1, $buff_size = 1024){
 	if(!($hd = fopen($file, 'r'))){
 		throw new Exception('file open fail');
 	}
+	$stop = false;
 	$last_line_buff = '';
 	$read_line_counter = 0;
-	while(!feof($hd)){
+	while(!feof($hd) && !$stop){
 		$buff = $last_line_buff.fgets($hd, $buff_size);
 		$buff = str_replace("\r", "", $buff);
 		$lines = explode("\n", $buff);
 		$last_line_buff = array_pop($lines);
 		if($lines){
 			foreach($lines as $text){
-				if($handle($text, ++$read_line_counter) === false){
+				$read_line_counter++;
+				if($read_line_counter < $start_line){
+					continue;
+				}
+				if($handle($text, $read_line_counter) === false){
 					fclose($hd);
 					return false;
 				}
