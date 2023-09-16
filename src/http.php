@@ -205,10 +205,10 @@ function http_request_accept_json(){
  * @param bool $with_protocol 是否包含协议头
  * @return string
  */
-function http_get_current_page_url($with_protocol = true){
+function http_get_current_page_url($with_protocol = true, $with_port = false){
 	$port_str = $_SERVER['SERVER_PORT'] == '80' ? '' : ':'.$_SERVER['SERVER_PORT'];
 	$protocol_str = $with_protocol ? (server_in_https() ? 'https:' : 'http:') : '';
-	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].$port_str.$_SERVER['REQUEST_URI'];
+	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].($with_port ? $port_str:'').$_SERVER['REQUEST_URI'];
 }
 
 /**
