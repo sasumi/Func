@@ -267,21 +267,24 @@ function pretty_time($timestamp, $as_html = false){
 
 /**
  * 补充日期范围，填充中间空白天数
- * @param string|int $start
- * @param string|int $end
- * @param string $format
+ * @param string|int $start 开始时间（允许开始时间大于结束时间）
+ * @param string|int $end 结束时间
+ * @param string $format 结果日期格式，如果设置为月份，函数自动去重
  * @return array
  */
 function make_date_ranges($start, $end = '', $format = 'Y-m-d'){
 	$end = $end ?: time();
-	$start = is_string($start) ? strtotime($start) : $start;
-	$end = is_string($end) ? strtotime($end) : $end;
+	$st = is_string($start) ? strtotime($start) : $start;
+	$ed = is_string($end) ? strtotime($end) : $end;
 
-	$ret = [];
-	for($i = $start; $i <= $end; $i += ONE_DAY){
-		$ret[] = date($format, $i);
+	$tmp = [];
+	$step_offset = $ed > $st ? ONE_DAY : (-1 * ONE_DAY);
+	$offset_dates = ceil(abs($ed - $st)/ONE_DAY);
+	while($offset_dates -- >= 0){
+		$tmp[] = date($format, $st);
+		$st += $step_offset;
 	}
-	return $ret;
+	return array_unique($tmp);
 }
 
 /**
