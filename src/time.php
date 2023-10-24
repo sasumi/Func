@@ -284,7 +284,7 @@ function make_date_ranges($start, $end = '', $format = 'Y-m-d'){
 		$tmp[] = date($format, $st);
 		$st += $step_offset;
 	}
-	return array_unique($tmp);
+	return array_values(array_unique($tmp));
 }
 
 /**
