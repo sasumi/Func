@@ -101,6 +101,31 @@ function curl_execute($ch){
 }
 
 /**
+ * 搭建 CURL 命令
+ * @param string $url
+ * @param string $body_str
+ * @param string $method
+ * @param string[] $headers
+ * @return string
+ */
+function curl_build_command($url, $body_str, $method, $headers, $multiple_line = true){
+	$method = strtoupper($method);
+	$line_sep = $multiple_line ? PHP_EOL : '';
+	if($method === 'GET' && $body_str){
+		$url .= (stripos($url, '?') !== false ? '&' : '?').$body_str;
+	}
+	$cmd = "curl -L -X $method '$url'\\".$line_sep;
+	foreach($headers as $name => $value){
+		$cmd .= " -H '$name: $value'\\".$line_sep;
+	}
+	if($body_str && $method === 'POST'){
+		$body_str = addcslashes($body_str, "'");
+		$cmd .= " --data-raw '$body_str'";
+	}
+	return $cmd;
+}
+
+/**
  * 获取CURL实例对象
  * @param string $url
  * @param array $curl_option
