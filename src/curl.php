@@ -47,10 +47,13 @@ function curl_post($url, $data = null, array $curl_option = []){
 function curl_post_json($url, $data = null, array $curl_option = []){
 	$data = ($data && !is_string($data)) ? json_encode($data) : $data;
 	$curl_option = curl_merge_options([
-		CURLOPT_HTTPHEADER => [
+		CURLOPT_HTTPHEADER     => [
 			'Content-Type: application/json; charset=utf-8',
 			'Content-Length: '.strlen($data),
 		],
+		CURLOPT_FOLLOWLOCATION => true, //允许重定向
+		CURLOPT_MAXREDIRS      => 3, //最多允许3次重定向
+		CURLOPT_ENCODING       => '', //开启gzip等编码支持
 	], $curl_option);
 	return curl_post($url, $data, $curl_option);
 }
@@ -106,18 +109,22 @@ function curl_execute($ch){
  * @param string $url
  * @param string $body_str
  * @param string $method
- * @param string[] $headers
+ * @param string[] $headers 头部信息，格式为 ['Content-Type: application/json'] 或 ['Content-Type‘=>'application/json']
  * @return string
  */
 function curl_build_command($url, $body_str, $method, $headers, $multiple_line = true){
 	$method = strtoupper($method);
-	$line_sep = $multiple_line ? PHP_EOL : '';
+	$line_sep = $multiple_line ? '\\'.PHP_EOL : '';
 	if($method === 'GET' && $body_str){
 		$url .= (stripos($url, '?') !== false ? '&' : '?').$body_str;
 	}
-	$cmd = "curl -L -X $method '$url'\\".$line_sep;
+	$cmd = "curl -L -X $method '$url'".$line_sep;
 	foreach($headers as $name => $value){
-		$cmd .= " -H '$name: $value'\\".$line_sep;
+		if(is_numeric($name)){
+			$cmd .= " -H '$value'".$line_sep;
+		}else{
+			$cmd .= " -H '$name: $value'".$line_sep;
+		}
 	}
 	if($body_str && $method === 'POST'){
 		$body_str = addcslashes($body_str, "'");
