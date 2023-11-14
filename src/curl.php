@@ -94,6 +94,7 @@ function curl_delete($url, $data, array $curl_option = []){
 function curl_execute($ch){
 	$raw_string = curl_exec($ch);
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+	$curl_info['info'] = curl_getinfo($ch);
 	$curl_info['head'] = substr($raw_string, 0, $header_size);
 	$curl_info['body'] = substr($raw_string, $header_size);
 	curl_close($ch);
