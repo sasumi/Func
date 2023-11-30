@@ -39,7 +39,7 @@ function curl_post($url, $data = null, array $curl_option = []){
 /**
  * JSON方式POST请求
  * @param string $url
- * @param null $data
+ * @param mixed $data
  * @param array $curl_option
  * @return array
  * @throws \Exception
@@ -56,6 +56,32 @@ function curl_post_json($url, $data = null, array $curl_option = []){
 		CURLOPT_ENCODING       => '', //开启gzip等编码支持
 	], $curl_option);
 	return curl_post($url, $data, $curl_option);
+}
+
+/**
+ * curl post 提交文件
+ * @param string $url
+ * @param array $file_map [filename=>filepath,...]
+ * @param mixed $ext_param 同时提交的其他post参数
+ * @param array $curl_option curl选项
+ * @return array curl_execute返回结果，包含 [info=>[], head=>'', body=>''] 信息
+ */
+function curl_post_file($url, array $file_map, array $ext_param = [], array $curl_option = []){
+	foreach($file_map as $name => $file){
+		if(!is_file($file)){
+			throw new Exception('file no found:'.$file);
+		}
+		$ext_param[$name] = curl_file_create($file);
+	}
+	$curl_option = curl_merge_options([
+		CURLOPT_POST           => true,
+		CURLOPT_POSTFIELDS     => $ext_param,
+		CURLOPT_FOLLOWLOCATION => true, //允许重定向
+		CURLOPT_MAXREDIRS      => 3, //最多允许3次重定向
+		CURLOPT_ENCODING       => '', //开启gzip等编码支持
+	], $curl_option);
+	$ch = curl_instance($url, $curl_option);
+	return curl_execute($ch);
 }
 
 /**
@@ -91,8 +117,9 @@ function curl_delete($url, $data, array $curl_option = []){
 }
 
 /**
+ * 执行curl，并关闭curl连接
  * @param resource $ch
- * @return array [head, body, ...] curl_getinfo信息
+ * @return array [info=>[], head=>'', body=>''] curl_getinfo信息
  */
 function curl_execute($ch){
 	$raw_string = curl_exec($ch);
