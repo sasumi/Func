@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * crontab相关操作函数
+ */
 namespace LFPhp\Func;
 
 use Exception;

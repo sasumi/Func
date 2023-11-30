@@ -1,4 +1,7 @@
 <?php
+/**
+ * 平台函数相关操作函数
+ */
 namespace LFPhp\Func;
 
 use Exception;

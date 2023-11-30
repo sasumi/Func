@@ -1,4 +1,7 @@
 <?php
+/**
+ * CSP相关操作函数
+ */
 namespace LFPhp\Func;
 
 const CSP_PREFIX = 'Content-Security-Policy';

@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * CURL网络请求相关操作函数
+ */
 namespace LFPhp\Func;
 
 use Exception;

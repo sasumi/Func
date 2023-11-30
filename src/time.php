@@ -1,9 +1,6 @@
 <?php
 /**
  * 时间相关操作函数
- * User: sasumi
- * Date: 17/7/17
- * Time: 22:13
  */
 namespace LFPhp\Func;
 

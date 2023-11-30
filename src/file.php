@@ -1,9 +1,6 @@
 <?php
 /**
  * 文件相关操作函数
- * User: sasumi
- * Date: 2015/5/8
- * Time: 14:07
  */
 namespace LFPhp\Func;
 

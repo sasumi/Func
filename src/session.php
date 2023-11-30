@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * session 相关操作函数
+ */
 namespace LFPhp\Func;
 
 /**

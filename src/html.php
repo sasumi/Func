@@ -3,7 +3,6 @@
  * Html 快速操作函数
  */
 namespace LFPhp\Func;
-
 use Exception;
 
 const HTML_SELF_CLOSING_TAGS = [

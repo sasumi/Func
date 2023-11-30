@@ -1,11 +1,10 @@
 <?php
-
-namespace LFPhp\Func;
 /**
- * CSV 相关操作函数
+ * CSV、电子表格相关操作函数
  * 如果正常开放性业务，建议使用 XLSXBuilder (https://github.com/sasumi/XLSXBuilder)
  * 或类似处理excel的其他技术方案。
  */
+namespace LFPhp\Func;
 
 /**
  * 获取Excel等电子表格中列名

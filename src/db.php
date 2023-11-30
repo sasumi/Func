@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * 数据库操作（PDO）相关操作函数
+ */
 namespace LFPhp\Func;
 
 use Exception;
