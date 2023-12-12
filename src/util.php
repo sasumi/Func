@@ -82,8 +82,8 @@ function printable($var, &$print_str = ''){
 /**
  * 打印异常信息
  * @param \Exception $ex
- * @param bool $include_external_properties
- * @param bool $as_return
+ * @param bool $include_external_properties 是否包含额外异常信息
+ * @param bool $as_return 是否以返回方式（不打印异常）处理
  * @return string
  */
 function print_exception(Exception $ex, $include_external_properties = false, $as_return = false){
