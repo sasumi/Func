@@ -461,8 +461,8 @@ function log_tmp_file($filename, $content, $max_size = 10*1024*1024, $max_files 
  */
 function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
 	$dir = $dir ?: sys_get_temp_dir();
-	if(!is_dir($dir)){
-		mkdir($dir, true);
+	if(!is_dir($dir) && !mkdir($dir, true)){
+		throw new Exception('temp file directory create fail:'.$dir);
 	}
 	$file_name = $dir.'/'.$prefix.substr(md5(time().rand()), 0, 16).$ext;
 	$fp = fopen($file_name, 'a');
