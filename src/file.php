@@ -450,3 +450,23 @@ function log_tmp_file($filename, $content, $max_size = 10*1024*1024, $max_files 
 	$file = $tmp_dir.'/'.$filename;
 	return log($file, $content, $max_size, $max_files, $pad_str);
 }
+
+/**
+ * 创建临时文件
+ * @param string $dir 文件所在目录
+ * @param string $prefix 文件名前缀
+ * @param string $ext 文件名后缀
+ * @param numeric $mod 权限，缺省为777
+ * @return string
+ */
+function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
+	$dir = $dir ?: sys_get_temp_dir();
+	if(!is_dir($dir)){
+		mkdir($dir, true);
+	}
+	$file_name = $dir.'/'.$prefix.substr(md5(time().rand()), 0, 16).$ext;
+	$fp = fopen($file_name, 'a');
+	fclose($fp);
+	chmod($file_name, $mod);
+	return $file_name;
+}
