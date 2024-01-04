@@ -603,6 +603,27 @@ function underscores_to_pascalcase($str, $capitalize_first = false){
 }
 
 /**
+ * 安全地解析json字符串，错误则抛出异常。
+ * 建议在业务代码中代替使用php原生的json_decode。
+ * @param string $str
+ * @param bool $associative
+ * @param int $depth
+ * @param int $flags
+ * @return mixed
+ * @throws \Exception
+ */
+function json_decode_safe($str, $associative = false, $depth = 512, $flags = 0){
+	if(!is_string($str)){
+		throw new Exception('json decode fail: parameter {$str} is no string type.');
+	}
+	$ret = @json_decode($str, $associative, $depth, $flags);
+	if(json_last_error()){
+		throw new Exception('json decode fail: '.json_last_error_msg());
+	}
+	return $ret;
+}
+
+/**
  * PHP URL encoding/decoding functions for Javascript interaction V3.0
  * (C) 2006 www.captain.at - all rights reserved
  * License: GPL

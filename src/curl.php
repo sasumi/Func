@@ -190,6 +190,11 @@ function curl_instance($url, array $curl_option){
 
 	//设置缺省参数
 	$curl_option = curl_merge_options($opt, $curl_option);
+	if($curl_option['USE_COOKIE']){
+		$curl_option[CURLOPT_COOKIEJAR] = //连接结束后保存cookie信息的文件。
+		$curl_option[CURLOPT_COOKIEFILE] = $curl_option['USE_COOKIE'];//包含cookie数据的文件名，cookie文件的格式可以是Netscape格式，或者只是纯HTTP头部信息存入文件。
+		unset($curl_option['USE_COOKIE']);
+	}
 
 	$sys_max_exe_time = ini_get('max_execution_time');
 	if($sys_max_exe_time && $curl_option[CURLOPT_TIMEOUT] && $curl_option[CURLOPT_TIMEOUT] > $sys_max_exe_time){
@@ -197,12 +202,7 @@ function curl_instance($url, array $curl_option){
 	}
 	$curl = curl_init();
 	foreach($curl_option as $k => $val){
-		if($k == 'USE_COOKIE'){
-			curl_setopt($curl, CURLOPT_COOKIEJAR, $val);    //连接结束后保存cookie信息的文件。
-			curl_setopt($curl, CURLOPT_COOKIEFILE, $val);   //包含cookie数据的文件名，cookie文件的格式可以是Netscape格式，或者只是纯HTTP头部信息存入文件。
-		}else{
-			curl_setopt($curl, $k, $val);
-		}
+		curl_setopt($curl, $k, $val);
 	}
 	return $curl;
 }
@@ -306,4 +306,133 @@ function http_parse_headers($header_str){
 		}
 	}
 	return $headers;
+}
+
+/**
+ * 转换CURL选项到标准HTTP头信息
+ * @param array $options
+ * @return string[] array
+ */
+function curl_option_to_request_header($options){
+	$headers = [];
+	$simple_mapping = [
+		CURLOPT_USERAGENT       => 'User-Agent',
+		CURLOPT_ACCEPT_ENCODING => 'Accept-Encoding',
+		CURLOPT_COOKIE          => 'Cookie',
+	];
+	$http_version_mapping = [
+		CURL_HTTP_VERSION_1_0 => 'HTTP/1.0',
+		CURL_HTTP_VERSION_1_1 => 'HTTP/1.1',
+		CURL_HTTP_VERSION_2_0 => 'HTTP/2.0',
+	];
+	foreach($options as $opt => $mix_values){
+		switch($opt){
+			case $simple_mapping[$opt]:
+				$headers[$simple_mapping[$opt]] = $mix_values;
+				break;
+			case CURLOPT_URL:
+				$url_info = parse_url($options[CURLOPT_URL]);
+				$headers['Host'] = $url_info['host'];
+				$headers['Origin'] = $url_info['scheme']."://".$url_info['host'];
+				break;
+			case CURLOPT_POST:
+				$headers['Content-Type'] = 'application/x-www-form-urlencoded';
+				break;
+			case CURLOPT_HTTPHEADER:
+				foreach($mix_values as $mv){
+					list($k, $v) = explode_by(':', $mv);
+					$headers[$k] = $v;
+				}
+				break;
+			case CURLOPT_POSTFIELDS:
+				$headers['Content-Length'] = strlen($mix_values);
+				break;
+			case CURLOPT_HTTP_VERSION:
+				$http_ver = $http_version_mapping[$mix_values];
+				$headers['http'] = $http_ver ?: null;
+				break;
+			default:
+				break;
+		}
+	}
+	return $headers;
+}
+
+/**
+ * 转换CURL信息到HAR格式文件
+ * @todo
+ * @param array $curl_options
+ * @param array $curl_info
+ * @param $response_header
+ * @param $response_body
+ * @return void
+ */
+function curl_to_har(array $curl_options, array $curl_info, $response_header, $response_body){
+	$start_time = '';
+	$json = [
+		'log'     => [
+			'version' => '1.2',
+			'creator' => [
+				'name'    => 'WebInspector',
+				'version' => '537.36',
+			],
+		],
+		'pages'   => [],
+		'entries' => [
+			[
+				'startDateTime' => date('j', $start_time),
+				'time'          => $start_time,
+				'request'       => [
+					'method'      => $curl_options[CURLOPT_POST],
+					'url'         => $curl_options[CURLOPT_URL],
+					'httpVersion' => 'http/1.0',
+					'headers'     => [
+						['name' => 'User-Agent', 'value' => $curl_options[CURLOPT_USERAGENT]],
+						['name' => 'Accept', 'value' => $curl_options[CURLOPT_USERAGENT]],
+						['name' => 'Accept-Encoding', 'value' => $curl_options[CURLOPT_USERAGENT]],
+						['name' => 'Accept-Language', 'value' => $curl_options[CURLOPT_USERAGENT]],
+						['name' => 'Cache-Control', 'value' => $curl_options[CURLOPT_USERAGENT]],
+						['name' => 'Connection', 'value' => 'keep-alive'],
+						['name' => 'Host', 'value' => 'host'],
+					],
+					'queryString' => [],
+					'cookies'     => [],
+					'headersSize' => 0,
+					'bodySize'    => 0,
+				],
+				'response'      => [
+					"status"      => 200,
+					"statusText"  => "OK",
+					"httpVersion" => "HTTP/1.1",
+					'headers'     => [
+
+					],
+					'content'     => [
+						'size'          => 33,
+						'mimeType'      => 'text/html',
+						'compression'   => 333,
+						'text'          => 'dfasdfasdf',
+						"redirectURL"   => "",
+						"headersSize"   => 408,
+						"bodySize"      => 1473,
+						"_transferSize" => 1881,
+						"_error"        => null,
+					],
+				],
+
+				"serverIPAddress" => "127.0.0.1",
+				"startedDateTime" => "2023-12-19T05:34:31.467Z",
+				"timings"         => [
+					"blocked"           => 2.5149999914132057,
+					"dns"               => -1,
+					"ssl"               => -1,
+					"connect"           => -1,
+					"send"              => 0.11099999999999999,
+					"wait"              => 1.749999976620078,
+					"receive"           => 0.438000017311424,
+					"_blocked_queueing" => 1.7799999914132059,
+				],
+			],
+		],
+	];
 }
