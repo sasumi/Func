@@ -733,9 +733,11 @@ function launch_daemon_task($payload, $id = null, $keep_alive_timeout = 600, $ki
 			unlink($process_file);
 			exit;
 		}
+		$ms = memory_get_usage(true);
 		file_put_contents($process_file, json_encode([
 			'pid'         => $pid,
 			'id'          => $id,
+			'mem'         => format_size($ms)."($ms)",
 			'last_update' => date('Y-m-d H:i:s'),
 		], JSON_UNESCAPED_UNICODE));
 	};
