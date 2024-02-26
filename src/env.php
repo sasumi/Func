@@ -226,7 +226,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
-	$str = "\r".str_pad($index.'',strlen($total.''),'0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
+	$str = "\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
 	$max_length = $max_length ?: strlen($str) + 20;
 	$str = str_pad($str, $max_length, ' ', STR_PAD_RIGHT);
 	echo $str;
@@ -649,8 +649,7 @@ function unix_get_port_usage(){
 				'process_file_id' => $process_file_id,
 				'process_name'    => $process_name,
 			];
-		}
-		//不包含State格式:     Pro     RecV     Send    LAddr   FAdd    PID/P tail
+		}//不包含State格式:     Pro     RecV     Send    LAddr   FAdd    PID/P tail
 		elseif(preg_match("/^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+).*$/", $row, $matches)){
 			$pid = $process_name = $process_file_id = null;
 			if(strpos($matches[6], '/')){
@@ -669,8 +668,7 @@ function unix_get_port_usage(){
 				'process_file_id' => $process_file_id,
 				'process_name'    => $process_name,
 			];
-		}
-		else{
+		}else{
 			break;
 		}
 	}
@@ -693,4 +691,65 @@ function get_screen_size(){
 		return [getenv('COLUMNS'), getenv('ROWS')];
 	}
 	return null;
+}
+
+/**
+ * kill process
+ * @param number $pid
+ * @param numeric $sig_num
+ * @return bool
+ */
+function pkill($pid, $sig_num = 0){
+	if(function_exists("posix_kill")){
+		return posix_kill($pid, $sig_num);
+	}
+	if(server_in_windows()){
+		exec("taskkill /PID $pid", $junk, $return_code);
+	}else{
+		exec("kill -s $sig_num $pid 2>&1", $junk, $return_code);
+	}
+	return !$return_code;
+}
+
+/**
+ * 启动守护进程
+ * 可以通过添加crontab启动命令，来确保任务不会因为假死、被杀等原因无法启动
+ * @param callable $payload 处理逻辑，入参1为心跳函数，调用者必须周期性调用，避免程序被判定为休眠
+ * @param int $keep_alive_timeout 保活时效（秒）
+ * @param string $id 处理函数唯一ID
+ * @return int 启动后的进程ID，如果原来的进程没有超时，返回原来进程ID
+ * @throws \Exception
+ */
+function launch_daemon_task($payload, $id = null, $keep_alive_timeout = 600, $kill_ontimeout = true){
+	$id = $id ?: md5($_SERVER['SCRIPT_FILENAME']);
+	$pid = getmypid();
+	$check_dir = sys_get_temp_dir().'/daemon_task_launcher';
+	if(!is_dir($check_dir) && !mkdir($check_dir)){
+		throw new Exception('launch daemon task failure, temptation directory create fail:'.$check_dir);
+	}
+	$process_file = $check_dir.'/'.$id.'.log';
+	$heartbeat = function($ending = false) use ($process_file, $pid, $id){
+		if($ending){
+			unlink($process_file);
+			exit;
+		}
+		file_put_contents($process_file, json_encode([
+			'pid'         => $pid,
+			'id'          => $id,
+			'last_update' => date('Y-m-d H:i:s'),
+		], JSON_UNESCAPED_UNICODE));
+	};
+	if(is_file($process_file)){
+		$p_obj = json_decode(file_get_contents($process_file), true);
+		$e_pid = $p_obj['pid'];
+		if((strtotime($p_obj['last_update']) + $keep_alive_timeout) > time()){ //仍然处于活动状态
+			return $e_pid;
+		}
+		if($kill_ontimeout && !pkill($e_pid, 0)){
+			return false;
+		}
+	}
+	$heartbeat();
+	$payload($heartbeat);
+	return $pid;
 }
