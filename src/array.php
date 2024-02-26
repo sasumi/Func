@@ -21,10 +21,11 @@ const ARRAY_POSING_LAST = 0x004;
 /**
  * Array group by function
  * group array(); by by_key
- * @param array $array
- * @param string $by_key
+ *
+ * @param array $array 数组
+ * @param string $by_key 合并key字符串
  * @param boolean $force_unique
- * @return array $array handle result
+ * @return array handle result
  */
 function array_group($array, $by_key, $force_unique = false){
 	if(empty ($array) || !is_array($array)){

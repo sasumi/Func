@@ -349,6 +349,16 @@ function xml_special_chars($val){
 }
 
 /**
+ * 移除 UTF-8 BOM头
+ * @param string $text
+ * @return string
+ */
+function remove_utf8_bom($text){
+	$bom = pack('H*', 'EFBBBF');
+	return preg_replace("/^$bom/", '', $text);
+}
+
+/**
  * 数字金额转换成中文大写金额的函数
  * @param int $num 要转换的小写数字或小写字符串（单位：元）
  * @return string

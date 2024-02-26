@@ -25,7 +25,8 @@
 		"ext-pdo": "*"
 	},
 	"require-dev": {
-		"ext-ssh2": "*"
+		"ext-ssh2": "*",
+		"jasny/phpdoc-parser": "^1.0"
 	},
 	"suggested": {
 		"ext-openssl": "*"

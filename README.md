@@ -20,5 +20,7 @@ composer require lfphp/func --ignore-platform-reqs
 ```
 具体使用方法请参考具体函数代码。
 
+[详细函数列表](functions.md)
+
 ## 获取最新版本库
 https://github.com/sasumi/Func
