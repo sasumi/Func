@@ -214,39 +214,65 @@ function file_lines($file, $line_separator = "\n"){
 }
 
 /**
- * 回溯读取文件
- * @param string $file 文件
- * @param callable $callback 行处理函数
- * @param int $line_limit
- * @param string $line_separator 换行符
+ * 文件tail功能
+ * @param string|resource $file
+ * @param int $lines 读取行数
+ * @param int $buffer 缓冲大小
+ * @return string[] 每一行内容
+ * @throws \Exception
  */
-function tail($file, callable $callback, $line_limit = 0, $line_separator = "\n"){
-	$file_size = filesize($file);
-	$fp = fopen($file, 'rb');
-	$offset = 0;
-	$text = '';
-	$line_count = 0;
-	while(($offset++) < $file_size){
-		if(fseek($fp, -$offset, SEEK_END) === -1){
-			break;
-		}
-		$t = fgetc($fp);
-		if($t === $line_separator){
-			//中断支持
-			if($callback($text) === false){
-				break;
-			};
-			$text = '';
-
-			//行数限制
-			if($line_limit && $line_count++ > $line_limit){
-				break;
-			}
-		}else{
-			$text = $t.$text;
-		}
+function tail($file, $lines = 10, $buffer = 4096){
+	$TAIL_NL = "\n";
+	// Open the file
+	if(is_resource($file) && (get_resource_type($file) == 'file' || get_resource_type($file) == 'stream')){
+		$f = $file;
+	}elseif(is_string($file)){
+		$f = fopen($file, 'rb');
+	}else{
+		throw new Exception('$file must be either a resource (file or stream) or a filename.');
 	}
-	fclose($fp);
+
+	// Jump to last character
+	fseek($f, -1, SEEK_END);
+
+	// Prepare to collect output
+	$output = '';
+	$chunk = '';
+
+	// Start reading it and adjust line number if necessary
+	// (Otherwise the result would be wrong if file doesn't end with a blank line)
+	if(fread($f, 1) != $TAIL_NL){
+		$lines -= 1;
+	}
+
+	// While we would like more
+	while(ftell($f) > 0 && $lines >= 0){
+		// Figure out how far back we should jump
+		$seek = min(ftell($f), $buffer);
+
+		// Do the jump (backwards, relative to where we are)
+		fseek($f, -$seek, SEEK_CUR);
+
+		// Read a chunk and prepend it to our output
+		$output = ($chunk = fread($f, $seek)).$output;
+
+		// Jump back to where we started reading
+		fseek($f, -mb_strlen($chunk, '8bit'), SEEK_CUR);
+
+		// Decrease our line counter
+		$lines -= substr_count($chunk, $TAIL_NL);
+	}
+
+	// While we have too many lines
+	// (Because of buffer size we might have read too many)
+	while($lines++ < 0){
+		// Find first newline and remove all text before that
+		$output = substr($output, strpos($output, $TAIL_NL) + 1);
+	}
+
+	// Close file and return
+	fclose($f);
+	return explode($TAIL_NL, $output);
 }
 
 /**
