@@ -1,24 +1,28 @@
 <?php
 
-use function LFPhp\Func\launch_daemon_task;
+use function LFPhp\Func\daemon_process_alive;
+use function LFPhp\Func\daemon_process_keepalive;
+use function LFPhp\Func\process_signal;
+use const LFPhp\Func\DAEMON_PROCESS_STATE_PATH;
 
 include __DIR__.'/../vendor/autoload.php';
 
-function html_console_out(...$msg_list){
-	$json_str_list = [];
-	foreach($msg_list as $msg){
-		$json_str_list[] = json_encode($msg, JSON_UNESCAPED_UNICODE);
-	}
-	file_put_contents(sys_get_temp_dir().'/daemon_task_launcher/runtime.log', date('Y-m-d H:i:s ').join(',', $json_str_list).PHP_EOL, FILE_APPEND);
-	flush();
+echo 'PATH:', DAEMON_PROCESS_STATE_PATH, PHP_EOL;
+
+if($e_pid = daemon_process_alive()){
+	die("process already running:".$e_pid);
 }
 
-$pid = launch_daemon_task(function($heartbeat){
-	while(true){
-		sleep(2);
-		$heartbeat(false);
-		html_console_out("next loop");
-	}
-}, 'daemon_test', 10);
+!defined('SIGTERM') && define('SIGTERM', 15);
 
-echo 'task start, pid:'.$pid;
+echo "start new process:".getmypid(), PHP_EOL;
+
+while(true){
+	sleep(2);
+	echo date('Y-m-d H:i:s'), " next loop", PHP_EOL;
+	process_signal(SIGTERM, function(){
+		echo "exit normal";
+		die;
+	});
+	daemon_process_keepalive();
+}

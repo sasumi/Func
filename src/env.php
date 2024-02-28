@@ -694,64 +694,124 @@ function get_screen_size(){
 }
 
 /**
- * kill process
- * @param number $pid
- * @param numeric $sig_num
+ * 杀死进程
+ * @param int $pid 进程ID
  * @return bool
  */
-function pkill($pid, $sig_num = 0){
+function process_kill($pid){
 	if(function_exists("posix_kill")){
-		return posix_kill($pid, $sig_num);
+		return posix_kill($pid, 9);
 	}
 	if(server_in_windows()){
 		exec("taskkill /PID $pid", $junk, $return_code);
 	}else{
-		exec("kill -s $sig_num $pid 2>&1", $junk, $return_code);
+		exec("kill -s 9 $pid 2>&1", $junk, $return_code);
 	}
 	return !$return_code;
 }
 
 /**
- * 启动守护进程
- * 可以通过添加crontab启动命令，来确保任务不会因为假死、被杀等原因无法启动
- * @param callable $payload 处理逻辑，入参1为心跳函数，调用者必须周期性调用，避免程序被判定为休眠
- * @param int $keep_alive_timeout 保活时效（秒）
- * @param string $id 处理函数唯一ID
- * @return int 启动后的进程ID，如果原来的进程没有超时，返回原来进程ID
+ * 检测指定进程是否运行中
+ * @param int $pid 进程ID
+ * @return bool
+ */
+function process_running($pid){
+	if(server_in_windows()){
+		$out = [];
+		exec("TASKLIST /FO LIST /FI \"PID eq $pid\"", $out);
+		return count($out) > 1;
+	}
+	elseif(function_exists("posix_kill")){
+		return posix_kill($pid, 0);
+	}
+	return false;
+}
+
+/**
+ * 进程信号监听
+ * @param $signal
+ * @param $handle
+ * @return bool
  * @throws \Exception
  */
-function launch_daemon_task($payload, $id = null, $keep_alive_timeout = 600, $kill_ontimeout = true){
-	$id = $id ?: md5($_SERVER['SCRIPT_FILENAME']);
+function process_signal($signal, $handle){
+	if(!function_exists('pcntl_signal')){
+		throw new Exception('pcntl_signal function no supported, ext-_signal required.');
+	}
+	return pcntl_signal($signal, $handle);
+}
+
+/**
+ * 发送进程信号量
+ * @param int $pid 进程ID
+ * @param int $sig_num 信号量
+ * @return bool
+ */
+function process_send_signal($pid, $sig_num){
+	if(function_exists("posix_kill")){
+		return posix_kill($pid, $sig_num);
+	}
+	exec("/usr/bin/kill -s $sig_num $pid 2>&1", $junk, $return_code);
+	return !$return_code;
+}
+
+/**
+ * 守护进程状态保存目录
+ */
+if(!defined(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH')){
+	define(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH', sys_get_temp_dir().'/daemon_task_process');
+}
+
+/**
+ * 检测守护进程是否正常
+ * @param string $id 任务ID
+ * @param int $expired_seconds 超时时间
+ * @param bool $kill_expired 是否杀死过期进程
+ * @return false|int 返回活动进程ID
+ * @throws \Exception
+ */
+function daemon_process_alive($id = '', $expired_seconds = 30, $kill_expired = false){
+	if(!$id){
+		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
+	}
+	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
+		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
+	}
+	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
+	if(!is_file($state_file) || !filesize($state_file)){
+		return false;
+	}
+	$state_info = json_decode_safe(file_get_contents($state_file), true);
+	$e_pid = $state_info['pid'];
+	if((strtotime($state_info['last_update']) + $expired_seconds) > time() && process_running($e_pid)){ //仍然处于活动状态
+		return $e_pid;
+	}
+	if($kill_expired){
+		@process_kill($e_pid);
+	}
+	return false;
+}
+
+/**
+ * 守护进程心跳函数
+ * @param string $id 任务ID
+ * @return void
+ * @throws \Exception
+ */
+function daemon_process_keepalive($id = ''){
+	if(!$id){
+		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
+	}
+	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
+		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
+	}
+	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
 	$pid = getmypid();
-	$check_dir = sys_get_temp_dir().'/daemon_task_launcher';
-	if(!is_dir($check_dir) && !mkdir($check_dir)){
-		throw new Exception('launch daemon task failure, temptation directory create fail:'.$check_dir);
-	}
-	$process_file = $check_dir.'/'.$id.'.log';
-	$heartbeat = function($ending = false) use ($process_file, $pid, $id){
-		if($ending){
-			unlink($process_file);
-			exit;
-		}
-		$ms = memory_get_usage(true);
-		file_put_contents($process_file, json_encode([
-			'pid'         => $pid,
-			'id'          => $id,
-			'mem'         => format_size($ms)."($ms)",
-			'last_update' => date('Y-m-d H:i:s'),
-		], JSON_UNESCAPED_UNICODE));
-	};
-	if(is_file($process_file)){
-		$p_obj = json_decode(file_get_contents($process_file), true);
-		$e_pid = $p_obj['pid'];
-		if((strtotime($p_obj['last_update']) + $keep_alive_timeout) > time()){ //仍然处于活动状态
-			return $e_pid;
-		}
-		if($kill_ontimeout && !pkill($e_pid, 0)){
-			return false;
-		}
-	}
-	$heartbeat();
-	$payload($heartbeat);
-	return $pid;
+	$mem_usg = memory_get_usage(true);
+	file_put_contents($state_file, json_encode([
+		'pid'         => $pid,
+		'id'          => $id,
+		'mem'         => format_size($mem_usg)."($mem_usg)",
+		'last_update' => date('Y-m-d H:i:s'),
+	], JSON_UNESCAPED_UNICODE));
 }
