@@ -763,6 +763,18 @@ if(!defined(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH')){
 }
 
 /**
+ * 守护进程缺省ID
+ * @param string $id
+ * @return string
+ */
+function daemon_process_id_default($id = ''){
+	if(!$id){
+		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
+	}
+	return $id;
+}
+
+/**
  * 检测守护进程是否正常
  * @param string $id 任务ID
  * @param int $expired_seconds 超时时间
@@ -771,9 +783,7 @@ if(!defined(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH')){
  * @throws \Exception
  */
 function daemon_process_alive($id = '', $expired_seconds = 30, $kill_expired = false){
-	if(!$id){
-		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
-	}
+	$id = daemon_process_id_default($id);
 	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
 		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
 	}
@@ -795,13 +805,10 @@ function daemon_process_alive($id = '', $expired_seconds = 30, $kill_expired = f
 /**
  * 守护进程心跳函数
  * @param string $id 任务ID
- * @return void
  * @throws \Exception
  */
 function daemon_process_keepalive($id = ''){
-	if(!$id){
-		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
-	}
+	$id = daemon_process_id_default($id);
 	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
 		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
 	}
@@ -814,4 +821,18 @@ function daemon_process_keepalive($id = ''){
 		'mem'         => format_size($mem_usg)."($mem_usg)",
 		'last_update' => date('Y-m-d H:i:s'),
 	], JSON_UNESCAPED_UNICODE));
+}
+
+/**
+ * 标记守护进程为退出状态
+ * @param string $id
+ * @return bool
+ */
+function daemon_process_mark_exit($id = ''){
+	$id = daemon_process_id_default($id);
+	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
+	if($state_file){
+		return unlink($state_file);
+	}
+	return false;
 }

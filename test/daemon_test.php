@@ -2,6 +2,7 @@
 
 use function LFPhp\Func\daemon_process_alive;
 use function LFPhp\Func\daemon_process_keepalive;
+use function LFPhp\Func\daemon_process_mark_exit;
 use function LFPhp\Func\process_signal;
 use const LFPhp\Func\DAEMON_PROCESS_STATE_PATH;
 
@@ -22,7 +23,12 @@ while(true){
 	echo date('Y-m-d H:i:s'), " next loop", PHP_EOL;
 	process_signal(SIGTERM, function(){
 		echo "exit normal";
+		daemon_process_mark_exit();
 		die;
 	});
+	if(rand(0, 10) == 3){
+		daemon_process_mark_exit(); //主动退出
+		break;
+	}
 	daemon_process_keepalive();
 }
