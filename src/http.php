@@ -219,15 +219,19 @@ function http_get_current_page_url($with_protocol = true, $with_port = false){
  * @throws \Exception
  */
 function http_download_stream($file, $download_name = '', $disposition = 'attachment'){
-	if(!($hd = fopen($file, 'r'))){
-		throw new Exception('file open fail');
-	}
 	http_header_download($download_name, $disposition);
-	while(!feof($hd)){
-		fgetc($hd);
-		echo fgets($hd, 1024);
-	}
-	fclose($hd);
+	echo file_get_contents($file);
+	exit;
+	//以下方法会丢失 BOM 头一个字节
+	//	if(!($hd = fopen($file, 'r'))){
+	//		throw new Exception('file open fail');
+	//	}
+	//	http_header_download($download_name, $disposition);
+	//	while(!feof($hd)){
+	//		fgetc($hd);
+	//		echo fgets($hd, 1024);
+	//	}
+	//	fclose($hd);
 }
 
 /**
