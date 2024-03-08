@@ -172,6 +172,27 @@ function copy_recursive($src, $dst){
 }
 
 /**
+ * 批量创建目录
+ * @param string[] $dirs 目录路径列表
+ * @param bool $break_on_error 是否在创建失败时抛出异常
+ * @param int $permissions 目录缺省权限
+ * @return string[] 创建失败的目录清单，成功则返回空数组
+ * @throws \Exception
+ */
+function mkdir_batch($dirs, $break_on_error = true, $permissions = 0x777){
+	$errors = [];
+	foreach($dirs as $dir){
+		if(!is_dir($dir) && !mkdir($dir, $permissions, true)){
+			if($break_on_error){
+				throw new Exception('mkdir fail:'.$dir);
+			}
+			$errors[] = $dir;
+		}
+	}
+	return $errors;
+}
+
+/**
  * 获取模块文件夹列表
  * @param string $dir
  * @return array

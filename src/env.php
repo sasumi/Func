@@ -763,6 +763,25 @@ if(!defined(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH')){
 }
 
 /**
+ * 重播当前脚本命令
+ * @return false|int 返回新开启的进程ID，false 为失败返回
+ */
+function replay_current_script(){
+	$cmd = "php ".join(' ', $_SERVER['argv']);
+	$descriptors_pec = array(
+		0 => array("pipe", "r"),
+		1 => array("pipe", "w"),
+		2 => array("pipe", "w"),
+	);
+	$process = proc_open($cmd, $descriptors_pec, $pipes, realpath('./'), $_SERVER);
+	if(is_resource($process)){
+		$status = proc_get_status($process);
+		return $status['pid'];
+	}
+	return false;
+}
+
+/**
  * 守护进程缺省ID
  * @param string $id
  * @return string

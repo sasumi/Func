@@ -4,6 +4,7 @@ use function LFPhp\Func\daemon_process_alive;
 use function LFPhp\Func\daemon_process_keepalive;
 use function LFPhp\Func\daemon_process_mark_exit;
 use function LFPhp\Func\process_signal;
+use function LFPhp\Func\replay_current_script;
 use const LFPhp\Func\DAEMON_PROCESS_STATE_PATH;
 
 include __DIR__.'/../vendor/autoload.php';
@@ -18,6 +19,8 @@ if($e_pid = daemon_process_alive()){
 
 echo "start new process:".getmypid(), PHP_EOL;
 
+replay_current_script();
+
 while(true){
 	sleep(2);
 	echo date('Y-m-d H:i:s'), " next loop", PHP_EOL;
@@ -26,6 +29,7 @@ while(true){
 		daemon_process_mark_exit();
 		die;
 	});
+
 	if(rand(0, 10) == 3){
 		daemon_process_mark_exit(); //主动退出
 		break;
