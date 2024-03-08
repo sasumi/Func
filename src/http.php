@@ -213,25 +213,31 @@ function http_get_current_page_url($with_protocol = true, $with_port = false){
 
 /**
  * 文件流方式下载文件
- * @param string $file
- * @param string $download_name
- * @param string $disposition
- * @throws \Exception
+ * @param string $file 文件路径
+ * @param string $download_name 下载文件名
+ * @param string $disposition 头类型
+ * @return false|int 成功下载文件尺寸，false为失败
  */
 function http_download_stream($file, $download_name = '', $disposition = 'attachment'){
 	http_header_download($download_name, $disposition);
-	echo file_get_contents($file);
-	exit;
-	//以下方法会丢失 BOM 头一个字节
-	//	if(!($hd = fopen($file, 'r'))){
-	//		throw new Exception('file open fail');
-	//	}
-	//	http_header_download($download_name, $disposition);
-	//	while(!feof($hd)){
-	//		fgetc($hd);
-	//		echo fgets($hd, 1024);
-	//	}
-	//	fclose($hd);
+	$CHUNK_SIZE = 1024*1024;
+	$handle = fopen($file, 'rb');
+	if($handle === false){
+		return false;
+	}
+	$cnt = 0;
+	while(!feof($handle)){
+		$buffer = fread($handle, $CHUNK_SIZE);
+		echo $buffer;
+		ob_flush();
+		flush();
+		$cnt += strlen($buffer);
+	}
+	$status = fclose($handle);
+	if($status){
+		return $cnt;
+	}
+	return false;
 }
 
 /**
