@@ -22,6 +22,25 @@ function tick_dump($step = 1, $fun = '\dump'){
 }
 
 /**
+ * 尝试调用函数
+ * @param callable $payload 处理函数，返回 FALSE 表示中断后续尝试
+ * @param int $tries 出错时额外尝试次数（不包含第一次正常执行）
+ * @return int 总尝试次数（不包含第一次正常执行）
+ */
+function try_many_times($payload, $tries = 0){
+	$tryCount = 0;
+	while($tryCount++ < $tries){
+		try{
+			if($payload() === false){
+				return $tryCount-1;
+			}
+		}catch(\Exception $e){
+		}
+	}
+	return $tryCount - 1;
+}
+
+/**
  * 程序调试函数
  * 调用方式：dump($var1, $var2, ..., 1) ，当最后一个数值为1时，表示退出（die）程序运行
  */
