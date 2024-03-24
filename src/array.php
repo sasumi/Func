@@ -115,6 +115,19 @@ function array_keys_exists(array $keys, array $arr){
 }
 
 /**
+ * 数组平铺
+ * @param array $arr
+ * @return array
+ */
+function array_flatten(array $arr){
+	$ret = [];
+	array_walk_recursive($arr, function($item) use (&$ret){
+		$ret[] = $item;
+	});
+	return $ret;
+}
+
+/**
  * 将多重数组值取出来，平铺成一维数组
  * @param array $arr
  * @param string $original_key

@@ -15,8 +15,6 @@ if($e_pid = daemon_process_alive()){
 	die("process already running:".$e_pid);
 }
 
-\LFPhp\Func\dump(SIGUSR1, 1);
-
 !defined('SIGTERM') && define('SIGTERM', 15);
 
 echo "start new process:".getmypid(), PHP_EOL;
