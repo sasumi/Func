@@ -782,76 +782,38 @@ function replay_current_script(){
 }
 
 /**
- * 守护进程缺省ID
- * @param string $id
- * @return string
+ * 守护进程锁定，用于处理守护类处理逻辑，提供避免重复运行、安全退出机制
+ * @param string $pid_lock_file 进程ID锁定文件
+ * @param callable $payload 处理函数，参数为 $still_alive 函数，处理函数内需要在逻辑循环结束或开始判断该函数返回。
+ * 如果该函数返回false表示锁定文件被清除或已经有其他守护进程启动，当前代码逻辑应当执行退出。
+ * @return int 退出原因标记，0：正常退出，1：已经存在进程ID锁定文件，无法启动处理函数，2：处理函数异常退出
  */
-function daemon_process_id_default($id = ''){
-	if(!$id){
-		$id = str_replace('.', '_', basename($_SERVER['SCRIPT_FILENAME']));
-	}
-	return $id;
-}
-
-/**
- * 检测守护进程是否正常
- * @param string $id 任务ID
- * @param int $expired_seconds 超时时间
- * @param bool $kill_expired 是否杀死过期进程
- * @return false|int 返回活动进程ID
- * @throws \Exception
- */
-function daemon_process_alive($id = '', $expired_seconds = 30, $kill_expired = false){
-	$id = daemon_process_id_default($id);
-	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
-		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
-	}
-	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
-	if(!is_file($state_file) || !filesize($state_file)){
-		return false;
-	}
-	$state_info = json_decode_safe(file_get_contents($state_file), true);
-	$e_pid = $state_info['pid'];
-	if((strtotime($state_info['last_update']) + $expired_seconds) > time() && process_running($e_pid)){ //仍然处于活动状态
-		return $e_pid;
-	}
-	if($kill_expired){
-		@process_kill($e_pid);
-	}
-	return false;
-}
-
-/**
- * 守护进程心跳函数
- * @param string $id 任务ID
- * @throws \Exception
- */
-function daemon_process_keepalive($id = ''){
-	$id = daemon_process_id_default($id);
-	if(!is_dir(DAEMON_PROCESS_STATE_PATH) && !mkdir(DAEMON_PROCESS_STATE_PATH)){
-		throw new Exception('launch daemon task failure, temptation directory create fail:'.DAEMON_PROCESS_STATE_PATH);
-	}
-	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
+const DAEMON_LOCK_EXIT_EXIST = 1;
+const DAEMON_LOCK_EXIT_NORMAL = 0;
+const DAEMON_LOCK_EXIT_EXCEPTION = 2;
+function daemon_lock($pid_lock_file, $payload){
 	$pid = getmypid();
-	$mem_usg = memory_get_usage(true);
-	file_put_contents($state_file, json_encode([
-		'pid'         => $pid,
-		'id'          => $id,
-		'mem'         => format_size($mem_usg)."($mem_usg)",
-		'last_update' => date('Y-m-d H:i:s'),
-	], JSON_UNESCAPED_UNICODE));
-}
-
-/**
- * 标记守护进程为退出状态
- * @param string $id
- * @return bool
- */
-function daemon_process_mark_exit($id = ''){
-	$id = daemon_process_id_default($id);
-	$state_file = DAEMON_PROCESS_STATE_PATH.'/'.$id;
-	if($state_file){
-		return unlink($state_file);
+	if(file_exists($pid_lock_file)){
+		return DAEMON_LOCK_EXIT_EXIST;
 	}
-	return false;
+	$PROCESS_LOCK_DIR = dirname($pid_lock_file);
+	if(!is_dir($PROCESS_LOCK_DIR)){
+		mkdir($PROCESS_LOCK_DIR);
+	}
+	file_put_contents($pid_lock_file, $pid);
+	try{
+		$still_alive = function() use ($pid_lock_file, $pid){
+			if(file_exists($pid_lock_file) && file_get_contents($pid_lock_file) == $pid){
+				touch($pid_lock_file);
+				return true;
+			}
+			return false;
+		};
+		$payload($still_alive);
+		return DAEMON_LOCK_EXIT_NORMAL;
+	}catch(Exception $e){
+		return DAEMON_LOCK_EXIT_EXCEPTION;
+	}finally{
+		@unlink($pid_lock_file);
+	}
 }
