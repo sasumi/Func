@@ -365,6 +365,22 @@ function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 }
 
 /**
+ * 构建Html日期输入框
+ * @param string $name
+ * @param string $time_str
+ * @param array $attributes
+ * @return string
+ */
+function html_tag_time($name, $time_str = '', $attributes = []){
+	$attributes['type'] = 'time';
+	$attributes['name'] = $name;
+	if($time_str){
+		$attributes['value'] = $time_str;
+	}
+	return html_tag('input', $attributes);
+}
+
+/**
  * 构建Html日期+时间输入框
  * @param string $name
  * @param string $datetime_or_timestamp
