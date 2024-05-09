@@ -746,9 +746,9 @@ function static_version_set(array $patch_config = []){
  */
 function static_version_patch($src, &$matched = false){
 	$config = static_version_set();
-	foreach($config as $k=>$version){
+	foreach($config as $k => $version){
 		$reg = static_version_statement_quote($k);
-		if(preg_match($reg, $src)){
+		if(preg_match($reg, $src) && $version){
 			$matched = true;
 			if(is_callable($version)){
 				return call_user_func($version, $src);
