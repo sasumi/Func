@@ -120,27 +120,27 @@ function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100
  * 保存CSV文件
   * @param string $file 文件路径
  * @param array $data
- * @param array $fields 字段列表，格式为：[field=>alias,...]
+ * @param array $field_map 字段别名映射列表，格式为：[field=>alias,...]
  */
-function save_csv($file, $data, array $fields = []){
+function save_csv($file, $data, array $field_map = []){
 	$fh = fopen($file, 'x');
 	csv_output(function($line) use ($fh){
 		fwrite($fh, $line);
-	}, $data, $fields);
+	}, $data, $field_map);
 	fclose($fh);
 }
 
 /**
  * 分块保存CSV文件
  * @param string $file 文件路径
- * @param callable $batch_fetcher
- * @param array $fields 字段列表，格式为：[field=>alias,...]
+ * @param callable $data_fetcher
+ * @param array $field_map 字段别名映射列表，格式为：[field=>alias,...]
  */
-function save_csv_chunk($file, callable $batch_fetcher, $fields = []){
+function save_csv_chunk($file, callable $data_fetcher, $field_map = []){
 	$fh = fopen($file, 'x');
 	csv_output_chunk(function($line) use ($fh){
 		fwrite($fh, $line);
-	}, $batch_fetcher, $fields);
+	}, $data_fetcher, $field_map);
 	fclose($fh);
 }
 
@@ -201,16 +201,16 @@ function csv_output(callable $output, array $data, array $fields = []){
 
 /**
  * 格式化CSV单元格内容
- * @param mixed $str
+ * @param mixed $val
  * @return string|array
  */
-function format_csv_ceil($str){
-	if(is_array($str)){
-		foreach($str as $k => $v){
-			$str[$k] = format_csv_ceil($v);
+function format_csv_ceil($val){
+	if(is_array($val)){
+		$ret = [];
+		foreach($val as $k => $item){
+			$ret[$k] = format_csv_ceil($item);
 		}
-		return $str;
+		return $ret;
 	}
-	$str = preg_replace("/\t/", "\\t", $str);
-	return preg_replace("/\r?\n/", "\\n", $str);
+	return '"'.str_replace('"', '""', $val).'"';
 }
