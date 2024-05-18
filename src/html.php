@@ -284,6 +284,20 @@ function html_tag_progress($value = null, $max = null, $attributes = []){
 }
 
 /**
+ * HTML <img> 标签
+ * @param $src
+ * @param $attributes
+ * @return string
+ */
+function html_tag_img($src, $attributes = [
+	//alt=>''
+	//loading='lazy'
+]){
+	$attributes['src'] = $src;
+	return html_tag('img', $attributes);
+}
+
+/**
  * Html循环滚动进度条
  * alias to htmlProgress
  * @param array $attributes

@@ -22,6 +22,21 @@ function tick_dump($step = 1, $fun = '\dump'){
 }
 
 /**
+ * 读取控制台行输入，如果系统安装了扩展，优先使用扩展函数
+ */
+if(!function_exists('readline')){
+	function readline($msg){
+		$fh = fopen('php://stdin', 'r');
+		if($msg){
+			echo $msg;
+		}
+		$userInput = trim(fgets($fh));
+		fclose($fh);
+		return $userInput;
+	}
+}
+
+/**
  * 尝试调用函数
  * @param callable $payload 处理函数，返回 FALSE 表示中断后续尝试
  * @param int $tries 出错时额外尝试次数（不包含第一次正常执行）
