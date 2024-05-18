@@ -87,7 +87,7 @@ function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100
 	$key_size = count($fields);
 	$chunk_tmp = [];
 	assert_via_exception($chunk_size > 0, 'Chunk size must bigger than 0');
-	read_line($file, function($text, $line_num) use ($delimiter, $output, &$chunk_tmp, $chunk_size, $fields, $key_size, $ignore_head_lines){
+	file_read_by_line($file, function($text, $line_num) use ($delimiter, $output, &$chunk_tmp, $chunk_size, $fields, $key_size, $ignore_head_lines){
 		if($ignore_head_lines && $line_num <= $ignore_head_lines){
 			return null;
 		}

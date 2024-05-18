@@ -305,7 +305,7 @@ function tail($file, $lines = 10, $buffer = 4096){
  * @return bool 是否为处理函数中断返回
  * @throws \Exception
  */
-function read_line($file, $handle, $start_line = 1, $buff_size = 1024){
+function file_read_by_line($file, $handle, $start_line = 1, $buff_size = 1024){
 	if(!($hd = fopen($file, 'r'))){
 		throw new Exception('file open fail');
 	}
