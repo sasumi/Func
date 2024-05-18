@@ -24,16 +24,14 @@ function tick_dump($step = 1, $fun = '\dump'){
 /**
  * 读取控制台行输入，如果系统安装了扩展，优先使用扩展函数
  */
-if(!function_exists('readline')){
-	function readline($msg){
-		$fh = fopen('php://stdin', 'r');
-		if($msg){
-			echo $msg;
-		}
-		$userInput = trim(fgets($fh));
-		fclose($fh);
-		return $userInput;
+function readline($msg){
+	$fh = fopen('php://stdin', 'r');
+	if($msg){
+		echo $msg;
 	}
+	$userInput = trim(fgets($fh));
+	fclose($fh);
+	return $userInput;
 }
 
 /**
@@ -47,7 +45,7 @@ function try_many_times($payload, $tries = 0){
 	while($tryCount++ < $tries){
 		try{
 			if($payload() === false){
-				return $tryCount-1;
+				return $tryCount - 1;
 			}
 		}catch(\Exception $e){
 		}
@@ -344,7 +342,7 @@ function trait_uses_recursive($trait){
 function get_constant_name($class, $const_val){
 	$class = new ReflectionClass($class);
 	$constants = $class->getConstants();
-	foreach($constants as $name=>$value){
+	foreach($constants as $name => $value){
 		if($value === $const_val){
 			return $name;
 		}
@@ -425,14 +423,7 @@ function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
 	$current_usage = memory_get_usage(true);
 	if(isset($last_usage) && ($current_usage - $last_usage > $threshold)){
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-		$msg = sprintf("Memory Leak:+%s(%s)\n%s#%s %s%s%s()\n",
-			format_size($current_usage - $last_usage),
-			format_size($current_usage),
-			$trace[1]['file'],
-			$trace[1]['line'],
-			$trace[1]['class'],
-			$trace[1]['type'],
-			$trace[1]['function']);
+		$msg = sprintf("Memory Leak:+%s(%s)\n%s#%s %s%s%s()\n", format_size($current_usage - $last_usage), format_size($current_usage), $trace[1]['file'], $trace[1]['line'], $trace[1]['class'], $trace[1]['type'], $trace[1]['function']);
 		$leak_payload($msg);
 	}
 	$last_usage = $current_usage;
