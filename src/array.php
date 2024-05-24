@@ -412,12 +412,17 @@ function array_clear_fields(array $keep_fields, array $data){
 /**
  * 根据数组项值，删除数组
  * @param array $arr
- * @param mixed $del_val
+ * @param mixed $values
  */
-function array_unset_by_value(&$arr, $del_val){
-	if(($key = array_search($del_val, $arr)) !== false){
-		unset($arr[$key]);
+function array_unset($arr, ...$values){
+	$tmp = [];
+	$assoc_arr = is_assoc_array($arr);
+	foreach($arr as $k=>$val){
+		if(!in_array($val, $values)){
+			$tmp[$k] = $val;
+		}
 	}
+	return $assoc_arr ? $tmp : array_values($tmp);
 }
 
 /**
