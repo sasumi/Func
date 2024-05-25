@@ -182,6 +182,7 @@ function curl_instance($url, array $curl_option){
 		CURLOPT_FOLLOWLOCATION => true, //启用时会将服务器服务器返回的"Location: "放在header中递归的返回给服务器，使用CURLOPT_MAXREDIRS可以限定递归返回的数量。
 		CURLOPT_RETURNTRANSFER => true, //文件流形式
 		CURLOPT_ENCODING       => 'gzip', //支持gzip
+		CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //支持 http1.1 协议
 		CURLOPT_HEADER         => 1, //响应支持携带头部信息
 		CURLOPT_TIMEOUT        => 10,
 		CURLOPT_URL            => $url,
