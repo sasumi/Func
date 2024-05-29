@@ -19,7 +19,7 @@ function curl_get($url, $data = null, array $curl_option = []){
 		$url .= (strpos($url, '?') !== false ? '&' : '?').curl_data2str($data);
 	}
 	$ch = curl_instance($url, $curl_option);
-	return curl_execute($ch);
+	return curl_query($ch);
 }
 
 /**
@@ -33,9 +33,30 @@ function curl_get($url, $data = null, array $curl_option = []){
 function curl_post($url, $data = null, array $curl_option = []){
 	$ch = curl_instance($url, curl_merge_options([
 		CURLOPT_POST       => true,
-		CURLOPT_POSTFIELDS => curl_data2str($data),
+		CURLOPT_POSTFIELDS => http_build_query($data),
 	], $curl_option));
-	return curl_execute($ch);
+
+	return curl_query($ch);
+}
+
+/**
+ * CURL HTTP Header追加额外信息，如果原来已经存在，则会被替换
+ * @param array $curl_option
+ * @param string $header_name
+ * @param string $header_value
+ * @return void
+ */
+function curl_patch_header(&$curl_option, $header_name, $header_value){
+	if(!$curl_option[CURLOPT_HTTPHEADER]){
+		$curl_option[CURLOPT_HTTPHEADER] = [];
+	}
+	foreach($curl_option[CURLOPT_HTTPHEADER] as $k=>$item){
+		if(strcasecmp($item, $header_name) === 0){
+			$curl_option[CURLOPT_HTTPHEADER][$k] = $header_value;
+			break;
+		}
+	}
+	$curl_option[CURLOPT_HTTPHEADER][] = "$header_name: $header_value";
 }
 
 /**
@@ -66,7 +87,8 @@ function curl_post_json($url, $data = null, array $curl_option = []){
  * @param array $file_map [filename=>filepath,...]
  * @param mixed $ext_param 同时提交的其他post参数
  * @param array $curl_option curl选项
- * @return array curl_execute返回结果，包含 [info=>[], head=>'', body=>''] 信息
+ * @return array curl_query返回结果，包含 [info=>[], head=>'', body=>''] 信息
+ * @throws \Exception
  */
 function curl_post_file($url, array $file_map, array $ext_param = [], array $curl_option = []){
 	foreach($file_map as $name => $file){
@@ -83,7 +105,7 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 		CURLOPT_ENCODING       => '', //开启gzip等编码支持
 	], $curl_option);
 	$ch = curl_instance($url, $curl_option);
-	return curl_execute($ch);
+	return curl_query($ch);
 }
 
 /**
@@ -99,7 +121,7 @@ function curl_put($url, $data, array $curl_option = []){
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'PUT',
 	], $curl_option));
-	return curl_execute($ch);
+	return curl_query($ch);
 }
 
 /**
@@ -115,25 +137,26 @@ function curl_delete($url, $data, array $curl_option = []){
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'DELETE',
 	], $curl_option));
-	return curl_execute($ch);
+	return curl_query($ch);
 }
 
 /**
  * 执行curl，并关闭curl连接
  * @param resource $ch
  * @return array [info=>[], head=>'', body=>''] curl_getinfo信息
+ * @throws \Exception
  */
-function curl_execute($ch){
+function curl_query($ch){
 	$raw_string = curl_exec($ch);
 	$error = curl_error($ch);
+	if($error){
+		throw new Exception($error);
+	}
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 	$curl_info['info'] = curl_getinfo($ch);
 	$curl_info['head'] = substr($raw_string, 0, $header_size);
 	$curl_info['body'] = substr($raw_string, $header_size);
 	curl_close($ch);
-	if($curl_info['info']['http_code'] != 200){
-		throw new Exception($error);
-	}
 	return $curl_info;
 }
 
@@ -174,21 +197,33 @@ function curl_build_command($url, $body_str, $method, $headers, $multiple_line =
  * @throws \Exception
  */
 function curl_instance($url, array $curl_option){
-	//use ssl
-	$as_ssl = substr($url, 0, 8) == 'https://';
-
 	$opt = array(
-		CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //在HTTP请求中包含一个"User-Agent: "头的字符串。
-		CURLOPT_FOLLOWLOCATION => true, //启用时会将服务器服务器返回的"Location: "放在header中递归的返回给服务器，使用CURLOPT_MAXREDIRS可以限定递归返回的数量。
-		CURLOPT_RETURNTRANSFER => true, //文件流形式
-		CURLOPT_ENCODING       => 'gzip', //支持gzip
-		CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //支持 http1.1 协议
-		CURLOPT_HEADER         => 1, //响应支持携带头部信息
+		//在HTTP请求中包含一个"User-Agent: "头的字符串，该选项会被HTTPHEADER里面的UA覆盖，仅做备份。
+		//可参考：https://stackoverflow.com/questions/52392262/what-is-different-between-set-opt-curlopt-useragent-and-set-useragent-in-header
+		CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'],
+
+		//跟随服务端响应的跳转
+		CURLOPT_FOLLOWLOCATION => true,
+
+		//最大跳转次数
+		CURLOPT_MAXREDIRS      => 10,
+
+		//文件流形式
+		CURLOPT_RETURNTRANSFER => true,
+
+		//CURLOPT_ENCODING       => '',
+		CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+
+		//支持 http1.1 协议
+		CURLOPT_HEADER         => 1,
+
+		//响应支持携带头部信息
 		CURLOPT_TIMEOUT        => 10,
 		CURLOPT_URL            => $url,
 	);
 
-	if($as_ssl){
+	//识别请求目标是否未SSL加密
+	if(parse_url($url)['scheme'] == 'https'){
 		$opt[CURLOPT_SSL_VERIFYPEER] = false;                   //对认证证书来源的检查
 		$opt[CURLOPT_SSL_VERIFYHOST] = true;                    //从证书中检查SSL加密算法是否存在
 	}
@@ -205,6 +240,7 @@ function curl_instance($url, array $curl_option){
 	if($sys_max_exe_time && $curl_option[CURLOPT_TIMEOUT] && $curl_option[CURLOPT_TIMEOUT] > $sys_max_exe_time){
 		throw new Exception('curl timeout setting larger than php.ini setting: '.$curl_option[CURLOPT_TIMEOUT].' > '.$sys_max_exe_time);
 	}
+
 	$curl = curl_init();
 	foreach($curl_option as $k => $val){
 		curl_setopt($curl, $k, $val);
