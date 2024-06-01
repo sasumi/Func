@@ -544,12 +544,12 @@ function html_tag_date_time_input($name, $value = '', $attributes = []){
 /**
  * 构建DataList
  * @param string $id
- * @param array $data [val=>title,...]
+ * @param array $data_map [val=>title,...]
  * @return string
  */
-function html_tag_data_list($id, $data = []){
+function html_tag_data_list($id, $data_map = []){
 	$opts = '';
-	foreach($data as $value=>$label){
+	foreach($data_map as $value=> $label){
 		$opts .= '<option value="'.ha($value).'" label="'.ha($label).'">';
 	}
 	return html_tag('datalist', ['id' => $id], $opts);

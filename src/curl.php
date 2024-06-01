@@ -33,9 +33,8 @@ function curl_get($url, $data = null, array $curl_option = []){
 function curl_post($url, $data = null, array $curl_option = []){
 	$ch = curl_instance($url, curl_merge_options([
 		CURLOPT_POST       => true,
-		CURLOPT_POSTFIELDS => http_build_query($data),
+		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
 	], $curl_option));
-
 	return curl_query($ch);
 }
 

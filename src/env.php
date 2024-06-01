@@ -80,7 +80,7 @@ function get_client_ip(){
  */
 function get_all_opt(){
 	$opts = [];
-	foreach($_SERVER['argv'] as $idx => $arg){
+	foreach($_SERVER['argv'] ?:[] as $idx => $arg){
 		//long option
 		if(preg_match('/--(\S+)=(\S+)/', $arg, $matches)){
 			$opts[$matches[1]] = trim($matches[2], '"');
