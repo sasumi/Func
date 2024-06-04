@@ -17,21 +17,21 @@ $__FUNC_EVENT_MAP__ = [];
  * @return int 返回状态标记：EVENT_PAYLOAD_
  */
 function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, &$p5 = null, &$p6 = null){
-	$hit = EVENT_PAYLOAD_NULL;
 	$arg_limit = 7;
 	$arg_count = func_num_args();
 	if($arg_count > $arg_limit){
 		throw new \Exception("event fire arguments overload:$arg_count (limitation: $arg_limit)");
 	}
 	global $__FUNC_EVENT_MAP__;
-	foreach($__FUNC_EVENT_MAP__ as $ev => $handle_list){
-		if($ev === $event){
-			foreach($handle_list as list($id, $payload)){
-				$hit = EVENT_PAYLOAD_HIT;
-				if($payload($p1, $p2, $p3, $p4, $p5, $p6) === false){
-					return EVENT_PAYLOAD_BREAK_NEXT;
-				}
-			}
+	$handle_list = isset($__FUNC_EVENT_MAP__[$event]) ? $__FUNC_EVENT_MAP__[$event] : [];
+	if(!$handle_list){
+		return EVENT_PAYLOAD_NULL;
+	}
+	$hit = EVENT_PAYLOAD_NULL;
+	foreach($handle_list as list($id, $payload)){
+		$hit = EVENT_PAYLOAD_HIT;
+		if($payload($p1, $p2, $p3, $p4, $p5, $p6) === false){
+			return EVENT_PAYLOAD_BREAK_NEXT;
 		}
 	}
 	return $hit;
