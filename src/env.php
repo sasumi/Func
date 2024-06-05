@@ -222,7 +222,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 		$start_time = $inner_start_time;
 	}
 	if($index){
-		$reminds = ' in '.format_time_size((time() - $start_time)*($total - $index)/$index);
+		$reminds = ' in '.time_get_eta($start_time, $index, $total);
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;

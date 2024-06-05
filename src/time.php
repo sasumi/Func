@@ -325,6 +325,19 @@ function time_range($start, $end){
 }
 
 /**
+ * 计算预计结束时间 ETA
+ * @param int $start_time 开始时间
+ * @param int $index 当前处理序号
+ * @param int $total 总数量
+ * @param bool $pretty 是否以文字方式返回剩余时间，设置false则返回秒数
+ * @return int|string
+ */
+function time_get_eta($start_time, $index, $total, $pretty = true){
+	$seconds = intval((time() - $start_time)*($total - $index)/$index);
+	return $pretty ? format_time_size($seconds) : $seconds;
+}
+
+/**
  * 转化时间长度到字符串
  * <pre>
  * $str = time_range_v(3601);
