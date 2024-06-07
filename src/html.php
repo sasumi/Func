@@ -544,13 +544,18 @@ function html_tag_date_time_input($name, $value = '', $attributes = []){
 /**
  * 构建DataList
  * @param string $id
- * @param array $data_map [val=>title,...]
+ * @param array $data_map 索引数组：[val=>title,...]，或者自然增长数组：[title1, title2,...]
  * @return string
  */
 function html_tag_data_list($id, $data_map = []){
 	$opts = '';
-	foreach($data_map as $value=> $label){
-		$opts .= '<option value="'.ha($value).'" label="'.ha($label).'">';
+	$is_assoc_array = is_assoc_array($data_map);
+	foreach($data_map as $key => $val){
+		if($is_assoc_array){
+			$opts .= '<option value="'.ha($key).'" label="'.ha($val).'">';
+		}else{
+			$opts .= '<option value="'.ha($val).'">';
+		}
 	}
 	return html_tag('datalist', ['id' => $id], $opts);
 }
