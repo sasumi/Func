@@ -545,6 +545,17 @@ function str_mixing($text, $param = []){
 }
 
 /**
+ * 检测字符串是否为 URL， 格式同时包含 // 这种省略协议的模式
+ * @param string $url
+ * @return bool
+ */
+function is_url($url){
+	return strpos($url, '//') === 0 || filter_var($url, FILTER_VALIDATE_URL);
+}
+
+/**
+ * url base64 安全编码
+ * 将base64中 + / = 符号分别替换成 - _ ''
  * @param string $str
  * @return string
  * base64编码
@@ -555,6 +566,7 @@ function url_safe_b64encode($str){
 }
 
 /**
+ * url base64 安全解码
  * @param string $str
  * @return string
  * base64解码
