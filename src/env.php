@@ -208,11 +208,10 @@ function console_color($text, $fore_color = null, $back_color = null){
  * @param int $total
  * @param string $patch_text 补充显示文本
  * @param int $start_time 开始时间戳
- * @param int $progress_length
- * @param int $max_length
  */
-function show_progress($index, $total, $patch_text = '', $start_time = null, $progress_length = 20, $max_length = 0){
+function show_progress($index, $total, $patch_text = '', $start_time = null){
 	$pc = str_pad(round(100*$index/$total), 2, ' ', STR_PAD_LEFT);
+	$progress_length = 20;
 	$reminds = '';
 	if(!$start_time){
 		static $inner_start_time;
@@ -222,13 +221,21 @@ function show_progress($index, $total, $patch_text = '', $start_time = null, $pr
 		$start_time = $inner_start_time;
 	}
 	if($index){
-		$reminds = ' in '.time_get_eta($start_time, $index, $total);
+		$reminds = ' ETA:'.time_get_eta($start_time, $index, $total);
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
-	$str = "\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
-	$max_length = $max_length ?: strlen($str) + 20;
-	$str = str_pad($str, $max_length, ' ', STR_PAD_RIGHT);
+	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
+	list($colum) = get_screen_size();
+	if($colum){
+		$left_space = $colum - mb_strwidth($str);
+		if($left_space > 0){
+			$str .= str_repeat(' ', $left_space);
+		}
+		$str = mb_strimwidth($str, 0, $colum);
+	}else{
+		$str = str_pad($str, strlen($str) + 20, ' ', STR_PAD_RIGHT);
+	}
 	echo $str;
 	if($index >= $total){
 		echo PHP_EOL;
