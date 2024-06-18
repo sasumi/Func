@@ -227,6 +227,15 @@ function curl_instance($url, array $curl_option){
 		$opt[CURLOPT_SSL_VERIFYHOST] = true;                    //从证书中检查SSL加密算法是否存在
 	}
 
+	//处理HTTP头部，如果传入的是key => value数组，转换成字符串数组
+	if($curl_option[CURLOPT_HTTPHEADER] && is_assoc_array($curl_option[CURLOPT_HTTPHEADER])){
+		$tmp = [];
+		foreach($curl_option[CURLOPT_HTTPHEADER] as $field=>$val){
+			$tmp[] = "$field: $val";
+		}
+		$curl_option[CURLOPT_HTTPHEADER] = $tmp;
+	}
+
 	//设置缺省参数
 	$curl_option = curl_merge_options($opt, $curl_option);
 	if($curl_option['USE_COOKIE']){
@@ -239,7 +248,6 @@ function curl_instance($url, array $curl_option){
 	if($sys_max_exe_time && $curl_option[CURLOPT_TIMEOUT] && $curl_option[CURLOPT_TIMEOUT] > $sys_max_exe_time){
 		throw new Exception('curl timeout setting larger than php.ini setting: '.$curl_option[CURLOPT_TIMEOUT].' > '.$sys_max_exe_time);
 	}
-
 	$curl = curl_init();
 	foreach($curl_option as $k => $val){
 		curl_setopt($curl, $k, $val);
