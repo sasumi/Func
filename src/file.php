@@ -519,12 +519,82 @@ function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
 }
 
 /**
+ * @param string $file 文件
+ * @param array $opt 控制选项
+ * @return void
+ * @throws \Exception
+ */
+function upload_file_check($file, $opt = [
+	'accept'         => 'image/*', //允许文件格式，具体请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+	'max_size'       => 0, //最大文件大小
+	'min_size'       => 0, //最小文件大小
+	'image_max_size' => [0, 0], //图片最大尺寸(宽,高)
+	'image_min_size' => [0, 0], //图片最小尺寸(宽,高)
+]){
+	if(!$file){
+		throw new Exception('文件为空');
+	}
+	if(!is_uploaded_file($file)){
+		throw new Exception('文件禁止访问');
+	}
+	if($opt['accept'] && !file_match_accept($file, $opt['accept'])){
+		throw new Exception('文件格式错误');
+	}
+	if($opt['max_size'] || $opt['min_size']){
+		$file_size = filesize($file);
+		if($opt['max_size'] && $file_size > $opt['max_size']){
+			throw new Exception('文件大小('.format_size($opt['max_size']).')超过允许值');
+		}
+		if($opt['min_size'] && $file_size < $opt['min_size']){
+			throw new Exception('文件大小('.format_size($file_size).')小于允许值');
+		}
+	}
+	if($opt['image_max_size'] || $opt['image_min_size']){
+		list($w, $h) = getimagesize($file);
+		if($opt['image_max_size']){
+			list($max_w, $max_h) = $opt['image_max_size'];
+			if($max_w && $max_w < $w){
+				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$max_w.'px)');
+			}
+			if($max_h && $max_h < $h){
+				throw new Exception('图片高度('.$w.'px)超过限制大小('.$max_w.'px)');
+			}
+		}
+		if($opt['image_min_size']){
+			list($min_w, $min_h) = $opt['image_min_size'];
+			if($min_w && $min_w > $w){
+				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$min_w.'px)');
+			}
+			if($min_h && $min_h > $h){
+				throw new Exception('图片高度('.$w.'px)超过限制大小('.$min_w.'px)');
+			}
+		}
+	}
+}
+
+/**
  * 获取匹配指定mime的扩展名列表
  * @param string $mime
  * @return string[]
  */
 function get_extensions_by_mime($mime){
 	return MIME_EXTENSION_MAP[$mime];
+}
+
+/**
+ * 通过文件后缀获取mime信息
+ * @param string $ext 文件后缀
+ * @return string[] mime 列表
+ */
+function get_mimes_by_extension($ext){
+	$ext = strtolower(ltrim($ext, '.'));
+	$mime_list = [];
+	foreach(MIME_EXTENSION_MAP as $mime=>$ext_list){
+		if(in_array($ext, $ext_list)){
+			$mime_list[] = $mime;
+		}
+	}
+	return $mime_list;
 }
 
 /**
@@ -536,6 +606,75 @@ function get_extensions_by_mime($mime){
  */
 function mime_match_extensions($mime, array $extensions){
 	return !empty(array_intersect(MIME_EXTENSION_MAP[$mime] ?: [], $extensions));
+}
+
+/**
+ * 检测文件mime信息是否匹配accept字符串
+ * @param string $mime 文件mime信息
+ * @param string $accept <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ * @return bool
+ */
+function mime_match_accept($mime, $accept){
+	$acc_list = explode_by(',', $accept);
+	foreach($acc_list as $acc){
+		if(strcasecmp($acc, $mime) === 0){
+			return true;
+		}
+		list($seg1, $seg2) = explode('/', $acc);
+		if($seg2 === '*' && stripos($mime, $seg1."/") === 0){
+			return true;
+		}
+		//后缀模式
+		if($acc[0] === '.'){
+			$ms = get_mimes_by_extension($acc);
+			if(in_array($mime, $ms)){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * 检测文件是否匹配指定accept定义
+ * @param string $file_name 文件路径
+ * @param string $accept <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ * @return bool
+ * @throws \Exception
+ */
+function file_match_accept($file_name, $accept){
+	$file_ext = resolve_file_extension($file_name);
+	$file_mime = null;
+	$acc_list = explode_by(',', $accept);
+
+	//文件mime对比单个accept
+	$mime_compare = function($file_mime, $acc){
+		list($seg1, $seg2) = explode('/', $acc);
+		if($seg2 === '*' && stripos($file_mime, $seg1."/") === 0){
+			return true;
+		}
+		return strcasecmp($acc, $file_mime) === 0;
+	};
+	foreach($acc_list as $acc){
+		//mime模式
+		if(strpos($acc, '/') !== false){
+			if(!$file_mime){
+				$file_mime = mime_content_type($file_name);
+			}
+			if($mime_compare($file_mime, $acc)){
+				return true;
+			}
+		}
+		//后缀模式
+		else if($acc[0] === '.'){
+			if(strcasecmp($file_ext, $acc)===0){
+				return true;
+			}
+		} else {
+			throw new Exception('accept 格式错误：'.$acc);
+		}
+	}
+	return false;
 }
 
 /**
