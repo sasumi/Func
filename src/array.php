@@ -21,7 +21,6 @@ const ARRAY_POSING_LAST = 0x004;
 /**
  * Array group by function
  * group array(); by by_key
- *
  * @param array $array 数组
  * @param string $by_key 合并key字符串
  * @param boolean $force_unique
