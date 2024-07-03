@@ -204,7 +204,7 @@ function html_tag_radio($name, $value, $title = '', $checked = false, $attribute
 	if($checked){
 		$attributes['checked'] = 'checked';
 	}
-	return html_tag('label', [], html_tag('input', $attributes).$title);
+	return html_tag('label', [], html_tag('input', $attributes).' '.$title);
 }
 
 /**
@@ -252,7 +252,7 @@ function html_tag_checkbox($name, $value, $title = '', $checked = false, $attrib
 	if(!$title){
 		return $checkbox;
 	}
-	return html_tag('label', [], $checkbox.$title);
+	return html_tag('label', [], $checkbox.' '.$title);
 }
 
 /**
