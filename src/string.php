@@ -337,6 +337,29 @@ function __h($str, $len = null, $tail = '...', &$over_length = false, $flags = n
 }
 
 /**
+ * 使用制表符生成多级option样式
+ * @param array $tree 菜单树结构，结构为 [{name, value, children=>[]}, ...]
+ * @param string $prefix 前置字符串（自动计算）
+ * @return array [[text, value], ...]
+ */
+function print_tree_to_options($tree, $prefix = ''){
+	$options = [];
+	$n = count($tree);
+	$tab_size = 3;
+	$space = ' ';
+	foreach($tree as $k => $item){
+		$last = ($k == $n - 1) ;
+		$text = $prefix.($last ? '└'.str_repeat('─', $tab_size - 2).$space : '├'.str_repeat('─', $tab_size - 2).$space).h($item['name']);
+		$options[] = [$text, ha($item['value'])];
+		if($item['children']){
+			$p = $last ? $prefix.str_repeat($space, $tab_size) : $prefix.'│'.str_repeat($space, $tab_size);
+			$options = array_merge($options , print_tree_to_options($item['children'], $p));
+		}
+	}
+	return $options;
+}
+
+/**
  * XML字符转义
  * @param string $val
  * @return string

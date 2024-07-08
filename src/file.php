@@ -4,6 +4,7 @@
  */
 namespace LFPhp\Func;
 
+use DirectoryIterator;
 use Exception;
 
 /**
@@ -24,6 +25,59 @@ function glob_recursive($pattern, $flags = 0){
 		$file = str_replace(array('/', '\\'), array(DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR), $file);
 	});
 	return $files;
+}
+
+/**
+ * 递归的unlink
+ * @param string $path 需要删除的文件夹
+ * @param bool $verbose 是否打印调试信息
+ * @return void
+ */
+function unlink_recursive($path, $verbose = false){
+	if(!is_readable($path)){
+		return;
+	}
+	if(is_file($path)){
+		if($verbose){
+			echo "unlink: {$path}\n";
+		}
+		if(!unlink($path)){
+			throw new \RuntimeException("Failed to unlink {$path}: ".var_export(error_get_last(), true));
+		}
+		return;
+	}
+	$foldersToDelete = array();
+	$filesToDelete = array();
+	// we should scan the entire directory before traversing deeper, to not have open handles to each directory:
+	// on very large director trees you can actually get OS-errors if you have too many open directory handles.
+	foreach(new DirectoryIterator($path) as $fileInfo){
+		if($fileInfo->isDot()){
+			continue;
+		}
+		if($fileInfo->isDir()){
+			$foldersToDelete[] = $fileInfo->getRealPath();
+		}else{
+			$filesToDelete[] = $fileInfo->getRealPath();
+		}
+	}
+	unset($fileInfo); // free file handle
+	foreach($foldersToDelete as $folder){
+		unlink_recursive($folder, $verbose);
+	}
+	foreach($filesToDelete as $file){
+		if($verbose){
+			echo "unlink: {$file}\n";
+		}
+		if(!unlink($file)){
+			throw new \RuntimeException("Failed to unlink {$file}: ".var_export(error_get_last(), true));
+		}
+	}
+	if($verbose){
+		echo "rmdir: {$path}\n";
+	}
+	if(!rmdir($path)){
+		throw new \RuntimeException("Failed to rmdir {$path}: ".var_export(error_get_last(), true));
+	}
 }
 
 /**
