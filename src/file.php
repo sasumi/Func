@@ -247,6 +247,21 @@ function mkdir_batch($dirs, $break_on_error = true, $permissions = 0x777){
 }
 
 /**
+ * 根据目标文件路径创建文件夹
+ * @param string $file
+ * @param int $permissions 目录权限
+ * @return string 创建成功目录路径
+ * @throws \Exception
+ */
+function mkdir_by_file($file, $permissions = 0777){
+	$dir = dirname($file);
+	if(!is_dir($dir) && !mkdir($dir, $permissions, true)){
+		throw new \Exception('directory create fail');
+	}
+	return $dir;
+}
+
+/**
  * 获取模块文件夹列表
  * @param string $dir
  * @return array
