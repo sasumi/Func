@@ -795,6 +795,7 @@ function static_version_statement_quote($str){
 
 /**
  * 修正浏览器 HTML5 中 input:datetime或者 input:datetime-local 提交过来的数据
+ * H5 提交的时间格式可能为 Y-m-dTH:i:s
  * @param string $datetime_str_from_h5
  * @return string|null
  * @throws \Exception

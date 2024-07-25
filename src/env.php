@@ -211,7 +211,7 @@ function console_color($text, $fore_color = null, $back_color = null){
  */
 function show_progress($index, $total, $patch_text = '', $start_time = null){
 	$pc = str_pad(round(100*$index/$total), 2, ' ', STR_PAD_LEFT);
-	$progress_length = 20;
+	$progress_length = 10;
 	$reminds = '';
 	if(!$start_time){
 		static $inner_start_time;
@@ -225,7 +225,8 @@ function show_progress($index, $total, $patch_text = '', $start_time = null){
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
-	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('░', $left_chars)."{$reminds} $patch_text";
+
+	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('▒', $left_chars)."{$reminds} $patch_text";
 	list($colum) = get_screen_size();
 	if($colum){
 		$left_space = $colum - mb_strwidth($str);
