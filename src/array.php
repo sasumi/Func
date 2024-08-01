@@ -526,8 +526,31 @@ function array_orderby($src_arr){
 	}
 	$args[] = &$data;
 	call_user_func_array('array_multisort', $args);
-	$src_arr = array_pop($args);
-	return $src_arr;
+	return array_pop($args);
+}
+
+/**
+ * 数组按照指定值列表排序
+ * @param array $src_arr 二维数组
+ * @param string $field 字段名称
+ * @param scalar[] $values 值列表
+ * @param bool $pad_tail_on_mismatch 如果数组元素没有在命中所有值，是否追加在返回结果后面。默认为不追加
+ * @return array
+ */
+function array_orderby_values(array $src_arr, $field, array $values, $pad_tail_on_mismatch = false){
+	$ret = [];
+	foreach($values as $v){
+		foreach($src_arr as $k => $item){
+			if($item[$field] == $v){
+				$ret[] = $item;
+				unset($src_arr[$k]);
+			}
+		}
+	}
+	if($pad_tail_on_mismatch && $src_arr){
+		$ret = array_merge($ret, $src_arr);
+	}
+	return $ret;
 }
 
 /**

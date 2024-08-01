@@ -243,6 +243,18 @@ function show_progress($index, $total, $patch_text = '', $start_time = null){
 	}
 }
 
+function show_loading($patch_text, $loading_chars = ['\\', '|', '/', '-']){
+	$loading_chars = ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
+	global $__last_loading_chart_idx;
+	list($colum) = get_screen_size();
+	if($colum){
+		$patch_text = mb_strimwidth($patch_text, 0, $colum-5);
+	}
+	echo "\r\r".$loading_chars[$__last_loading_chart_idx++]." ".$patch_text;
+	$__last_loading_chart_idx = ($__last_loading_chart_idx == count($loading_chars) ? 0 : $__last_loading_chart_idx);
+
+}
+
 /**
  * 运行终端命令
  * @param string $command 命令
