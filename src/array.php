@@ -651,13 +651,12 @@ function null_in_array(array $arr){
 }
 
 /**
- * filter array by specified keys
+ * 按照指定key值列表过滤数组
  * @param array $arr
- * @param array $keys
+ * @param string[]|int[] $keys
  * @return array
  * @example array_filter_by_keys($data, array('key1','key2'));
  * array_filter_by_keys($data, 'key1', 'key2');
- * @deprecated 请使用 array_clear_fields
  */
 function array_filter_by_keys($arr, $keys){
 	$args = is_array($keys) ? $keys : array_slice(func_get_args(), 1);

@@ -257,6 +257,17 @@ function string2error($string){
 }
 
 /**
+ * 转换exception对象为其他指定exception类对象
+ * @param Exception $exception
+ * @param string $target_class
+ * @return mixed
+ */
+function exception_convert(Exception $exception, $target_class){
+	/** @var Exception $new_exception */
+	return new $target_class($exception->getMessage(), $exception->getCode(), $exception);
+}
+
+/**
  * 注册将PHP错误转换异常抛出
  * @param int $error_levels
  * @param \ErrorException|null $exception_class
