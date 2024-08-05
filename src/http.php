@@ -25,6 +25,16 @@ function http_send_status($status){
 }
 
 /**
+ * 开启 httpd服务器分块输出
+ */
+function http_chunk_on(){
+	@ob_end_clean(); //强制php直接输出内容到浏览器，不加入缓冲区
+	ob_implicit_flush(true); //设置nginx或apache不缓冲，直接输出
+	header('X-Accel-Buffering: no'); //关键是加了这一行。
+}
+
+
+/**
  * 请求来自POST
  * @return bool
  */
