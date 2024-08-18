@@ -345,3 +345,13 @@ function http_header_report_api(array $endpoint_urls, $group = 'default', $max_a
 function http_header_report_api_nel(array $endpoint_urls, $group = 'network-error', $max_age_sec = ONE_DAY, $include_subdomains = true){
 	header('NEL: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
 }
+
+/**
+ * 解析cookie字符串为一个哈希数组
+ * @param string $cookie_str
+ * @return array
+ */
+function http_parse_cookie($cookie_str){
+	parse_str(strtr($cookie_str, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
+	return $cookies;
+}
