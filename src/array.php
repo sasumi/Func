@@ -83,7 +83,7 @@ function object_shuffle($objects){
  * 任何时候返回的都是数组列表，而不是key或者keys，该方法不会对结果进行混淆
  * @param array $arr 源数组，支持自然索引数组与关联数组
  * @param int $count 获取数量
- * @return array 返回指定数量的数组
+ * @return array 返回指定数量的数组(注意：该处为索引数组，key与元数组key保持一致)
  */
 function array_random(array $arr = [], $count = 1){
 	if(!$arr){

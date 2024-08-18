@@ -84,6 +84,22 @@ function time_get_month_period_ranges($start_str, $end_str){
 }
 
 /**
+ * 调用间隔保证
+ * @param string $timer_key
+ * @param int $interval
+ */
+function keep_interval($timer_key, $interval){
+	$k = __FUNCTION__.$timer_key;
+	if($GLOBALS[$k]){
+		$need_sleep = $interval - (time() - $GLOBALS[$k]);
+		if($need_sleep > 0){
+			sleep($need_sleep);
+		}
+	}
+	$GLOBALS[$k] = time();
+}
+
+/**
  * @param string $timezone_title
  * @return float|int
  * @throws \Exception
