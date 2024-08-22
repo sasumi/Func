@@ -203,25 +203,28 @@ function console_color($text, $fore_color = null, $back_color = null){
 }
 
 /**
- * show progress in console
+ * 显示进度条
  * @param int $index
  * @param int $total
  * @param string $patch_text 补充显示文本
- * @param int $start_time 开始时间戳
+ * @param int $start_timestamp 开始时间戳，为空函数内初始化全局唯一一个时间戳
  */
-function show_progress($index, $total, $patch_text = '', $start_time = null){
+function show_progress($index, $total, $patch_text = '', $start_timestamp = null){
+	if($patch_text){
+		$patch_text = preg_replace("/[\n\r]/", '', trim($patch_text));
+	}
 	$pc = str_pad(round(100*$index/$total), 2, ' ', STR_PAD_LEFT);
 	$progress_length = 10;
 	$reminds = '';
-	if(!$start_time){
+	if(!$start_timestamp){
 		static $inner_start_time;
 		if(!$inner_start_time){
 			$inner_start_time = time();
 		}
-		$start_time = $inner_start_time;
+		$start_timestamp = $inner_start_time;
 	}
 	if($index){
-		$reminds = ' ETA:'.time_get_eta($start_time, $index, $total);
+		$reminds = ' ETA:'.time_get_eta($start_timestamp, $index, $total);
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
@@ -229,7 +232,7 @@ function show_progress($index, $total, $patch_text = '', $start_time = null){
 	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('▒', $left_chars)."{$reminds} $patch_text";
 	list($colum) = get_screen_size();
 	if($colum){
-		$left_space = $colum - mb_strwidth($str);
+		$left_space = $colum - mb_strwidth($str) - 1;
 		if($left_space > 0){
 			$str .= str_repeat(' ', $left_space);
 		}
@@ -243,7 +246,16 @@ function show_progress($index, $total, $patch_text = '', $start_time = null){
 	}
 }
 
+/**
+ * loading 方式输出控制台字符串
+ * @param $patch_text
+ * @param $loading_chars
+ * @return void
+ */
 function show_loading($patch_text, $loading_chars = ['\\', '|', '/', '-']){
+	if($patch_text){
+		$patch_text = preg_replace("/[\n\r]/", '', trim($patch_text));
+	}
 	$loading_chars = ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
 	global $__last_loading_chart_idx;
 	list($colum) = get_screen_size();
@@ -252,7 +264,6 @@ function show_loading($patch_text, $loading_chars = ['\\', '|', '/', '-']){
 	}
 	echo "\r\r".$loading_chars[$__last_loading_chart_idx++]." ".$patch_text;
 	$__last_loading_chart_idx = ($__last_loading_chart_idx == count($loading_chars) ? 0 : $__last_loading_chart_idx);
-
 }
 
 /**
