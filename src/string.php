@@ -11,10 +11,10 @@ use Exception;
  * @param string $string 串
  * @param int $length 切割长度
  * @param string $tail 尾部追加字符串
- * @param bool $over_length 是否超长
+ * @param bool $length_exceeded 是否超长
  * @return string
  */
-function substr_utf8($string, $length, $tail = '...', &$over_length = false){
+function substr_utf8($string, $length, $tail = '...', &$length_exceeded = false){
 	$chars = $string;
 	$i = 0;
 	$n = 0;
@@ -32,7 +32,7 @@ function substr_utf8($string, $length, $tail = '...', &$over_length = false){
 	} while($k < $length);
 	$str1 = mb_substr($string, 0, $l, 'utf-8');
 	if($str1 != $string){
-		$over_length = true;
+		$length_exceeded = true;
 		if($tail){
 			$str1 .= $tail;
 		}
@@ -285,38 +285,14 @@ function calc_formula($stm, array $param, callable $result_decorator = null){
 }
 
 /**
- * 输出html变量
- * @param array|string $str
- * @param number|null $len 截断长度，为空表示不截断
- * @param null|string $tail 追加尾串字符
- * @param bool $over_length 超长长度
- * @return string|array
- */
-function h($str, $len = null, $tail = '...', &$over_length = false){
-	return __h($str, $len, $tail, $over_length, ENT_IGNORE);
-}
-
-/**
- * 输出html节点属性变量
- * @param array|string $str
- * @param number|null $len 截断长度，为空表示不截断
- * @param null|string $tail 追加尾串字符
- * @param bool $over_length 超长长度
- * @return string|array
- */
-function ha($str, $len = null, $tail = '...', &$over_length = false){
-	return __h($str, $len, $tail, $over_length, ENT_QUOTES);
-}
-
-/**
+ * 字符串切割（UTF8编码）
  * @param string $str
- * @param null $len
+ * @param int $len
  * @param string $tail
- * @param bool $over_length
- * @param null $flags ENT_QUOTES|ENT_SUBSTITUTE
- * @return array|string
+ * @param bool $length_exceeded
+ * @return array|float|int|mixed|string|void
  */
-function __h($str, $len = null, $tail = '...', &$over_length = false, $flags = null){
+function cut_string($str, $len = 0, $tail = '...', &$length_exceeded = false){
 	if(is_object($str)){
 		return $str;
 	}
@@ -328,12 +304,12 @@ function __h($str, $len = null, $tail = '...', &$over_length = false, $flags = n
 		return $ret;
 	}
 	if($len){
-		$str = substr_utf8($str, $len, $tail, $over_length);
+		$str = substr_utf8($str, $len, $tail, $length_exceeded);
 	}
 	if(is_numeric($str)){
 		return $str;
 	}
-	return htmlspecialchars($str, $flags);
+	return $str;
 }
 
 /**

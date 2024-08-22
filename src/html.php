@@ -1,10 +1,13 @@
 <?php
 /**
- * Html 快速操作函数
+ * HTML快速操作函数
  */
 namespace LFPhp\Func;
 use Exception;
 
+/**
+ * HTML单标签
+ */
 const HTML_SELF_CLOSING_TAGS = [
 	'area',
 	'base',
@@ -648,6 +651,33 @@ function html_attributes(array $attributes = []){
 	return join(' ', $html);
 }
 
+
+/**
+ * 转义、截断html内字符串
+ * @param string $str
+ * @param number|null $len 截断长度，为空表示不截断
+ * @param null|string $tail 追加尾串字符
+ * @param bool $length_exceeded 超长长度
+ * @return string
+ */
+function h($str, $len = null, $tail = '...', &$length_exceeded = false){
+	$str = cut_string($str, $len, $tail, $length_exceeded);
+	return htmlspecialchars($str, ENT_IGNORE);
+}
+
+/**
+ * 转义、截断html节点属性字符串
+ * @param string $str
+ * @param int $len 截断长度，为空表示不截断
+ * @param string $tail 追加尾串字符
+ * @param bool $length_exceeded 超长长度
+ * @return string
+ */
+function ha($str, $len = 0, $tail = '...', &$length_exceeded = false){
+	$str = cut_string($str, $len, $tail, $length_exceeded);
+	return htmlspecialchars($str, ENT_QUOTES);
+}
+
 /**
  * 转化明文文本到HTML
  * @param string $text
@@ -662,8 +692,7 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 	}
 	$html = htmlspecialchars($text);
 	$html = str_replace("\r", '', $html);
-	$html = str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
-	return $html;
+	return str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
 }
 
 /**
