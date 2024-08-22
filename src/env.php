@@ -206,13 +206,21 @@ function console_color($text, $fore_color = null, $back_color = null){
  * 显示进度条
  * @param int $index
  * @param int $total
- * @param string $patch_text 补充显示文本
+ * @param string|callable $patch_text
+ * 补充显示文本，可以是一个闭包函数，函数内所有echo字符串均会被当成进度文本输出，如果是闭包函数由于php cli的ob会造成一定的延时
  * @param int $start_timestamp 开始时间戳，为空函数内初始化全局唯一一个时间戳
  */
 function show_progress($index, $total, $patch_text = '', $start_timestamp = null){
-	if($patch_text){
-		$patch_text = preg_replace("/[\n\r]/", '', trim($patch_text));
+	if(is_callable($patch_text)){
+		try {
+			ob_start();
+			call_user_func($patch_text);
+			$patch_text = ob_get_clean();
+		} catch(Exception $e){
+			$patch_text = $e->getMessage();
+		}
 	}
+	$patch_text = preg_replace("/[\n\r]/", '', trim($patch_text));
 	$pc = str_pad(round(100*$index/$total), 2, ' ', STR_PAD_LEFT);
 	$progress_length = 10;
 	$reminds = '';
