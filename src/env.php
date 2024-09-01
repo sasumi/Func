@@ -256,15 +256,15 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 
 /**
  * loading 方式输出控制台字符串
- * @param $patch_text
- * @param $loading_chars
+ * @param string $patch_text 显示文本
+ * @param string[] $loading_chars loading字符序列，例如可以为：['\\', '|', '/', '-']
  * @return void
  */
-function show_loading($patch_text, $loading_chars = ['\\', '|', '/', '-']){
+function show_loading($patch_text, $loading_chars = ''){
 	if($patch_text){
 		$patch_text = preg_replace("/[\n\r]/", '', trim($patch_text));
 	}
-	$loading_chars = ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
+	$loading_chars = $loading_chars ?: ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
 	global $__last_loading_chart_idx;
 	list($colum) = get_screen_size();
 	if($colum){

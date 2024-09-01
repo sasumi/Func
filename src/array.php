@@ -246,6 +246,25 @@ function array_merge_recursive_distinct(array &$array1, array &$array2){
 }
 
 /**
+ * 关联数组合并（即使是自然索引数组，也是按照key的逻辑来合并，子项也不例外）
+ * @param array $org_arr
+ * @param array $new_arr
+ * @param $recursive
+ * @return array
+ */
+function array_merge_assoc(array $org_arr, array $new_arr, $recursive = false){
+	foreach($new_arr as $k=>$val){
+		if($recursive && isset($org_arr[$k]) && is_array($val) && is_array($org_arr[$k])){
+			$org_arr[$k] = array_merge_assoc($org_arr[$k], $val);
+		} else {
+			$org_arr[$k] = $val;
+		}
+	}
+	return $org_arr;
+}
+
+
+/**
  * 清理数组中null的元素
  * @param array|mixed $data
  * @param bool $recursive

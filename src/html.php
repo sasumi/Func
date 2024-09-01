@@ -28,7 +28,6 @@ const HTML_SELF_CLOSING_TAGS = [
 	'menuitem',
 ];
 
-
 /**
  * 构建select节点，支持optgroup模式
  * @param string $name
@@ -693,6 +692,20 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 	$html = htmlspecialchars($text);
 	$html = str_replace("\r", '', $html);
 	return str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
+}
+
+/**
+ * todo
+ * @param $html
+ * @param $option
+ * @return void
+ */
+function html_to_text($html, $option){
+	$option = array_Merge([
+		'trim'            => true,
+		'image_replacer'  => '',
+		'keep_line_break' => false,
+	], $option);
 }
 
 /**
