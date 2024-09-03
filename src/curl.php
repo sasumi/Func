@@ -495,13 +495,9 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		$get_result();
 
 		if(!$added && !$running_count){
-			echo('no added & no running count');
 			break;
 		}
-		//		Logger::debug('$still_running:'.$running_count, '$state:'.$state);
 	} while($state === CURLM_OK);
-
-	echo('Finish Task');
 	curl_multi_close($mh);
 	return true;
 }
