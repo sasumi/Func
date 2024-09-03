@@ -1,10 +1,54 @@
 <?php
 /**
- * HTTP 快速操作函数
+ * HTTP操作函数
  */
 namespace LFPhp\Func;
 
 use Exception;
+
+const HTTP_STATUS_MESSAGE_MAP = [
+	100 => 'Continue',
+	101 => 'Switching Protocols',
+	200 => 'OK',
+	201 => 'Created',
+	202 => 'Accepted',
+	203 => 'Non-Authoritative Information',
+	204 => 'No Content',
+	205 => 'Reset Content',
+	206 => 'Partial Content',
+	300 => 'Multiple Choices',
+	301 => 'Moved Permanently',
+	302 => 'Moved Temporarily ',
+	303 => 'See Other',
+	304 => 'Not Modified',
+	305 => 'Use Proxy',
+	307 => 'Temporary Redirect',
+	400 => 'Bad Request',
+	401 => 'Unauthorized',
+	402 => 'Payment Required',
+	403 => 'Forbidden',
+	404 => 'Not Found',
+	405 => 'Method Not Allowed',
+	406 => 'Not Acceptable',
+	407 => 'Proxy Authentication Required',
+	408 => 'Request Timeout',
+	409 => 'Conflict',
+	410 => 'Gone',
+	411 => 'Length Required',
+	412 => 'Precondition Failed',
+	413 => 'Request Entity Too Large',
+	414 => 'Request-URI Too Long',
+	415 => 'Unsupported Media Type',
+	416 => 'Requested Range Not Satisfiable',
+	417 => 'Expectation Failed',
+	500 => 'Internal Server Error',
+	501 => 'Not Implemented',
+	502 => 'Bad Gateway',
+	503 => 'Service Unavailable',
+	504 => 'Gateway Timeout',
+	505 => 'HTTP Version Not Supported',
+	509 => 'Bandwidth Limit Exceeded',
+];
 
 /**
  * 发送HTTP状态码
@@ -25,29 +69,12 @@ function http_send_status($status){
 }
 
 /**
- * 开启 httpd服务器分块输出
+ * 开启 httpd 服务器分块输出
  */
 function http_chunk_on(){
 	@ob_end_clean(); //强制php直接输出内容到浏览器，不加入缓冲区
 	ob_implicit_flush(true); //设置nginx或apache不缓冲，直接输出
 	header('X-Accel-Buffering: no'); //关键是加了这一行。
-}
-
-
-/**
- * 请求来自POST
- * @return bool
- */
-function request_in_post(){
-	return $_SERVER['REQUEST_METHOD'] === 'POST';
-}
-
-/**
- * 请求来自于GET
- * @return bool
- */
-function request_in_get(){
-	return $_SERVER['REQUEST_METHOD'] === 'GET';
 }
 
 /**
@@ -95,50 +122,7 @@ function http_send_charset($charset){
  * @return string|null
  */
 function http_get_status_message($status){
-	static $msg = [
-		100 => 'Continue',
-		101 => 'Switching Protocols',
-		200 => 'OK',
-		201 => 'Created',
-		202 => 'Accepted',
-		203 => 'Non-Authoritative Information',
-		204 => 'No Content',
-		205 => 'Reset Content',
-		206 => 'Partial Content',
-		300 => 'Multiple Choices',
-		301 => 'Moved Permanently',
-		302 => 'Moved Temporarily ',
-		303 => 'See Other',
-		304 => 'Not Modified',
-		305 => 'Use Proxy',
-		307 => 'Temporary Redirect',
-		400 => 'Bad Request',
-		401 => 'Unauthorized',
-		402 => 'Payment Required',
-		403 => 'Forbidden',
-		404 => 'Not Found',
-		405 => 'Method Not Allowed',
-		406 => 'Not Acceptable',
-		407 => 'Proxy Authentication Required',
-		408 => 'Request Timeout',
-		409 => 'Conflict',
-		410 => 'Gone',
-		411 => 'Length Required',
-		412 => 'Precondition Failed',
-		413 => 'Request Entity Too Large',
-		414 => 'Request-URI Too Long',
-		415 => 'Unsupported Media Type',
-		416 => 'Requested Range Not Satisfiable',
-		417 => 'Expectation Failed',
-		500 => 'Internal Server Error',
-		501 => 'Not Implemented',
-		502 => 'Bad Gateway',
-		503 => 'Service Unavailable',
-		504 => 'Gateway Timeout',
-		505 => 'HTTP Version Not Supported',
-		509 => 'Bandwidth Limit Exceeded',
-	];
-	return isset($msg[$status]) ? $msg[$status] : null;
+	return HTTP_STATUS_MESSAGE_MAP[$status];
 }
 
 /**
@@ -195,6 +179,32 @@ function http_get_request_header($key){
 }
 
 /**
+ * 解析 http头信息
+ * @param $header_str
+ * @return array
+ */
+function http_parse_headers($header_str){
+	$headers = [];
+	foreach(explode("\n", $header_str) as $i => $h){
+		list($k, $v) = explode(':', $h, 2);
+		//由于HTTP HEADER没有约束大小写，这里为了避免传入数据不规范导致，全部格式化小写
+		$k = strtolower($k);
+		if(isset($v)){
+			if(!isset($headers[$k])){
+				$headers[$k] = trim($v);
+			}else if(is_array($headers[$k])){
+				$tmp = array_merge($headers[$k], array(trim($v)));
+				$headers[$k] = $tmp;
+			}else{
+				$tmp = array_merge(array($headers[$k]), array(trim($v)));
+				$headers[$k] = $tmp;
+			}
+		}
+	}
+	return $headers;
+}
+
+/**
  * 判断请求方式是否为 JSON 方式
  * @return bool
  */
@@ -208,6 +218,22 @@ function http_from_json_request(){
  */
 function http_request_accept_json(){
 	return http_get_request_header('Accept') == 'application/json';
+}
+
+/**
+ * 请求来自POST
+ * @return bool
+ */
+function request_in_post(){
+	return $_SERVER['REQUEST_METHOD'] === 'POST';
+}
+
+/**
+ * 请求来自于GET
+ * @return bool
+ */
+function request_in_get(){
+	return $_SERVER['REQUEST_METHOD'] === 'GET';
 }
 
 /**
@@ -251,14 +277,6 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
 }
 
 /**
- * 响应JSON返回头
- * @param string $charset
- */
-function http_header_json_response($charset = 'utf-8'){
-	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
-}
-
-/**
  * 响应json数据
  * @param mixed $json
  * @param int $json_option
@@ -267,6 +285,14 @@ function http_header_json_response($charset = 'utf-8'){
 function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
 	http_header_json_response();
 	echo json_encode($json, $json_option);
+}
+
+/**
+ * 响应JSON返回头
+ * @param string $charset
+ */
+function http_header_json_response($charset = 'utf-8'){
+	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
 }
 
 /**
@@ -303,27 +329,6 @@ function http_header_csp(array $csp_rules, $report_uri = '', $report_only = fals
 }
 
 /**
- * 生成 Report API
- * @param string[] $endpoint_urls
- * @param string $group
- * @param number $max_age_sec
- * @param bool $include_subdomains
- * @return array
- */
-function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
-	$endpoints_obj = [];
-	foreach($endpoint_urls as $url){
-		$endpoints_obj[] = ['url' => $url];
-	};
-	return [
-		'group'              => $group,
-		'max_age'            => $max_age_sec,
-		'include_subdomains' => $include_subdomains,
-		'endpoints'          => $endpoints_obj,
-	];
-}
-
-/**
  * 发送浏览器设置 Report API
  * @param string[] $endpoint_urls
  * @param string $group
@@ -344,6 +349,27 @@ function http_header_report_api(array $endpoint_urls, $group = 'default', $max_a
  */
 function http_header_report_api_nel(array $endpoint_urls, $group = 'network-error', $max_age_sec = ONE_DAY, $include_subdomains = true){
 	header('NEL: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
+}
+
+/**
+ * 生成 Report API
+ * @param string[] $endpoint_urls
+ * @param string $group
+ * @param number $max_age_sec
+ * @param bool $include_subdomains
+ * @return array
+ */
+function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
+	$endpoints_obj = [];
+	foreach($endpoint_urls as $url){
+		$endpoints_obj[] = ['url' => $url];
+	};
+	return [
+		'group'              => $group,
+		'max_age'            => $max_age_sec,
+		'include_subdomains' => $include_subdomains,
+		'endpoints'          => $endpoints_obj,
+	];
 }
 
 /**
