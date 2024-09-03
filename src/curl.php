@@ -10,15 +10,15 @@ use Exception;
  * CURL GET请求
  * @param string $url
  * @param mixed|null $data
- * @param array|null|callable $curl_option 额外CURL选项，如果是闭包函数，传入第一个参数为ch
- * @return array [head, body, ...] curl_getinfo信息
+ * @param array $curl_option 额外CURL选项
+ * @return array [info=>[], head=>'', body=>'', ...] curl_getinfo信息
  * @throws \Exception
  */
 function curl_get($url, $data = null, array $curl_option = []){
 	if($data){
 		$url .= (strpos($url, '?') !== false ? '&' : '?').curl_data2str($data);
 	}
-	$ch = curl_instance($url, $curl_option);
+	$ch = curl_instance($url, curl_default_option($url, $curl_option));
 	return curl_query($ch);
 }
 
@@ -31,10 +31,11 @@ function curl_get($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post($url, $data = null, array $curl_option = []){
-	$ch = curl_instance($url, array_merge_assoc([
+	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
-	], $curl_option));
+	]);
+	$ch = curl_instance($url, $curl_option);
 	return curl_query($ch);
 }
 
@@ -48,15 +49,12 @@ function curl_post($url, $data = null, array $curl_option = []){
  */
 function curl_post_json($url, $data = null, array $curl_option = []){
 	$data = ($data && !is_string($data)) ? json_encode($data) : $data;
-	$curl_option = array_merge_assoc([
-		CURLOPT_HTTPHEADER     => [
+	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
+		CURLOPT_HTTPHEADER => [
 			'Content-Type: application/json; charset=utf-8',
 			'Content-Length: '.strlen($data),
 		],
-		CURLOPT_FOLLOWLOCATION => true, //允许重定向
-		CURLOPT_MAXREDIRS      => 3, //最多允许3次重定向
-		CURLOPT_ENCODING       => '', //开启gzip等编码支持
-	], $curl_option);
+	]);
 	return curl_post($url, $data, $curl_option);
 }
 
@@ -76,13 +74,13 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 		}
 		$ext_param[$name] = curl_file_create($file);
 	}
-	$curl_option = array_merge_assoc([
+	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
 		CURLOPT_POST           => true,
 		CURLOPT_POSTFIELDS     => $ext_param,
 		CURLOPT_FOLLOWLOCATION => true, //允许重定向
 		CURLOPT_MAXREDIRS      => 3, //最多允许3次重定向
 		CURLOPT_ENCODING       => '', //开启gzip等编码支持
-	], $curl_option);
+	]);
 	$ch = curl_instance($url, $curl_option);
 	return curl_query($ch);
 }
@@ -189,8 +187,63 @@ function curl_build_command($url, $body_str, $method, $headers, $multiple_line =
 }
 
 /**
+ * 解析代理字符串，生成CURL选项
+ * @param string $proxy_string
+ * 代理字符串，格式如：
+ * http://hostname:port
+ * http://username:password@hostname:port
+ * https://hostname:port (converted to http://)
+ * https://username:password@hostname:port (converted to http://)
+ * socks4://hostname:port
+ * socks4://username:password@hostname:port
+ * socks5://hostname:port
+ * socks5://username:password@hostname:port
+ * @return array
+ */
+function curl_get_proxy_option($proxy_string){
+	$type = 'http'; //默认使用 http 协议
+	$account = '';
+	$password = '';
+	$CURL_TYPE_MAP = [
+		'http'    => CURLPROXY_HTTP,
+		'https'   => CURLPROXY_HTTP, //port 443
+		'socks4'  => CURLPROXY_SOCKS4,
+		'socks5'  => CURLPROXY_SOCKS5,
+		'socks4a' => CURLPROXY_SOCKS4A,
+	];
+	if(preg_match('/^(\w+):\/\//', $proxy_string, $matches)){
+		$type = strtolower($matches[1]);
+		$proxy_string = preg_replace('/^\w+:\/\//', '', $proxy_string);
+	}
+	if(!isset($CURL_TYPE_MAP[$type])){
+		throw new Exception('Proxy type no supported:'.$type);
+	}
+	if(preg_match('/^(.*?)@/', $proxy_string, $matches)){
+		list($account, $password) = explode(':', $matches[1]);
+		$proxy_string = preg_replace('/.*?@/', '', $proxy_string);
+	}
+	list($host, $port) = explode(':', $proxy_string);
+
+	//https缺省使用443端口
+	if($type === 'https' && !$port){
+		$port = 443;
+	}
+	$curl_option = [
+		CURLOPT_PROXY     => $host,
+		CURLOPT_PROXYTYPE => $CURL_TYPE_MAP[$type],
+	];
+	if($port){
+		$curl_option[CURLOPT_PROXYPORT] = (int)$port;
+	}
+	if($account){
+		$curl_option[CURLOPT_PROXYUSERPWD] = $account.($password ? ':'.$password : '');
+	}
+	return $curl_option;
+}
+
+/**
  * 获取CURL默认选项
- * @param string $url
+ * @param string $url 请求URL，该参数用于识别https协议请求，添加响应CURL选项
  * @param array $custom_option
  * @return array
  */
@@ -201,16 +254,18 @@ function curl_default_option($url = '', $custom_option = []){
 		CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //缺省使用请求UA，如果是CLI模式，这里为空
 		CURLOPT_FOLLOWLOCATION => true, //跟随服务端响应的跳转
 		CURLOPT_MAXREDIRS      => 10, //最大跳转次数
-		CURLOPT_ENCODING       => 'gzip', //缺省使用 gzip 传输
+		CURLOPT_ENCODING       => 'gzip, deflate', //缺省使用 gzip 传输
 		CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //默认使用 HTTP1.1 版本
 		CURLOPT_TIMEOUT        => 10, //默认超时时间 10s
-		CURLOPT_URL            => $url,
 	], $custom_option);
 
-	//补充支持 https:// 协议
-	if(stripos($url, 'https://') === 0){
-		$curl_option[CURLOPT_SSL_VERIFYPEER] = 0;
-		$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
+	if($url){
+		$curl_option[CURLOPT_URL] = $url;
+		//补充支持 https:// 协议
+		if(stripos($url, 'https://') === 0){
+			$curl_option[CURLOPT_SSL_VERIFYPEER] = 0;
+			$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
+		}
 	}
 
 	//处理HTTP头部，如果传入的是key => value数组，转换成字符串数组
@@ -231,6 +286,7 @@ function curl_default_option($url = '', $custom_option = []){
 
 	if($curl_option[CURLOPT_TIMEOUT] && get_max_socket_timeout() < $curl_option[CURLOPT_TIMEOUT]){
 		//warning timeout setting no taking effect
+		error_log('warning timeout setting no taking effect');
 	}
 
 	return $curl_option;
@@ -244,9 +300,9 @@ function curl_default_option($url = '', $custom_option = []){
  * @throws \Exception
  */
 function curl_instance($url, array $curl_option){
-	$option = curl_default_option($url, $curl_option);
 	$ch = curl_init();
-	curl_setopt_array($ch, $option);
+	$curl_option[CURLOPT_URL] = $url;
+	curl_setopt_array($ch, $curl_option);
 	if(!$ch){
 		throw new Exception('Curl init fail');
 	}
@@ -358,7 +414,6 @@ function curl_option_to_request_header($options){
 	}
 	return $headers;
 }
-
 
 /**
  * 请求链接转换成闭包函数
