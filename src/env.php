@@ -154,50 +154,63 @@ function get_php_info(){
 }
 
 /**
- * get console text colorize
+ * 控制台前景色映射集合
+ */
+const CONSOLE_FOREGROUND_COLOR_MAP = [
+	'default'      => '0:39',
+	'black'        => '0;30',
+	'dark_gray'    => '1;30',
+	'blue'         => '0;34',
+	'light_blue'   => '1;34',
+	'green'        => '0;32',
+	'light_green'  => '1;32',
+	'cyan'         => '0;36',
+	'light_cyan'   => '1;36',
+	'red'          => '0;31',
+	'light_red'    => '1;31',
+	'purple'       => '0;35',
+	'light_purple' => '1;35',
+	'brown'        => '0;33',
+	'yellow'       => '1;33',
+	'light_gray'   => '0;37',
+	'white'        => '1;37',
+];
+
+/**
+ * 控制台背景色映射集合
+ */
+const CONSOLE_BACKGROUND_COLOR_MAP = [
+	'black'      => '40',
+	'red'        => '41',
+	'green'      => '42',
+	'yellow'     => '43',
+	'blue'       => '44',
+	'magenta'    => '45',
+	'cyan'       => '46',
+	'light_gray' => '47',
+];
+
+/**
+ * 生成携带颜色的CLI字符串
  * @param string $text
- * @param null $fore_color
- * @param null $back_color
+ * @param string $fore_color
+ * @param string $back_color
  * @return string
  */
-function console_color($text, $fore_color = null, $back_color = null){
-	static $fore_color_map = [
-		'default'      => '0:39',
-		'black'        => '0;30',
-		'dark_gray'    => '1;30',
-		'blue'         => '0;34',
-		'light_blue'   => '1;34',
-		'green'        => '0;32',
-		'light_green'  => '1;32',
-		'cyan'         => '0;36',
-		'light_cyan'   => '1;36',
-		'red'          => '0;31',
-		'light_red'    => '1;31',
-		'purple'       => '0;35',
-		'light_purple' => '1;35',
-		'brown'        => '0;33',
-		'yellow'       => '1;33',
-		'light_gray'   => '0;37',
-		'white'        => '1;37',
-	], $back_color_map = [
-		'black'      => '40',
-		'red'        => '41',
-		'green'      => '42',
-		'yellow'     => '43',
-		'blue'       => '44',
-		'magenta'    => '45',
-		'cyan'       => '46',
-		'light_gray' => '47',
-	];
-	$color_str = '';
+function console_color($text, $fore_color = '', $back_color = ''){
+	//忽略已经设置颜色的字符串
+	if(preg_match("/\033\\[0m/", $text)){
+		return $text;
+	}
+	$color_prefix = '';
 	if($fore_color){
-		$color_str .= "\033[".$fore_color_map[$fore_color]."m";
+		$color_prefix .= "\033[".CONSOLE_FOREGROUND_COLOR_MAP[$fore_color]."m";
 	}
 	if($back_color){
-		$color_str .= "\033[".$back_color_map[$back_color]."m";
+		$color_prefix .= "\033[".CONSOLE_BACKGROUND_COLOR_MAP[$back_color]."m";
 	}
-	if($color_str){
-		return $color_str.$text."\033[0m";
+	if($color_prefix){
+		return $color_prefix.$text."\033[0m";
 	}
 	return $text;
 }

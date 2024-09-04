@@ -418,10 +418,10 @@ function curl_option_to_request_header($options){
 /**
  * 请求链接转换成闭包函数
  * @param string[] $urls 请求链接数组
- * @param array $curl_option 通用CURL选项数组
+ * @param array $curl_option CURL选项数组
  * @return \Closure
  */
-function curl_urls_to_fetcher($urls, $curl_option){
+function curl_urls_to_fetcher($urls, $curl_option = []){
 	$options = [];
 	foreach($urls as $url){
 		$curl_option[CURLOPT_URL] = $url;
