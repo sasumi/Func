@@ -10,6 +10,18 @@ use Exception;
  * CURL 请求全局默认参数，可以通过 curl_get_default_option() 和 curl_set_default_option() 进行操作
  */
 const CURL_DEFAULT_OPTION_GLOBAL_KEY = __NAMESPACE__.'/curl_default_option';
+
+/**
+ * 额外支持控制选项
+ */
+
+//响应页面部分编码做自动转换为UTF-8，可以设置为指定编码（如gbk, gb2312）或 ''(表示自动识别)
+//不设置该选项，或设置为NULL，CURL不进行页面编码转换
+const CURLOPT_PAGE_ENCODING = __NAMESPACE__.'/CURL_PAGE_ENCODING';
+
+//设置自动写入、读取cookie文件（跟随cookie文件）
+const CURLOPT_FOLLOWING_COOKIE_FILE = __NAMESPACE__.'/CURLOPT_FOLLOWING_COOKIE_FILE';
+
 $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
 	CURLOPT_RETURNTRANSFER => true, //返回内容部分
 	CURLOPT_HEADER         => true, //发送头部信息
@@ -33,8 +45,7 @@ function curl_get($url, $data = null, array $curl_option = []){
 	if($data){
 		$url .= (strpos($url, '?') !== false ? '&' : '?').curl_data2str($data);
 	}
-	$ch = curl_instance($url, $curl_option);
-	return curl_query($ch);
+	return curl_query($url, $curl_option);
 }
 
 /**
@@ -46,11 +57,10 @@ function curl_get($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post($url, $data = null, array $curl_option = []){
-	$ch = curl_instance($url, array_merge_assoc($curl_option, [
+	return curl_query($url, array_merge_assoc($curl_option, [
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
 	]));
-	return curl_query($ch);
 }
 
 /**
@@ -87,11 +97,10 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 		}
 		$ext_param[$name] = curl_file_create($file);
 	}
-	$ch = curl_instance($url, array_merge_assoc([
+	return curl_query($url, array_merge_assoc([
 		CURLOPT_POST           => true,
 		CURLOPT_POSTFIELDS     => $ext_param,
 	], $curl_option));
-	return curl_query($ch);
 }
 
 /**
@@ -103,11 +112,10 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
  * @throws \Exception
  */
 function curl_put($url, $data, array $curl_option = []){
-	$ch = curl_instance($url, array_merge_assoc([
+	return curl_query($url, array_merge_assoc([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'PUT',
 	], $curl_option));
-	return curl_query($ch);
 }
 
 /**
@@ -119,20 +127,22 @@ function curl_put($url, $data, array $curl_option = []){
  * @throws \Exception
  */
 function curl_delete($url, $data, array $curl_option = []){
-	$ch = curl_instance($url, array_merge_assoc([
+	return curl_query($url, array_merge_assoc([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'DELETE',
 	], $curl_option));
-	return curl_query($ch);
 }
 
 /**
- * 执行curl，并关闭curl连接
- * @param resource $ch
+ * 快速执行curl查询，并关闭curl连接
+ * @param string $url
+ * @param array $curl_option
+ * @param string $error
  * @return array [info=>[], head=>'', body=>''] curl_getinfo信息
  * @throws \Exception
  */
-function curl_query($ch, &$error = ''){
+function curl_query($url, array $curl_option, &$error = ''){
+	list($ch, $exec_option) = curl_instance($url, $curl_option);
 	$raw_string = curl_exec($ch);
 	$error = curl_error($ch);
 	if($error){
@@ -142,6 +152,11 @@ function curl_query($ch, &$error = ''){
 	$curl_info['info'] = curl_getinfo($ch);
 	$curl_info['head'] = substr($raw_string, 0, $header_size);
 	$curl_info['body'] = substr($raw_string, $header_size);
+
+	if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
+		$curl_info['body'] = mb_convert_encoding($curl_info['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+	}
+
 	curl_close($ch);
 	return $curl_info;
 }
@@ -274,13 +289,13 @@ function curl_set_default_option(array $curl_option, $patch = false){
 /**
  * 获取CURL实例对象
  * @param string $url
- * @param array $curl_option CURL选项，会通过 curl_default_option() 添加额外默认选项
- * @return resource
+ * @param array $ext_curl_option CURL选项，会通过 curl_default_option() 添加额外默认选项
+ * @return array(resource, $curl_option)
  * @throws \Exception
  */
-function curl_instance($url, array $curl_option = []){
+function curl_instance($url, array $ext_curl_option = []){
 	$ch = curl_init();
-	$curl_option = curl_get_default_option($curl_option);
+	$curl_option = curl_get_default_option($ext_curl_option);
 	$curl_option[CURLOPT_URL] = $url ?: $curl_option[CURLOPT_URL];
 
 	//补充支持 https:// 协议
@@ -299,21 +314,26 @@ function curl_instance($url, array $curl_option = []){
 	}
 
 	//设置缺省参数
-	if($curl_option['USE_COOKIE']){
-		$curl_option[CURLOPT_COOKIEJAR] = $curl_option['USE_COOKIE']; //连接结束后保存cookie信息的文件。
-		$curl_option[CURLOPT_COOKIEFILE] = $curl_option['USE_COOKIE']; //包含cookie数据的文件名，cookie文件的格式可以是Netscape格式，或者只是纯HTTP头部信息存入文件。
-		unset($curl_option['USE_COOKIE']);
+	if($curl_option[CURLOPT_FOLLOWING_COOKIE_FILE]){
+		$curl_option[CURLOPT_COOKIEJAR] = $curl_option[CURLOPT_FOLLOWING_COOKIE_FILE]; //连接结束后保存cookie信息的文件。
+		$curl_option[CURLOPT_COOKIEFILE] = $curl_option[CURLOPT_FOLLOWING_COOKIE_FILE]; //包含cookie数据的文件名，cookie文件的格式可以是Netscape格式，或者只是纯HTTP头部信息存入文件。
 	}
 
 	if($curl_option[CURLOPT_TIMEOUT] && get_max_socket_timeout() < $curl_option[CURLOPT_TIMEOUT]){
 		//warning timeout setting no taking effect
 		error_log('warning timeout setting no taking effect');
 	}
-	curl_setopt_array($ch, $curl_option);
+
+	//忽略自定义选项
+	foreach($curl_option as $k=>$item){
+		if(strpos($k, __NAMESPACE__) === false){
+			curl_setopt($ch, $k, $item);
+		}
+	}
 	if(!$ch){
 		throw new Exception('Curl init fail');
 	}
-	return $ch;
+	return [$ch, $curl_option];
 }
 
 /**
@@ -456,13 +476,17 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 
 	$mh = curl_multi_init();
 
+	$tmp_option_cache = [
+		//url => option
+	];
+
 	/**
 	 * 添加任务
 	 * @param int $count 添加数量
 	 * @return int
 	 * @throws \Exception
 	 */
-	$add_task = function($count) use ($mh, $curl_option_fetcher, $on_item_start){
+	$add_task = function($count) use ($mh, $curl_option_fetcher, $on_item_start, &$tmp_option_cache){
 		$added = 0;
 		for($i = 0; $i < $count; $i++){
 			$curl_opt = $curl_option_fetcher();
@@ -471,7 +495,8 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 			}
 			$added++;
 			$on_item_start && $on_item_start($curl_opt);
-			$ch = curl_instance('', $curl_opt);
+			list($ch, $exec_option) = curl_instance('', $curl_opt);
+			$tmp_option_cache[$curl_opt[CURLOPT_URL]] = $exec_option;
 			curl_multi_add_handle($mh, $ch);
 		}
 		return $added;
@@ -481,21 +506,30 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	 * 获取结果
 	 * @return void
 	 */
-	$get_result = function() use ($mh, $on_item_finish, &$running_count){
+	$get_result = function() use ($mh, $on_item_finish, &$running_count, &$tmp_option_cache){
 		//把所有已完成的任务都处理掉, curl_multi_info_read执行一次读取一条
 		while($curl_result = curl_multi_info_read($mh)){
 			$ch = $curl_result['handle'];
 			$info = curl_getinfo($ch);
+			$exec_option = $tmp_option_cache[$info['url']];
 
 			$raw_string = curl_multi_getcontent($ch); //获取结果
 			$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 			$info['head'] = substr($raw_string, 0, $header_size);
+
 			$info['body'] = substr($raw_string, $header_size);
+
+			//处理编码转换
+			if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
+				$info['body'] = mb_convert_encoding($info['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+			}
+
 			$error = curl_error($ch) ?: null;
 			$on_item_finish && $on_item_finish($info, $error);
 
 			curl_multi_remove_handle($mh, $ch);
 			curl_close($ch);
+			unset($tmp_option_cache[$info['url']]);
 		}
 	};
 
