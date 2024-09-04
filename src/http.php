@@ -381,3 +381,44 @@ function http_parse_cookie($cookie_str){
 	parse_str(strtr($cookie_str, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
 	return $cookies;
 }
+
+/**
+ * 修正相对URL成绝对URL
+ * @param string $url
+ * @param string $base_url
+ * @return string|string[]
+ */
+function http_fix_relative_url($url, $base_url){
+	if(is_array($url)){
+		foreach($url as $k => $u){
+			$url[$k] = http_fix_relative_url($u, $base_url);
+		}
+		return $url;
+	}
+
+	/* return if already absolute URL */
+	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//') return $url;
+
+	/* queries and anchors */
+	if ($url[0]=='#' || $url[0]=='?') return $base_url.$url;
+
+	/* parse base URL and convert to local variables:
+	 $scheme, $host, $path */
+	extract(parse_url($base_url));
+
+	/* remove non-directory element from path */
+	$path = preg_replace('#/[^/]*$#', '', $path);
+
+	/* destroy path if relative url points to root */
+	if ($url[0] == '/') $path = '';
+
+	/* dirty absolute URL */
+	$abs = "$host$path/$url";
+
+	/* replace '//' or '/./' or '/foo/../' with '/' */
+	$re = array('#(/\.?/)#', '#/(?!\.\.)[^/]+/\.\./#');
+	for($n=1; $n>0; $abs=preg_replace($re, '/', $abs, -1, $n)) {}
+
+	/* absolute URL is ready! */
+	return $scheme.'://'.$abs;
+}

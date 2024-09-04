@@ -442,7 +442,7 @@ function curl_urls_to_fetcher($urls, $curl_option = []){
 /**
  * CURL 并发请求
  * 注意：回调函数需尽快处理避免阻塞后续请求流程
- * @param callable $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
+ * @param callable|array $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
  * @param callable|null $on_item_start ($curl_option) 开始执行回调
  * @param callable|null $on_item_finish ($info, $error=null) 请求结束回调，参数1：返回结果数组，参数2：错误信息，为空表示成功
  * @param int $rolling_window 滚动请求数量
@@ -450,6 +450,10 @@ function curl_urls_to_fetcher($urls, $curl_option = []){
  * @throws \Exception
  */
 function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_finish = null, $rolling_window = 10){
+	if(is_array($curl_option_fetcher)){
+		$curl_option_fetcher = curl_urls_to_fetcher($curl_option_fetcher);
+	}
+
 	$mh = curl_multi_init();
 
 	/**
