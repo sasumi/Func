@@ -7,6 +7,21 @@ namespace LFPhp\Func;
 use Exception;
 
 /**
+ * CURL 请求全局默认参数，可以通过 curl_get_default_option() 和 curl_set_default_option() 进行操作
+ */
+const CURL_DEFAULT_OPTION_GLOBAL_KEY = __NAMESPACE__.'/curl_default_option';
+$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
+	CURLOPT_RETURNTRANSFER => true, //返回内容部分
+	CURLOPT_HEADER         => true, //发送头部信息
+	CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //缺省使用请求UA，如果是CLI模式，这里为空
+	CURLOPT_FOLLOWLOCATION => true, //跟随服务端响应的跳转
+	CURLOPT_MAXREDIRS      => 5, //最大跳转次数，跳转次数过多，可能会出现过度性能消耗
+	CURLOPT_ENCODING       => 'gzip, deflate', //缺省使用 gzip 传输
+	CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //默认使用 HTTP1.1 版本
+	CURLOPT_TIMEOUT        => 10, //默认超时时间 10s
+];
+
+/**
  * CURL GET请求
  * @param string $url
  * @param mixed|null $data
@@ -18,7 +33,7 @@ function curl_get($url, $data = null, array $curl_option = []){
 	if($data){
 		$url .= (strpos($url, '?') !== false ? '&' : '?').curl_data2str($data);
 	}
-	$ch = curl_instance($url, curl_default_option($url, $curl_option));
+	$ch = curl_instance($url, $curl_option);
 	return curl_query($ch);
 }
 
@@ -31,11 +46,10 @@ function curl_get($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post($url, $data = null, array $curl_option = []){
-	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
+	$ch = curl_instance($url, array_merge_assoc($curl_option, [
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
-	]);
-	$ch = curl_instance($url, $curl_option);
+	]));
 	return curl_query($ch);
 }
 
@@ -49,13 +63,12 @@ function curl_post($url, $data = null, array $curl_option = []){
  */
 function curl_post_json($url, $data = null, array $curl_option = []){
 	$data = ($data && !is_string($data)) ? json_encode($data) : $data;
-	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
+	return curl_post($url, $data, array_merge_assoc([
 		CURLOPT_HTTPHEADER => [
 			'Content-Type: application/json; charset=utf-8',
 			'Content-Length: '.strlen($data),
 		],
-	]);
-	return curl_post($url, $data, $curl_option);
+	], $curl_option));
 }
 
 /**
@@ -74,14 +87,10 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 		}
 		$ext_param[$name] = curl_file_create($file);
 	}
-	$curl_option = array_merge_assoc(curl_default_option($url, $curl_option), [
+	$ch = curl_instance($url, array_merge_assoc([
 		CURLOPT_POST           => true,
 		CURLOPT_POSTFIELDS     => $ext_param,
-		CURLOPT_FOLLOWLOCATION => true, //允许重定向
-		CURLOPT_MAXREDIRS      => 3, //最多允许3次重定向
-		CURLOPT_ENCODING       => '', //开启gzip等编码支持
-	]);
-	$ch = curl_instance($url, $curl_option);
+	], $curl_option));
 	return curl_query($ch);
 }
 
@@ -199,6 +208,7 @@ function curl_build_command($url, $body_str, $method, $headers, $multiple_line =
  * socks5://hostname:port
  * socks5://username:password@hostname:port
  * @return array
+ * @throws \Exception
  */
 function curl_get_proxy_option($proxy_string){
 	$type = 'http'; //默认使用 http 协议
@@ -243,29 +253,40 @@ function curl_get_proxy_option($proxy_string){
 
 /**
  * 获取CURL默认选项
- * @param string $url 请求URL，该参数用于识别https协议请求，添加响应CURL选项
- * @param array $custom_option
  * @return array
  */
-function curl_default_option($url = '', $custom_option = []){
-	$curl_option = array_merge_assoc([
-		CURLOPT_RETURNTRANSFER => true, //返回内容部分
-		CURLOPT_HEADER         => true, //发送头部信息
-		CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //缺省使用请求UA，如果是CLI模式，这里为空
-		CURLOPT_FOLLOWLOCATION => true, //跟随服务端响应的跳转
-		CURLOPT_MAXREDIRS      => 10, //最大跳转次数
-		CURLOPT_ENCODING       => 'gzip, deflate', //缺省使用 gzip 传输
-		CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //默认使用 HTTP1.1 版本
-		CURLOPT_TIMEOUT        => 10, //默认超时时间 10s
-	], $custom_option);
+function curl_get_default_option($ext_option = []){
+	return array_merge_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY], $ext_option);
+}
 
-	if($url){
-		$curl_option[CURLOPT_URL] = $url;
-		//补充支持 https:// 协议
-		if(stripos($url, 'https://') === 0){
-			$curl_option[CURLOPT_SSL_VERIFYPEER] = 0;
-			$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
-		}
+/**
+ * 设置 curl_* 操作默认选项
+ * @param array $curl_option
+ * @param bool $patch 是否以追加方式添加，默认为覆盖
+ * @return array
+ */
+function curl_set_default_option(array $curl_option, $patch = false){
+	$default = $patch ? curl_get_default_option() : [];
+	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = array_merge_assoc($default, $curl_option);
+	return $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY];
+}
+
+/**
+ * 获取CURL实例对象
+ * @param string $url
+ * @param array $curl_option CURL选项，会通过 curl_default_option() 添加额外默认选项
+ * @return resource
+ * @throws \Exception
+ */
+function curl_instance($url, array $curl_option = []){
+	$ch = curl_init();
+	$curl_option = curl_get_default_option($curl_option);
+	$curl_option[CURLOPT_URL] = $url ?: $curl_option[CURLOPT_URL];
+
+	//补充支持 https:// 协议
+	if(stripos($curl_option[CURLOPT_URL], 'https://') === 0){
+		$curl_option[CURLOPT_SSL_VERIFYPEER] = 0;
+		$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
 	}
 
 	//处理HTTP头部，如果传入的是key => value数组，转换成字符串数组
@@ -288,20 +309,6 @@ function curl_default_option($url = '', $custom_option = []){
 		//warning timeout setting no taking effect
 		error_log('warning timeout setting no taking effect');
 	}
-
-	return $curl_option;
-}
-
-/**
- * 获取CURL实例对象
- * @param string $url
- * @param array $curl_option CURL选项，会通过 curl_default_option() 添加额外默认选项
- * @return resource
- * @throws \Exception
- */
-function curl_instance($url, array $curl_option){
-	$ch = curl_init();
-	$curl_option[CURLOPT_URL] = $url;
 	curl_setopt_array($ch, $curl_option);
 	if(!$ch){
 		throw new Exception('Curl init fail');
@@ -435,11 +442,12 @@ function curl_urls_to_fetcher($urls, $curl_option = []){
 /**
  * CURL 并发请求
  * 注意：回调函数需尽快处理避免阻塞后续请求流程
- * @param callable $curl_option_fetcher : array 返回CURL选项映射数组
+ * @param callable $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
  * @param callable|null $on_item_start ($curl_option) 开始执行回调
  * @param callable|null $on_item_finish ($info, $error=null) 请求结束回调，参数1：返回结果数组，参数2：错误信息，为空表示成功
  * @param int $rolling_window 滚动请求数量
  * @return bool
+ * @throws \Exception
  */
 function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_finish = null, $rolling_window = 10){
 	$mh = curl_multi_init();
@@ -448,6 +456,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	 * 添加任务
 	 * @param int $count 添加数量
 	 * @return int
+	 * @throws \Exception
 	 */
 	$add_task = function($count) use ($mh, $curl_option_fetcher, $on_item_start){
 		$added = 0;
@@ -458,8 +467,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 			}
 			$added++;
 			$on_item_start && $on_item_start($curl_opt);
-			$ch = curl_init();
-			curl_setopt_array($ch, $curl_opt);
+			$ch = curl_instance('', $curl_opt);
 			curl_multi_add_handle($mh, $ch);
 		}
 		return $added;
