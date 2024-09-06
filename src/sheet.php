@@ -33,8 +33,7 @@ function spreadsheet_get_column_index($column){
  * @param string $delimiter 分隔符
  */
 function csv_download($filename, $data, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
-	header("Content-type: text/csv");
-	header("Content-disposition: attachment;filename=\"$filename\"");
+	http_header_download($filename);
 	if($headers){
 		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
 	}
@@ -56,8 +55,7 @@ function csv_download($filename, $data, array $headers = [], $delimiter = CSV_CO
  * @param string $delimiter 分隔符
  */
 function csv_download_chunk($filename, callable $rows_fetcher, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
-	header("Content-type: text/csv");
-	header("Content-disposition: attachment;filename=\"$filename\"");
+	http_header_download($filename);
 	if($headers){
 		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
 	}
