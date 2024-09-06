@@ -6,17 +6,20 @@
  */
 namespace LFPhp\Func;
 
+const CSV_LINE_SEPARATOR = PHP_EOL; //CSV行分隔符
+const CSV_COMMON_DELIMITER = ','; //默认数据分隔符
+
 /**
  * 获取Excel等电子表格中列名
  * @param integer $column 列序号，由1开始
  * @return string 电子表格中的列名，格式如：A1、E3
  */
-function get_spreadsheet_column($column){
+function spreadsheet_get_column_index($column){
 	$numeric = ($column - 1)%26;
 	$letter = chr(65 + $numeric);
 	$num2 = intval(($column - 1)/26);
 	if($num2 > 0){
-		return get_spreadsheet_column($num2).$letter;
+		return spreadsheet_get_column_index($num2).$letter;
 	}else{
 		return $letter;
 	}
@@ -24,82 +27,76 @@ function get_spreadsheet_column($column){
 
 /**
  * 输出CSV文件到浏览器下载
- * @param string $download_name 下载文件名
+ * @param string $filename 下载文件名
  * @param array $data
- * @param array $fields 字段列表，格式为：[field=>alias,...]
- * @param string $mime_type
+ * @param array|string[] $headers 字段列表，格式为：[field=>alias,...]，或 [‘name', 'password'] 纯字符串数组
+ * @param string $delimiter 分隔符
  */
-function download_csv($download_name, $data, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
-	header("Content-Disposition: attachment; filename=\"$download_name\"");
-	header("Content-Type: $mime_type");
-	csv_output('echo', $data, $fields);
+function csv_download($filename, $data, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
+	header("Content-type: text/csv");
+	header("Content-disposition: attachment;filename=\"$filename\"");
+	if($headers){
+		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
+	}
+	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
+	foreach($data as $row){
+		if($fields){
+			echo join($delimiter, csv_format(array_filter_by_keys($row, $fields))).CSV_LINE_SEPARATOR;
+		}else{
+			echo join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
+		}
+	}
 }
 
 /**
  * 分块输出CSV文件到浏览器下载
- * @param string $download_name 下载文件名
- * @param callable $batch_fetcher
- * @param array $fields 字段列表，格式为：[field=>alias,...]
- * @param string $mime_type
+ * @param string $filename 下载文件名
+ * @param callable $rows_fetcher 数据获取函数，返回二维数组
+ * @param array|string[] $headers 字段列表，格式为：[field=>alias,...]，或 [‘name', 'password'] 纯字符串数组
+ * @param string $delimiter 分隔符
  */
-function download_csv_chunk($download_name, callable $batch_fetcher, array $fields = [], $mime_type = 'application/vnd.ms-excel'){
-	header("Content-Disposition: attachment; filename=\"$download_name\"");
-	header("Content-Type: $mime_type");
-	csv_output_chunk('echo', $batch_fetcher, $fields);
-}
-
-/**
- * CSV 读取
-  * @param string $file 文件路径
- * @param array $keys
- * @param int $ignore_head_lines
- * @return array 数据，格式为：[[字段1,字段2,...],...]
- */
-function read_csv($file, $keys = [], $ignore_head_lines = 0){
-	$fp = fopen($file, 'r');
-	$delimiter = ',';
-	$ret = [];
-	$ln = 0;
-	while($data = fgetcsv($fp, 0, $delimiter)){
-		if($ignore_head_lines && $ignore_head_lines < $ln){
-			$ln++;
-			continue;
-		}
-		$ln++;
-		if($keys && count($data) < count($keys)){
-			$data = array_pad($data, count($keys) - count($data), '');
-		}
-		$ret[] = $data;
+function csv_download_chunk($filename, callable $rows_fetcher, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
+	header("Content-type: text/csv");
+	header("Content-disposition: attachment;filename=\"$filename\"");
+	if($headers){
+		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
 	}
-	return $ret;
+	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
+	while($rows = $rows_fetcher()){
+		foreach($rows as $row){
+			$row = $fields ? array_filter_by_keys($row, $fields) : $row;
+			echo join($delimiter, csv_format($row)), CSV_LINE_SEPARATOR;
+		}
+	}
 }
 
 /**
  * 分块读取CSV文件
- * @param callable $output 数据输出处理函数，传入参数：chunks， 返回参数若为false，则中断读取
  * @param string $file 文件名称
- * @param array $fields 字段列表，格式为：[field=>alias,...] 映射字段名
+ * @param callable $output 数据输出处理函数，传入参数：rows， 返回参数若为false，则中断读取
+ * @param array $headers 字段列表，格式为：[field=>alias,...] 映射字段名
  * @param int $chunk_size 分块大小
- * @param int $ignore_head_lines 忽略开始头部标题行数
+ * @param int $start_line 开始读取行数，默认为第1行
+ * @param string $delimiter 分隔符
  * @throws \Exception
  */
-function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100, $ignore_head_lines = 0, $delimiter = ','){
-	$key_size = count($fields);
+function csv_read_file_chunk($file, callable $output, $headers = [], $chunk_size = 100, $start_line = 1, $delimiter = CSV_COMMON_DELIMITER){
+	$key_size = count($headers);
 	$chunk_tmp = [];
 	assert_via_exception($chunk_size > 0, 'Chunk size must bigger than 0');
-	file_read_by_line($file, function($text, $line_num) use ($delimiter, $output, &$chunk_tmp, $chunk_size, $fields, $key_size, $ignore_head_lines){
-		if($ignore_head_lines && $line_num <= $ignore_head_lines){
+	file_read_by_line($file, function($text, $line_num) use ($delimiter, $output, &$chunk_tmp, $chunk_size, $headers, $key_size, $start_line){
+		if($start_line && $line_num < $start_line){
 			return null;
 		}
 		$data = explode($delimiter, $text);
-		if($fields){
+		if($headers){
 			$data_size = count($data);
 			if($data_size > $key_size){
 				$data = array_slice($data, 0, $key_size);
 			} else if($data_size < $key_size){
-				$data = array_pad($data, count($fields), '');
+				$data = array_pad($data, count($headers), '');
 			}
-			$data = array_combine($fields, $data);
+			$data = array_combine($headers, $data);
 		}
 		$chunk_tmp[] = $data;
 		if(count($chunk_tmp) >= $chunk_size){
@@ -117,86 +114,69 @@ function read_csv_chunk(callable $output, $file, $fields = [], $chunk_size = 100
 }
 
 /**
- * 保存CSV文件
+ * CSV 读取
   * @param string $file 文件路径
- * @param array $data
- * @param array $field_map 字段别名映射列表，格式为：[field=>alias,...]
+ * @param string[] $keys 返回数组key配置，为空返回自然索引数组
+ * @param int $start_line 开始读取行数，默认为第1行
+ * @param string $delimiter 分隔符
+ * @return array 数据，格式为：[[key1=>val, key2=>val, ...], ...]， 如果没有配置key，返回二维自然索引数组
  */
-function save_csv($file, $data, array $field_map = []){
-	$fh = fopen($file, 'x');
-	csv_output(function($line) use ($fh){
-		fwrite($fh, $line);
-	}, $data, $field_map);
-	fclose($fh);
-}
-
-/**
- * 分块保存CSV文件
- * @param string $file 文件路径
- * @param callable $data_fetcher
- * @param array $field_map 字段别名映射列表，格式为：[field=>alias,...]
- */
-function save_csv_chunk($file, callable $data_fetcher, $field_map = []){
-	$fh = fopen($file, 'x');
-	csv_output_chunk(function($line) use ($fh){
-		fwrite($fh, $line);
-	}, $data_fetcher, $field_map);
-	fclose($fh);
-}
-
-/**
- * 分块输出CSV数据
- * @param callable $output
- * @param callable $batch_fetcher
- * @param array $fields 字段列表，格式为：[field=>alias,...]
- * @param int $uniq_seed
- * @return int 数据行数
- */
-function csv_output_chunk(callable $output, callable $batch_fetcher, array $fields = [], &$uniq_seed = 0){
-	$comma = "\t";
-	$line_sep = PHP_EOL;
-	$list = $batch_fetcher();
-
-	//first batch empty, return false
-	if(!$list){
-		return false;
-	}
-
-	if($uniq_seed++ < 1){
-		$output($fields ? implode($comma, format_csv_ceil($fields)).$line_sep : implode($comma, array_keys($list[0])).$line_sep);
-	}
-
-	$row_count = 0;
-	while($list || $list = $batch_fetcher()){
-		$row_count += count($list);
-		foreach($list as $row){
-			if($fields){
-				$tmp = [];
-				foreach($fields as $field => $alias){
-					$tmp[] = format_csv_ceil($row[$field]);
-				}
-				$output(join($comma, $tmp).$line_sep);
-			}else{
-				$output(join($comma, format_csv_ceil($row)).$line_sep);
-			}
+function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMMON_DELIMITER){
+	$fp = fopen($file, 'r');
+	$ret = [];
+	$line_num = 0;
+	while($data = fgetcsv($fp, 0, $delimiter)){
+		$line_num++;
+		if($start_line && $start_line > $line_num){
+			continue;
 		}
-		$list = [];
+		if($keys && count($data) < count($keys)){
+			$data = array_pad($data, count($keys) - count($data), '');
+		}
+		if($keys){
+			$ret[] = array_combine($keys, $data);
+		} else {
+			$ret[] = $data;
+		}
 	}
-	return $row_count;
+	return $ret;
 }
 
 /**
- * 输出CSV
- * @param callable $output
- * @param array $data 二维数组
- * @param array $fields 字段列表，格式为：[field=>alias,...]
- * @return bool|int
+ * 写入文件
+ * @param string $file 文件
+ * @param array[] $rows 二维数组
+ * @param string $delimiter 分隔符
+ * @param string $mode 文件打开模式 fopen(, mode)
  */
-function csv_output(callable $output, array $data, array $fields = []){
-	$tmp = $data;
-	return csv_output_chunk($output, function() use ($tmp, &$export_flag){
-		return array_shift($tmp);
-	}, $fields);
+function csv_save_file($file, $rows, $delimiter = CSV_COMMON_DELIMITER, $mode = 'a+'){
+	$fh = fopen($file, $mode);
+	csv_save_file_handle($fh, $rows, $delimiter);
+	fclose($fh);
+}
+
+/**
+ * 使用文件句柄方式写入文件（写入完成不会关闭句柄）
+ * 相比 csv_save_file()，该函数可以提供给周期性连续写入文件的场景，例如数据流处理
+ * @param resource $file_handle 文件句柄
+ * @param array[] $rows 二维数组
+ * @param string $delimiter 分隔符
+ */
+function csv_save_file_handle($file_handle, $rows, $delimiter = CSV_COMMON_DELIMITER){
+	$buffer_rows = 100; //每100行缓冲成字符串后写入文件，提高写入性能
+	$buffer_line = '';
+	$bf_counter = 0;
+	foreach($rows as $row){
+		$buffer_line .= join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
+		$bf_counter ++;
+		if($bf_counter >= $buffer_rows){
+			fwrite($file_handle, $buffer_line);
+			$buffer_line = '';
+		}
+	}
+	if($buffer_line){
+		fwrite($file_handle, $buffer_line);
+	}
 }
 
 /**
@@ -204,11 +184,11 @@ function csv_output(callable $output, array $data, array $fields = []){
  * @param mixed $val
  * @return string|array
  */
-function format_csv_ceil($val){
+function csv_format($val){
 	if(is_array($val)){
 		$ret = [];
 		foreach($val as $k => $item){
-			$ret[$k] = format_csv_ceil($item);
+			$ret[$k] = csv_format($item);
 		}
 		return $ret;
 	}

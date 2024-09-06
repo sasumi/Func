@@ -621,7 +621,7 @@ function array_index($array, $compare_fn_or_value){
  * 根据指定数组下标进行求和
  * @param array $arr
  * @param string $key
- * @return mixed
+ * @return float|int
  */
 function array_sumby(array $arr, $key = ''){
 	if(!$key){
@@ -694,7 +694,7 @@ function array_filter_by_keys($arr, $keys){
 function array_make_spreadsheet_columns($column_size){
 	$ret = [];
 	for($column = 1; $column <= $column_size; $column++){
-		$ret[] = get_spreadsheet_column($column);
+		$ret[] = spreadsheet_get_column_index($column);
 	}
 	return $ret;
 }
@@ -795,7 +795,7 @@ function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by
 	$result = [];
 	$group_by_parents = $group_by_parents ?: array_group($all, $pn_k);
 
-	foreach($all as $k => $item){
+	foreach($all as $item){
 		if($item[$pn_k] == $parent_id){
 			$item[$lv_k] = $level;  //set level
 			if(!$opt['return_as_tree']){
@@ -911,13 +911,13 @@ function array_transform(array $data, array $rules){
  * 根据指定下标获取多维数组所有值，无下标时获取所有
  * @param string $key
  * @param array $arr
- * @return array|mixed
+ * @return array
  */
 function array_value_recursive(array $arr, $key = ''){
 	$val = [];
 	array_walk_recursive($arr, function($v, $k) use ($key, &$val){
 		if(!$key || $k == $key){
-			array_push($val, $v);
+			$val[] = $v;
 		}
 	});
 	return $val;

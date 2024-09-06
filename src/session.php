@@ -18,7 +18,7 @@ function session_start_once(){
 	if(!$initialized && !headers_sent()){
 		session_start();
 		session_write_close();
-	};
+	}
 	return true;
 }
 

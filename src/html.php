@@ -608,7 +608,7 @@ function html_tag_table($data, $headers = [], $caption = '', $attributes = []){
 		$all_fields = array_keys(array_first($data));
 		$headers = $headers ?: array_combine($all_fields, $all_fields);
 		$html .= '<thead><tr>';
-		foreach($headers as $field => $alias){
+		foreach($headers as $alias){
 			$html .= "<th>$alias</th>";
 		}
 		$html .= '</tr></thead>';

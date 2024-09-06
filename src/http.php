@@ -185,7 +185,7 @@ function http_get_request_header($key){
  */
 function http_parse_headers($header_str){
 	$headers = [];
-	foreach(explode("\n", $header_str) as $i => $h){
+	foreach(explode("\n", $header_str) as $h){
 		list($k, $v) = explode(':', $h, 2);
 		//由于HTTP HEADER没有约束大小写，这里为了避免传入数据不规范导致，全部格式化小写
 		$k = strtolower($k);
@@ -363,7 +363,7 @@ function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_
 	$endpoints_obj = [];
 	foreach($endpoint_urls as $url){
 		$endpoints_obj[] = ['url' => $url];
-	};
+	}
 	return [
 		'group'              => $group,
 		'max_age'            => $max_age_sec,

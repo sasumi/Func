@@ -122,9 +122,9 @@ function cron_watch_commands(array $rules, callable $on_before_call = null, $che
 				if($on_before_call && $on_before_call($cmd, $now) === false){
 					unset($list[$k]);
 					continue;
-				};
+				}
 				run_command($cmd, [], true);
-			};
+			}
 		}
 		if(time() - $now - 60 < 0){
 			continue;
