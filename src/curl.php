@@ -190,9 +190,9 @@ function curl_patch_header(&$curl_option, $header_name, $header_value){
  * @return string
  */
 function curl_build_command($url, $body_str, $method, $headers, $multiple_line = true){
-	$method = strtoupper($method);
 	$line_sep = $multiple_line ? '\\'.PHP_EOL : '';
-	if($method === 'GET' && $body_str){
+	$method = strtoupper($method);
+	if($method === HTTP_METHOD_GET && $body_str){
 		$url .= (stripos($url, '?') !== false ? '&' : '?').$body_str;
 	}
 	$cmd = "curl -L -X $method '$url'".$line_sep;
@@ -203,7 +203,7 @@ function curl_build_command($url, $body_str, $method, $headers, $multiple_line =
 			$cmd .= " -H '$name: $value'".$line_sep;
 		}
 	}
-	if($body_str && $method === 'POST'){
+	if($body_str && $method === HTTP_METHOD_POST){
 		$body_str = addcslashes($body_str, "'");
 		$cmd .= " --data-raw '$body_str'";
 	}
