@@ -71,8 +71,8 @@ function curl_post($url, $data = null, array $curl_option = []){
  * @return array
  * @throws \Exception
  */
-function curl_post_json($url, $data = null, array $curl_option = []){
-	$data = ($data && !is_string($data)) ? json_encode($data) : $data;
+function curl_post_json($url, array $data = [], array $curl_option = []){
+	$data = $data ? json_encode($data) : '';
 	return curl_post($url, $data, array_merge_assoc([
 		CURLOPT_HTTPHEADER => [
 			'Content-Type: application/json; charset=utf-8',
@@ -137,16 +137,15 @@ function curl_delete($url, $data, array $curl_option = []){
  * 快速执行curl查询，并关闭curl连接
  * @param string $url
  * @param array $curl_option
- * @param string $error
  * @return array [info=>[], head=>'', body=>''] curl_getinfo信息
  * @throws \Exception
  */
-function curl_query($url, array $curl_option, &$error = ''){
+function curl_query($url, array $curl_option){
 	list($ch, $exec_option) = curl_instance($url, $curl_option);
 	$raw_string = curl_exec($ch);
 	$error = curl_error($ch);
 	if($error){
-		return [];
+		throw new Exception('curl error: '.$error);
 	}
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 	$curl_info['info'] = curl_getinfo($ch);
