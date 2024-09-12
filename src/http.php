@@ -272,9 +272,23 @@ function request_in_get(){
  * @return string
  */
 function http_get_current_page_url($with_protocol = true, $with_port = false){
-	$port_str = $_SERVER['SERVER_PORT'] == '80' ? '' : ':'.$_SERVER['SERVER_PORT'];
+	return http_get_current_host($with_protocol, $with_port).$_SERVER['REQUEST_URI'];
+}
+
+/**
+ * 获取当前页面域名
+ * @param bool $with_protocol 是否包含协议头：http, https
+ * @param bool $with_port 是否包含端口（仅非http:80, https:443情况有效）
+ * @return string 如 http://www.abc.com  http://www.abc.com:81 结尾不包含斜杠
+ */
+function http_get_current_host($with_protocol = true, $with_port = false){
+	$server_port = $_SERVER['SERVER_PORT'];
+	$port_str = '';
+	if($with_port && ((server_in_https() && $server_port != 443) || (!server_in_https() && $server_port != 80))){
+		$port_str = ':'.$server_port;
+	}
 	$protocol_str = $with_protocol ? (server_in_https() ? 'https:' : 'http:') : '';
-	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].($with_port ? $port_str:'').$_SERVER['REQUEST_URI'];
+	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].$port_str;
 }
 
 /**
