@@ -1,7 +1,7 @@
 <?php
 /**
  * CURL网络请求相关操作函数
- * curl相关处理函数返回标准结构：[info=>[], error='', head=>'', body=>'']
+ * curl相关处理函数返回标准结构：[info=>['url'='', ...], error='', head=>'', body=>'']
  */
 namespace LFPhp\Func;
 
@@ -142,7 +142,7 @@ function curl_delete($url, $data, array $curl_option = []){
  * @throws \Exception
  */
 function curl_query($url, array $curl_option){
-	list($ch, $exec_option) = curl_instance($url, $curl_option);
+	list($ch, $curl_option) = curl_instance($url, $curl_option);
 	$raw_string = curl_exec($ch);
 
 	$ret = [];
@@ -153,8 +153,8 @@ function curl_query($url, array $curl_option){
 		$ret['error'] = "Curl Error($errno) $error";
 	}else{
 		list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
-		if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
-			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+		if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
+			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
 		}
 	}
 
@@ -492,7 +492,9 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	}
 
 	$mh = curl_multi_init();
-	$tmp_option_cache = [/** url => option */];
+	$tmp_option_cache = [
+		//resource_id=> []
+	];
 
 	/**
 	 * 添加任务
@@ -504,7 +506,6 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		$added = 0;
 		for($i = 0; $i < $count; $i++){
 			$curl_opt = $curl_option_fetcher();
-			dump($curl_opt[CURLOPT_URL]);
 			if(!$curl_opt){
 				return false;
 			}
@@ -512,8 +513,9 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 			if($on_item_start && $on_item_start($curl_opt) === false){
 				continue;
 			}
-			list($ch, $exec_option) = curl_instance('', $curl_opt);
-			$tmp_option_cache[$curl_opt[CURLOPT_URL]] = $exec_option;
+			list($ch, $curl_option) = curl_instance('', $curl_opt);
+			$resource_id = get_resource_id($ch);
+			$tmp_option_cache[$resource_id] = $curl_option;
 			curl_multi_add_handle($mh, $ch);
 		}
 		return $added;
@@ -527,24 +529,26 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		//把所有已完成的任务都处理掉, curl_multi_info_read执行一次读取一条
 		while($curl_result = curl_multi_info_read($mh)){
 			$ch = $curl_result['handle'];
+			$resource_id = get_resource_id($ch);
+
 			$ret = [];
 			$ret['info'] = curl_getinfo($ch);
-			$exec_option = $tmp_option_cache[$ret['info']['url']];
+			$curl_option = $tmp_option_cache[$resource_id];
 
 			$raw_string = curl_multi_getcontent($ch); //获取结果
 			list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
 
 			//处理编码转换
-			if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
-				$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+			if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
+				$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
 			}
 
 			$ret['error'] = curl_error($ch) ?: null;
-			$on_item_finish && $on_item_finish($ret);
+			$on_item_finish && $on_item_finish($ret, $curl_option);
 
 			curl_multi_remove_handle($mh, $ch);
 			curl_close($ch);
-			unset($tmp_option_cache[$ret['url']]);
+			unset($tmp_option_cache[$resource_id]);
 		}
 	};
 
