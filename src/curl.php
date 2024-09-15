@@ -145,7 +145,8 @@ function curl_query($url, array $curl_option){
 	$raw_string = curl_exec($ch);
 	$error = curl_error($ch);
 	if($error){
-		throw new Exception('curl error: '.$error);
+		$errno = curl_errno($ch);
+		throw new Exception("Curl Error($errno) $error");
 	}
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 	$curl_info['info'] = curl_getinfo($ch);
