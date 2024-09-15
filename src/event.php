@@ -4,6 +4,8 @@
  */
 namespace LFPhp\Func;
 
+use Exception;
+
 const EVENT_PAYLOAD_HIT = 1; //事件命中
 const EVENT_PAYLOAD_BREAK_NEXT = 2; //事件命中，且中断后续执行
 const EVENT_PAYLOAD_NULL = 3; //未命中事件
@@ -20,7 +22,7 @@ function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, 
 	$arg_limit = 7;
 	$arg_count = func_num_args();
 	if($arg_count > $arg_limit){
-		throw new \Exception("event fire arguments overload:$arg_count (limitation: $arg_limit)");
+		throw new Exception("event fire arguments overload:$arg_count (limitation: $arg_limit)");
 	}
 	global $__FUNC_EVENT_MAP__;
 	$handle_list = isset($__FUNC_EVENT_MAP__[$event]) ? $__FUNC_EVENT_MAP__[$event] : [];

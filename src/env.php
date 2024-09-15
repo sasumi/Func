@@ -250,7 +250,7 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;
 
-	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('▒', $left_chars)."{$reminds} $patch_text";
+	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('▒', $left_chars)."$reminds $patch_text";
 	list($colum) = get_screen_size();
 	if($colum){
 		$left_space = $colum - mb_strwidth($str) - 1;

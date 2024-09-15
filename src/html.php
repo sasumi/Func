@@ -3,6 +3,7 @@
  * HTML快速操作函数
  */
 namespace LFPhp\Func;
+use DateTime;
 use Exception;
 
 /**
@@ -843,5 +844,5 @@ function static_version_statement_quote($str){
  * @throws \Exception
  */
 function fix_browser_datetime($datetime_str_from_h5){
-	return $datetime_str_from_h5 ? (new \DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s') : null;
+	return $datetime_str_from_h5 ? (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s') : null;
 }

@@ -175,7 +175,7 @@ function object2array($obj){
 			return [];
 		}
 		if (gettype($v) == 'object' || gettype($v) == 'array') {
-			$obj[$k] = (array)object2array($v);
+			$obj[$k] = object2array($v);
 		}
 	}
 	return $obj;
@@ -232,7 +232,7 @@ function array_copy_by_fields(array $array, array $fields){
  * @param array $array2
  * @return array
  */
-function array_merge_recursive_distinct(array &$array1, array &$array2){
+function array_merge_recursive_distinct(array $array1, array &$array2){
 	$merged = $array1;
 	foreach($array2 as $key => &$value){
 		if(is_array($value) && isset ($merged [$key]) && is_array($merged [$key])){
@@ -713,7 +713,7 @@ function array_push_by_path(&$data, $path_str, $value, $glue = '.'){
 		$path_stm .= "['".addslashes($path)."']";
 	}
 	$val = var_export($value, true);
-	$statement = "\$data{$path_stm} = $val;";
+	$statement = "\$data$path_stm = $val;";
 	eval($statement);
 }
 

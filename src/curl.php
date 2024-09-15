@@ -1,6 +1,7 @@
 <?php
 /**
  * CURL网络请求相关操作函数
+ * curl相关处理函数返回标准结构：[info=>[], error='', head=>'', body=>'']
  */
 namespace LFPhp\Func;
 
@@ -137,28 +138,28 @@ function curl_delete($url, $data, array $curl_option = []){
  * 快速执行curl查询，并关闭curl连接
  * @param string $url
  * @param array $curl_option
- * @return array [info=>[], head=>'', body=>''] curl_getinfo信息
+ * @return array [info=>[], error='', head=>'', body=>'']
  * @throws \Exception
  */
 function curl_query($url, array $curl_option){
 	list($ch, $exec_option) = curl_instance($url, $curl_option);
 	$raw_string = curl_exec($ch);
+
+	$ret = [];
+	$ret['info'] = curl_getinfo($ch);
 	$error = curl_error($ch);
 	if($error){
 		$errno = curl_errno($ch);
-		throw new Exception("Curl Error($errno) $error");
-	}
-	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-	$curl_info['info'] = curl_getinfo($ch);
-	$curl_info['head'] = substr($raw_string, 0, $header_size);
-	$curl_info['body'] = substr($raw_string, $header_size);
-
-	if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
-		$curl_info['body'] = mb_convert_encoding($curl_info['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+		$ret['error'] = "Curl Error($errno) $error";
+	}else{
+		list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
+		if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
+			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+		}
 	}
 
 	curl_close($ch);
-	return $curl_info;
+	return $ret;
 }
 
 /**
@@ -460,11 +461,27 @@ function curl_urls_to_fetcher($urls, $curl_option = []){
 }
 
 /**
+ * 切割CURL结果字符串
+ * @param resource $ch
+ * @param string $raw_string
+ * @return string[] head,body
+ */
+function curl_cut_raw($ch, $raw_string){
+	if(!$raw_string){
+		return ['', ''];
+	}
+	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+	$head = substr($raw_string, 0, $header_size);
+	$body = substr($raw_string, $header_size);
+	return [$head, $body];
+}
+
+/**
  * CURL 并发请求
  * 注意：回调函数需尽快处理避免阻塞后续请求流程
  * @param callable|array $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
- * @param callable|null $on_item_start ($curl_option) 开始执行回调
- * @param callable|null $on_item_finish ($info, $error=null) 请求结束回调，参数1：返回结果数组，参数2：错误信息，为空表示成功
+ * @param callable|null $on_item_start ($curl_option) 开始执行回调，如果返回false，忽略该任务
+ * @param callable|null $on_item_finish ($curl_ret) 请求结束回调，参数1：返回结果数组，参数2：错误信息，为空表示成功
  * @param int $rolling_window 滚动请求数量
  * @return bool
  * @throws \Exception
@@ -475,10 +492,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	}
 
 	$mh = curl_multi_init();
-
-	$tmp_option_cache = [
-		//url => option
-	];
+	$tmp_option_cache = [/** url => option */];
 
 	/**
 	 * 添加任务
@@ -490,11 +504,14 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		$added = 0;
 		for($i = 0; $i < $count; $i++){
 			$curl_opt = $curl_option_fetcher();
+			dump($curl_opt[CURLOPT_URL]);
 			if(!$curl_opt){
 				return false;
 			}
 			$added++;
-			$on_item_start && $on_item_start($curl_opt);
+			if($on_item_start && $on_item_start($curl_opt) === false){
+				continue;
+			}
 			list($ch, $exec_option) = curl_instance('', $curl_opt);
 			$tmp_option_cache[$curl_opt[CURLOPT_URL]] = $exec_option;
 			curl_multi_add_handle($mh, $ch);
@@ -510,26 +527,24 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		//把所有已完成的任务都处理掉, curl_multi_info_read执行一次读取一条
 		while($curl_result = curl_multi_info_read($mh)){
 			$ch = $curl_result['handle'];
-			$info = curl_getinfo($ch);
-			$exec_option = $tmp_option_cache[$info['url']];
+			$ret = [];
+			$ret['info'] = curl_getinfo($ch);
+			$exec_option = $tmp_option_cache[$ret['info']['url']];
 
 			$raw_string = curl_multi_getcontent($ch); //获取结果
-			$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-			$info['head'] = substr($raw_string, 0, $header_size);
-
-			$info['body'] = substr($raw_string, $header_size);
+			list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
 
 			//处理编码转换
 			if(isset($exec_option[CURLOPT_PAGE_ENCODING])){
-				$info['body'] = mb_convert_encoding($info['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
+				$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $exec_option[CURLOPT_PAGE_ENCODING]);
 			}
 
-			$error = curl_error($ch) ?: null;
-			$on_item_finish && $on_item_finish($info, $error);
+			$ret['error'] = curl_error($ch) ?: null;
+			$on_item_finish && $on_item_finish($ret);
 
 			curl_multi_remove_handle($mh, $ch);
 			curl_close($ch);
-			unset($tmp_option_cache[$info['url']]);
+			unset($tmp_option_cache[$ret['url']]);
 		}
 	};
 

@@ -122,12 +122,12 @@ function db_connect_dsn($dsn, $user, $password, $persistence_connect = false){
  */
 function db_build_dsn($db_type, $host, $database, $port = '', $charsets = ''){
 	$db_type = $db_type ?: 'mysql';
-	$dns = "$db_type:host=$host;dbname={$database}";
+	$dns = "$db_type:host=$host;dbname=$database";
 	if($port){
-		$dns .= ";port={$port}";
+		$dns .= ";port=$port";
 	}
 	if($charsets){
-		$dns .= ";charset={$charsets}";
+		$dns .= ";charset=$charsets";
 	}
 	return $dns;
 }
@@ -390,7 +390,7 @@ function db_sql_prepare(...$args){
  */
 function db_delete(PDO $pdo, $limit, $table, ...$statement){
 	$table = db_quote_field($table);
-	$sql = db_sql_prepare("DELETE FROM {$table}", $statement);
+	$sql = db_sql_prepare("DELETE FROM $table", $statement);
 	$sql = db_sql_patch_limit($sql, 0, $limit);
 	$result = db_query($pdo, $sql);
 	return db_affect_rows($result);

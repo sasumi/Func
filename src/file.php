@@ -6,6 +6,7 @@ namespace LFPhp\Func;
 
 use DirectoryIterator;
 use Exception;
+use RuntimeException;
 
 /**
  * 递归的glob
@@ -39,10 +40,10 @@ function unlink_recursive($path, $verbose = false){
 	}
 	if(is_file($path)){
 		if($verbose){
-			echo "unlink: {$path}\n";
+			echo "unlink: $path\n";
 		}
 		if(!unlink($path)){
-			throw new \RuntimeException("Failed to unlink {$path}: ".var_export(error_get_last(), true));
+			throw new RuntimeException("Failed to unlink $path: ".var_export(error_get_last(), true));
 		}
 		return;
 	}
@@ -69,14 +70,14 @@ function unlink_recursive($path, $verbose = false){
 			echo "unlink: {$file}\n";
 		}
 		if(!unlink($file)){
-			throw new \RuntimeException("Failed to unlink {$file}: ".var_export(error_get_last(), true));
+			throw new RuntimeException("Failed to unlink {$file}: ".var_export(error_get_last(), true));
 		}
 	}
 	if($verbose){
 		echo "rmdir: {$path}\n";
 	}
 	if(!rmdir($path)){
-		throw new \RuntimeException("Failed to rmdir {$path}: ".var_export(error_get_last(), true));
+		throw new RuntimeException("Failed to rmdir {$path}: ".var_export(error_get_last(), true));
 	}
 }
 

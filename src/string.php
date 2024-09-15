@@ -144,7 +144,7 @@ function parse_str_without_limitation($string, $extra_to_post = false){
  * @param string $dynamicKey
  * @return array
  */
-function __array_merge_distinct_with_dynamic_key(array &$array1, array &$array2, $dynamicKey){
+function __array_merge_distinct_with_dynamic_key(array $array1, array &$array2, $dynamicKey){
 	$merged = $array1;
 	foreach($array2 as $key => &$value){
 		if(is_array($value) && isset ($merged [$key]) && is_array($merged [$key])){
@@ -502,7 +502,7 @@ function format_size($size, $dot = 2){
 	for($i = 0; $size > $mod; $i++){
 		$size /= $mod;
 	}
-	return $obs.round($size, $dot).''.$units[$i];
+	return $obs.round($size, $dot).$units[$i];
 }
 
 /**
