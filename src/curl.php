@@ -13,15 +13,17 @@ use Exception;
 const CURL_DEFAULT_OPTION_GLOBAL_KEY = __NAMESPACE__.'/curl_default_option';
 
 /**
- * 额外支持控制选项
+ * 额外支持控制选项，使用当前 __NAMESPACE__ 作为前缀，会在curl初始化参数时去掉
  */
-
 //响应页面部分编码做自动转换为UTF-8，可以设置为指定编码（如gbk, gb2312）或 ''(表示自动识别)
 //不设置该选项，或设置为NULL，CURL不进行页面编码转换
 const CURLOPT_PAGE_ENCODING = __NAMESPACE__.'/CURL_PAGE_ENCODING';
 
 //设置自动写入、读取cookie文件（跟随cookie文件）
 const CURLOPT_FOLLOWING_COOKIE_FILE = __NAMESPACE__.'/CURLOPT_FOLLOWING_COOKIE_FILE';
+
+//自动修复html中相对路径
+const CURLOPT_HTML_FIX_RELATIVE_PATH = __NAMESPACE__.'/CURLOPT_HTML_FIX_RELATIVE_PATH';
 
 $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
 	CURLOPT_RETURNTRANSFER => true, //返回内容部分
@@ -155,6 +157,11 @@ function curl_query($url, array $curl_option){
 		list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
 		if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
 			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
+		}
+
+		if($curl_option[CURLOPT_HTML_FIX_RELATIVE_PATH]){
+			//这里使用最后实际URL作为替换标准
+			$ret['body'] = html_fix_relative_path($ret['body'], $ret['info']['url']);
 		}
 	}
 
@@ -481,7 +488,7 @@ function curl_cut_raw($ch, $raw_string){
  * 注意：回调函数需尽快处理避免阻塞后续请求流程
  * @param callable|array $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
  * @param callable|null $on_item_start ($curl_option) 开始执行回调，如果返回false，忽略该任务
- * @param callable|null $on_item_finish ($curl_ret) 请求结束回调，参数1：返回结果数组，参数2：错误信息，为空表示成功
+ * @param callable|null $on_item_finish ($curl_ret, $curl_option) 请求结束回调，参数1：返回结果数组，参数2：CURL选项
  * @param int $rolling_window 滚动请求数量
  * @return bool
  * @throws \Exception
