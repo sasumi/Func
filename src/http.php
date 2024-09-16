@@ -429,7 +429,7 @@ function http_parse_cookie($cookie_str){
 /**
  * 修正相对URL成绝对URL
  * @param string $url
- * @param string $base_url
+ * @param string $base_url 基本url（如页面url）
  * @return string|string[]
  */
 function http_fix_relative_url($url, $base_url){
@@ -440,11 +440,20 @@ function http_fix_relative_url($url, $base_url){
 		return $url;
 	}
 
-	/* return if already absolute URL */
-	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//') return $url;
+	//url已经包含schema，或者使用相对协议[//]，不用继续匹配
+	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//'){
+		return $url;
+	}
 
-	/* queries and anchors */
-	if ($url[0]=='#' || $url[0]=='?') return $base_url.$url;
+	//查询语句，或锚点
+	if ($url[0]=='#' || $url[0]=='?'){
+		return $base_url.$url;
+	}
+
+	// [../] 修正为 [./]
+	if(strpos($url, '../') === 0){
+		$url = substr($url, 1);
+	}
 
 	/* parse base URL and convert to local variables:
 	 $scheme, $host, $path */

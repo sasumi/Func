@@ -696,6 +696,23 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 }
 
 /**
+ * 修正html中相对路径
+ * @param string $html
+ * @param string $page_url
+ * @return string 替换失败返回原来的html
+ */
+function html_fix_relative_path($html, $page_url){
+	//匹配替换所有 src="", href="" 模式标签
+	$new_html = preg_replace_callback('/(<[^>]*?\s)(src|href)(=\s*[\'"])(.*?)([\'"])/iu', function($matches) use ($page_url){
+		$matches[4] = http_fix_relative_url($matches[4], $page_url);
+		array_shift($matches);
+		return join('', $matches);
+	}, $html);
+
+	return $new_html ?: $html;
+}
+
+/**
  * todo
  * @param $html
  * @param $option
