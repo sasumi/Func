@@ -11,20 +11,6 @@ use Exception;
  * CURL 请求全局默认参数，可以通过 curl_get_default_option() 和 curl_set_default_option() 进行操作
  */
 const CURL_DEFAULT_OPTION_GLOBAL_KEY = __NAMESPACE__.'/curl_default_option';
-
-/**
- * 额外支持控制选项，使用当前 __NAMESPACE__ 作为前缀，会在curl初始化参数时去掉
- */
-//响应页面部分编码做自动转换为UTF-8，可以设置为指定编码（如gbk, gb2312）或 ''(表示自动识别)
-//不设置该选项，或设置为NULL，CURL不进行页面编码转换
-const CURLOPT_PAGE_ENCODING = __NAMESPACE__.'/CURL_PAGE_ENCODING';
-
-//设置自动写入、读取cookie文件（跟随cookie文件）
-const CURLOPT_FOLLOWING_COOKIE_FILE = __NAMESPACE__.'/CURLOPT_FOLLOWING_COOKIE_FILE';
-
-//自动修复html中相对路径
-const CURLOPT_HTML_FIX_RELATIVE_PATH = __NAMESPACE__.'/CURLOPT_HTML_FIX_RELATIVE_PATH';
-
 $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
 	CURLOPT_RETURNTRANSFER => true, //返回内容部分
 	CURLOPT_HEADER         => true, //发送头部信息
@@ -35,6 +21,18 @@ $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
 	CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1, //默认使用 HTTP1.1 版本
 	CURLOPT_TIMEOUT        => 10, //默认超时时间 10s
 ];
+
+/**
+ * 额外支持控制选项，使用当前 __NAMESPACE__ 作为前缀，会在curl初始化参数时去掉
+ */
+//响应页面部分编码做自动转换为UTF-8，可以设置为指定编码（如gbk, gb2312）或 ''(表示自动识别)。不设置该选项，或设置为NULL，CURL不进行页面编码转换
+const CURLOPT_PAGE_ENCODING = __NAMESPACE__.'/CURL_PAGE_ENCODING';
+
+//设置自动写入、读取cookie文件（跟随cookie文件）
+const CURLOPT_FOLLOWING_COOKIE_FILE = __NAMESPACE__.'/CURLOPT_FOLLOWING_COOKIE_FILE';
+
+//自动修复html中相对路径
+const CURLOPT_HTML_FIX_RELATIVE_PATH = __NAMESPACE__.'/CURLOPT_HTML_FIX_RELATIVE_PATH';
 
 /**
  * CURL GET请求
@@ -312,7 +310,7 @@ function curl_instance($url, array $ext_curl_option = []){
 		$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
 	}
 
-	//处理HTTP头部，如果传入的是key => value数组，转换成字符串数组
+	//修正HTTP头部，如果传入的是key => value数组，转换成字符串数组
 	if($curl_option[CURLOPT_HTTPHEADER] && is_assoc_array($curl_option[CURLOPT_HTTPHEADER])){
 		$tmp = [];
 		foreach($curl_option[CURLOPT_HTTPHEADER] as $field=>$val){
@@ -484,6 +482,56 @@ function curl_cut_raw($ch, $raw_string){
 }
 
 /**
+ * 判断 curl_query 是否成功
+ * @param array $query_result curl_query返回标准结构
+ * @param string $error
+ * @param bool $allow_empty_body 允许body为空
+ * @return bool
+ */
+function curl_query_success($query_result, &$error = '', $allow_empty_body = false){
+	if($query_result['error']){
+		$error = $query_result['error'];
+	}
+	if(!$error && $query_result['info']['http_code'] != 200){
+		$error = 'http code error:'.$query_result['info']['http_code'];
+	}
+	if(!$error && !$allow_empty_body && !strlen($query_result['body'])){
+		$error = 'body empty';
+	}
+	return !$error;
+}
+
+/**
+ * 从 curl_query 结果中解析json对象
+ * @example
+ * if(!curl_query_json_success($ret, $data, $error)){
+ *   die($error);
+ * }
+ * $msg = array_get($data, 'message');
+ * @param array $query_result curl_query返回标准结构
+ * @param mixed $ret 返回结果
+ * @param string $error 错误信息
+ * @param bool $force_array
+ * @return bool 是否成功
+ */
+function curl_query_json_success($query_result, &$ret = null, &$error = '', $force_array = true){
+	if(!curl_query_success($query_result, $error)){
+		return false;
+	}
+	$tmp = @json_decode($query_result['body'], true);
+	$error = json_last_error();
+	if($error){
+		return false;
+	}
+	if($force_array && !is_array($tmp)){
+		$error = 'return format error:'.gettype($tmp);
+		return false;
+	}
+	$ret = $tmp;
+	return true;
+}
+
+/**
  * CURL 并发请求
  * 注意：回调函数需尽快处理避免阻塞后续请求流程
  * @param callable|array $curl_option_fetcher : array 返回CURL选项映射数组，即使只有一个url，也需要返回 [CURLOPT_URL=>$url]
@@ -521,7 +569,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 				continue;
 			}
 			list($ch, $curl_option) = curl_instance('', $curl_opt);
-			$resource_id = get_resource_id($ch);
+			$resource_id = (int)$ch;
 			$tmp_option_cache[$resource_id] = $curl_option;
 			curl_multi_add_handle($mh, $ch);
 		}
@@ -536,7 +584,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		//把所有已完成的任务都处理掉, curl_multi_info_read执行一次读取一条
 		while($curl_result = curl_multi_info_read($mh)){
 			$ch = $curl_result['handle'];
-			$resource_id = get_resource_id($ch);
+			$resource_id = (int)$ch;
 
 			$ret = [];
 			$ret['info'] = curl_getinfo($ch);
