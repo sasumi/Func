@@ -142,7 +142,7 @@ function curl_delete($url, $data, array $curl_option = []){
  * @throws \Exception
  */
 function curl_query($url, array $curl_option){
-	list($ch, $curl_option) = curl_instance($url, $curl_option);
+	[$ch, $curl_option] = curl_instance($url, $curl_option);
 	$raw_string = curl_exec($ch);
 
 	$ret = [];
@@ -152,7 +152,7 @@ function curl_query($url, array $curl_option){
 		$errno = curl_errno($ch);
 		$ret['error'] = "Curl Error($errno) $error";
 	}else{
-		list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
+		[$ret['head'], $ret['body']] = curl_cut_raw($ch, $raw_string);
 		if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
 			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
 		}
@@ -250,10 +250,10 @@ function curl_get_proxy_option($proxy_string){
 		throw new Exception('Proxy type no supported:'.$type);
 	}
 	if(preg_match('/^(.*?)@/', $proxy_string, $matches)){
-		list($account, $password) = explode(':', $matches[1]);
+		[$account, $password] = explode(':', $matches[1]);
 		$proxy_string = preg_replace('/.*?@/', '', $proxy_string);
 	}
-	list($host, $port) = explode(':', $proxy_string);
+	[$host, $port] = explode(':', $proxy_string);
 
 	//https缺省使用443端口
 	if($type === 'https' && !$port){
@@ -430,7 +430,7 @@ function curl_option_to_request_header($options){
 				break;
 			case CURLOPT_HTTPHEADER:
 				foreach($mix_values as $mv){
-					list($k, $v) = explode_by(':', $mv);
+					[$k, $v] = explode_by(':', $mv);
 					$headers[$k] = $v;
 				}
 				break;
@@ -450,15 +450,24 @@ function curl_option_to_request_header($options){
 
 /**
  * 请求链接转换成闭包函数
- * @param string[] $urls 请求链接数组
- * @param array $curl_option CURL选项数组
+ * @param string[]|array[] $urls 请求链接数组
+ * @param array $ext_curl_option CURL选项数组
  * @return \Closure
  */
-function curl_urls_to_fetcher($urls, $curl_option = []){
+function curl_urls_to_fetcher($urls, $ext_curl_option = []){
 	$options = [];
-	foreach($urls as $url){
-		$curl_option[CURLOPT_URL] = $url;
-		$options[] = $curl_option;
+	//一维数组
+	if(count($urls) === count($urls, true)){
+		foreach($urls as $url){
+			$ext_curl_option[CURLOPT_URL] = $url;
+			$options[] = $ext_curl_option;
+		}
+	}
+	//二维数组，当作CURL OPTION处理
+	else {
+		foreach($urls as $opt){
+			$options[] = array_merge_assoc($opt, $ext_curl_option);
+		}
 	}
 	return function()use(&$options){
 		return array_shift($options);
@@ -568,7 +577,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 			if($on_item_start && $on_item_start($curl_opt) === false){
 				continue;
 			}
-			list($ch, $curl_option) = curl_instance('', $curl_opt);
+			[$ch, $curl_option] = curl_instance('', $curl_opt);
 			$resource_id = (int)$ch;
 			$tmp_option_cache[$resource_id] = $curl_option;
 			curl_multi_add_handle($mh, $ch);
@@ -591,7 +600,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 			$curl_option = $tmp_option_cache[$resource_id];
 
 			$raw_string = curl_multi_getcontent($ch); //获取结果
-			list($ret['head'], $ret['body']) = curl_cut_raw($ch, $raw_string);
+			[$ret['head'], $ret['body']] = curl_cut_raw($ch, $raw_string);
 
 			//处理编码转换
 			if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
