@@ -205,6 +205,12 @@ function file_exists_case_insensitive($file, $parent = null){
 	return false;
 }
 
+function file_put_contents_safe($file, $data, $flags = 0, $context = null){
+	if(file_put_contents($file, $data, $flags, $context) === false){
+		throw new Exception('file save fail:'.error_get_last());
+	}
+}
+
 /**
  * 递归拷贝目录
  * @param string $src
