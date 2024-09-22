@@ -99,8 +99,8 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 		$ext_param[$name] = curl_file_create($file);
 	}
 	return curl_query($url, array_merge_assoc([
-		CURLOPT_POST           => true,
-		CURLOPT_POSTFIELDS     => $ext_param,
+		CURLOPT_POST       => true,
+		CURLOPT_POSTFIELDS => $ext_param,
 	], $curl_option));
 }
 
@@ -178,7 +178,7 @@ function curl_patch_header(&$curl_option, $header_name, $header_value){
 	if(!$curl_option[CURLOPT_HTTPHEADER]){
 		$curl_option[CURLOPT_HTTPHEADER] = [];
 	}
-	foreach($curl_option[CURLOPT_HTTPHEADER] as $k=>$item){
+	foreach($curl_option[CURLOPT_HTTPHEADER] as $k => $item){
 		if(strcasecmp($item, $header_name) === 0){
 			$curl_option[CURLOPT_HTTPHEADER][$k] = $header_value;
 			break;
@@ -313,7 +313,7 @@ function curl_instance($url, array $ext_curl_option = []){
 	//修正HTTP头部，如果传入的是key => value数组，转换成字符串数组
 	if($curl_option[CURLOPT_HTTPHEADER] && is_assoc_array($curl_option[CURLOPT_HTTPHEADER])){
 		$tmp = [];
-		foreach($curl_option[CURLOPT_HTTPHEADER] as $field=>$val){
+		foreach($curl_option[CURLOPT_HTTPHEADER] as $field => $val){
 			$tmp[] = "$field: $val";
 		}
 		$curl_option[CURLOPT_HTTPHEADER] = $tmp;
@@ -331,7 +331,7 @@ function curl_instance($url, array $ext_curl_option = []){
 	}
 
 	//忽略自定义选项
-	foreach($curl_option as $k=>$item){
+	foreach($curl_option as $k => $item){
 		if(strpos($k, __NAMESPACE__) === false){
 			curl_setopt($ch, $k, $item);
 		}
@@ -462,14 +462,13 @@ function curl_urls_to_fetcher($urls, $ext_curl_option = []){
 			$ext_curl_option[CURLOPT_URL] = $url;
 			$options[] = $ext_curl_option;
 		}
-	}
-	//二维数组，当作CURL OPTION处理
-	else {
+	}//二维数组，当作CURL OPTION处理
+	else{
 		foreach($urls as $opt){
 			$options[] = array_merge_assoc($opt, $ext_curl_option);
 		}
 	}
-	return function()use(&$options){
+	return function() use (&$options){
 		return array_shift($options);
 	};
 }
@@ -512,16 +511,16 @@ function curl_query_success($query_result, &$error = '', $allow_empty_body = fal
 
 /**
  * 从 curl_query 结果中解析json对象
- * @example
- * if(!curl_query_json_success($ret, $data, $error)){
- *   die($error);
- * }
- * $msg = array_get($data, 'message');
  * @param array $query_result curl_query返回标准结构
  * @param mixed $ret 返回结果
  * @param string $error 错误信息
  * @param bool $force_array
  * @return bool 是否成功
+ * @example
+ * if(!curl_query_json_success($ret, $data, $error)){
+ *   die($error);
+ * }
+ * $msg = array_get($data, 'message');
  */
 function curl_query_json_success($query_result, &$ret = null, &$error = '', $force_array = true){
 	if(!curl_query_success($query_result, $error)){
@@ -556,14 +555,12 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	}
 
 	$mh = curl_multi_init();
-	$tmp_option_cache = [
-		//resource_id=> []
-	];
+	$tmp_option_cache = [];
 
 	/**
 	 * 添加任务
 	 * @param int $count 添加数量
-	 * @return int
+	 * @return int 任务添加数量，-1表示没有任务了，0可能由于onstart中断原因导致的。
 	 * @throws \Exception
 	 */
 	$add_task = function($count) use ($mh, $curl_option_fetcher, $on_item_start, &$tmp_option_cache){
@@ -571,7 +568,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		for($i = 0; $i < $count; $i++){
 			$curl_opt = $curl_option_fetcher();
 			if(!$curl_opt){
-				return false;
+				return -1;
 			}
 			$added++;
 			if($on_item_start && $on_item_start($curl_opt) === false){
@@ -589,7 +586,7 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	 * 获取结果
 	 * @return void
 	 */
-	$get_result = function() use ($mh, $on_item_finish, &$running_count, &$tmp_option_cache){
+	$get_result = function() use ($add_task, $rolling_window, $mh, $on_item_finish, &$running_count, &$tmp_option_cache){
 		//把所有已完成的任务都处理掉, curl_multi_info_read执行一次读取一条
 		while($curl_result = curl_multi_info_read($mh)){
 			$ch = $curl_result['handle'];
@@ -618,14 +615,14 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 
 	$running_count = 0;
 	do{
-		$added = $add_task($rolling_window - $running_count);
+		$added_count = $add_task($rolling_window - $running_count);
+		//没有任务可以继续添加
+		if($added_count === -1){
+			break;
+		}
 		$state = curl_multi_exec($mh, $running_count);
 		curl_multi_select($mh, 0.1);
 		$get_result();
-
-		if(!$added && !$running_count){
-			break;
-		}
 	} while($state === CURLM_OK);
 	curl_multi_close($mh);
 	return true;
@@ -633,12 +630,12 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 
 /**
  * 转换CURL信息到HAR格式文件
- * @todo
  * @param array $curl_options
  * @param array $curl_info
  * @param $response_header
  * @param $response_body
  * @return void
+ * @todo
  */
 function curl_to_har(array $curl_options, array $curl_info, $response_header, $response_body){
 	$start_time = '';
@@ -716,5 +713,4 @@ function curl_to_har(array $curl_options, array $curl_info, $response_header, $r
  * @see https://curlconverter.com/php/
  */
 function curl_cmd_to_php(){
-
 }

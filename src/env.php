@@ -79,23 +79,43 @@ function get_client_ip(){
  * @return array
  */
 function get_all_opt(){
-	$opts = [];
-	foreach($_SERVER['argv'] ?:[] as $idx => $arg){
-		//long option
-		if(preg_match('/--(\S+)=(\S+)/', $arg, $matches)){
-			$opts[$matches[1]] = trim($matches[2], '"');
-			continue;
-		}
-		//short option
-		if(preg_match('/-(\S+)/', $arg, $matches)){
-			for($i = 0; $i < strlen($matches[1]); $i++){
-				$opts[$matches[1][$i]] = false;
+	$options = [];
+	$args = $_SERVER['argv'];
+	array_shift($args); // 移除脚本名称
+
+	while ($arg = array_shift($args)) {
+		if (substr($arg, 0, 2) === '--') {
+			// 处理长选项
+			$option = substr($arg, 2);
+			if (strpos($option, '=') !== false) {
+				list($key, $value) = explode('=', $option, 2);
+				$options[$key] = $value;
+			} else {
+				$options[$option] = true;
 			}
-			continue;
+		} elseif (substr($arg, 0, 1) === '-') {
+			// 处理短选项
+			$option = substr($arg, 1);
+			if (strlen($option) > 1) {
+				foreach (str_split($option) as $char) {
+					$options[$char] = true;
+				}
+			} else {
+				$nextArg = array_shift($args);
+				if ($nextArg && substr($nextArg, 0, 1) !== '-') {
+					$options[$option] = $nextArg;
+				} else {
+					$options[$option] = true;
+					array_unshift($args, $nextArg);
+				}
+			}
+		} else {
+			// 处理位置参数
+			$options[] = $arg;
 		}
-		$opts[$idx] = $arg;
 	}
-	return $opts;
+
+	return $options;
 }
 
 /**
