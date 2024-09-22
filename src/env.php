@@ -246,7 +246,7 @@ function console_color($text, $fore_color = '', $back_color = '', $override = fa
  * @return string
  */
 function console_color_clean($text){
-	return preg_replace('/\033\\[.*?m/g', '', $text);
+	return preg_replace('/\033\\[.*?m/', '', $text);
 }
 
 /**
