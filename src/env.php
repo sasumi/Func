@@ -88,7 +88,7 @@ function get_all_opt(){
 			// 处理长选项
 			$option = substr($arg, 2);
 			if (strpos($option, '=') !== false) {
-				list($key, $value) = explode('=', $option, 2);
+				[$key, $value] = explode('=', $option, 2);
 				$options[$key] = $value;
 			} else {
 				$options[$option] = true;
@@ -215,13 +215,18 @@ const CONSOLE_BACKGROUND_COLOR_MAP = [
  * @param string $text
  * @param string $fore_color
  * @param string $back_color
+ * @param bool $override 是否覆盖原来的颜色设置
  * @return string
  */
-function console_color($text, $fore_color = '', $back_color = ''){
-	//忽略已经设置颜色的字符串
+function console_color($text, $fore_color = '', $back_color = '', $override = false){
 	if(preg_match("/\033\\[0m/", $text)){
-		return $text;
+		if(!$override){
+			return $text;
+		} else {
+			$text = console_color_clean($text);
+		}
 	}
+
 	$color_prefix = '';
 	if($fore_color){
 		$color_prefix .= "\033[".CONSOLE_FOREGROUND_COLOR_MAP[$fore_color]."m";
@@ -233,6 +238,15 @@ function console_color($text, $fore_color = '', $back_color = ''){
 		return $color_prefix.$text."\033[0m";
 	}
 	return $text;
+}
+
+/**
+ * 清理颜色控制字符
+ * @param string $text
+ * @return string
+ */
+function console_color_clean($text){
+	return preg_replace('/\033\\[.*?m/g', '', $text);
 }
 
 /**
@@ -271,7 +285,7 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 	$left_chars = $progress_length - $fin_chars;
 
 	$str = "\r\r".str_pad($index.'', strlen($total.''), '0', STR_PAD_LEFT)."/$total $pc% ".str_repeat('█', $fin_chars).str_repeat('▒', $left_chars)."$reminds $patch_text";
-	list($colum) = get_screen_size();
+	[$colum] = get_screen_size();
 	if($colum){
 		$left_space = $colum - mb_strwidth($str) - 1;
 		if($left_space > 0){
@@ -299,7 +313,7 @@ function show_loading($patch_text, $loading_chars = ''){
 	}
 	$loading_chars = $loading_chars ?: ["⠙", "⠘", "⠰", "⠴", "⠤", "⠦", "⠆", "⠃", "⠋", "⠉"];
 	global $__last_loading_chart_idx;
-	list($colum) = get_screen_size();
+	[$colum] = get_screen_size();
 	if($colum){
 		$patch_text = mb_strimwidth($patch_text, 0, $colum-5);
 	}
@@ -420,7 +434,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 	//剩余任务，或者还有任务执行中，程序继续
 	while($param_batches || $running_process_list){
 		//检测进程状态
-		foreach($running_process_list as $k => list($process, $param, $param_index, $stdout, $stderr, $start_time)){
+		foreach($running_process_list as $k => [$process, $param, $param_index, $stdout, $stderr, $start_time]){
 			$status = proc_get_status($process);
 
 			//执行结束
@@ -459,7 +473,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 		if(count($running_process_list) < $parallel_num && $param_batches){
 			$start_count = min($parallel_num - count($running_process_list), count($param_batches));
 			while($start_count-- > 0){
-				list($param, $param_index) = array_shift_assoc($param_batches);
+				[$param, $param_index] = array_shift_assoc($param_batches);
 				$cmd = build_command($command, $param);
 				$start_time = microtime(true);
 				$descriptors = [
@@ -477,7 +491,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 
 				stream_set_blocking($pipes[0], 0);
 				stream_set_blocking($pipes[1], 0);
-				list($stdin, $stdout, $stderr) = $pipes;
+				[$stdin, $stdout, $stderr] = $pipes;
 				$running_process_list[] = [$process, $param, $param_index, $stdout, $stderr, $start_time];
 				fclose($stdin);
 			}
@@ -706,8 +720,8 @@ function unix_get_port_usage(){
 		if(preg_match("/^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\w+)\s+(\S+).*$/", $row, $matches)){
 			$pid = $process_name = $process_file_id = null;
 			if(strpos($matches[7], '/')){
-				list($pid, $pif) = explode('/', $matches[7]);
-				list($process_file_id) = explode(':', $pif);
+				[$pid, $pif] = explode('/', $matches[7]);
+				[$process_file_id] = explode(':', $pif);
 				$process_name = $process_file_id;
 			}
 			$ret[] = [
@@ -725,8 +739,8 @@ function unix_get_port_usage(){
 		elseif(preg_match("/^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+).*$/", $row, $matches)){
 			$pid = $process_name = $process_file_id = null;
 			if(strpos($matches[6], '/')){
-				list($pid, $pif) = explode('/', $matches[6]);
-				list($process_file_id) = explode(':', $pif);
+				[$pid, $pif] = explode('/', $matches[6]);
+				[$process_file_id] = explode(':', $pif);
 				$process_name = $process_file_id;
 			}
 			$ret[] = [
