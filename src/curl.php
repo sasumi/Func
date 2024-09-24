@@ -555,8 +555,8 @@ function curl_query_json_success($query_result, &$ret = null, &$error = '', $for
 		return false;
 	}
 	$tmp = @json_decode($query_result['body'], true);
-	$error = json_last_error_msg();
-	if($error){
+	if(json_last_error()){
+		$error = json_last_error_msg();
 		return false;
 	}
 	if($force_array && !is_array($tmp)){
