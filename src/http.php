@@ -216,7 +216,7 @@ function http_get_request_header($key){
 function http_parse_headers($header_str){
 	$headers = [];
 	foreach(explode("\n", $header_str) as $h){
-		list($k, $v) = explode(':', $h, 2);
+		[$k, $v] = explode(':', $h, 2);
 		//由于HTTP HEADER没有约束大小写，这里为了避免传入数据不规范导致，全部格式化小写
 		$k = strtolower($k);
 		if(isset($v)){
@@ -239,15 +239,59 @@ function http_parse_headers($header_str){
  * @return bool
  */
 function http_from_json_request(){
-	return http_get_request_header('Content-Type') == 'application/json';
+	return http_get_content_type() == 'application/json';
 }
 
 /**
- * 判断请求接受格式是否为 JSON
+ * 获取http请求头中content-type
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type#directives
+ * @param array $directives 额外指令，例如 ['charset'=>'utf-8']，或['boundary'=>'ExampleBoundaryString']
+ * @return string
+ */
+function http_get_content_type(&$directives = []){
+	$type_str = http_get_request_header('Content-Type');
+	[$media_type, $directives_str] = explode_by(';', $type_str);
+	if($directives_str && preg_match('/(\w+)=(.*)$/', $directives_str, $matches)){
+		$directives[$matches[1]] = $matches[2];
+	}
+	return strtolower($media_type);
+}
+
+/**
+ * 判断请求是否接收SON格式
+ * @param bool $include_generic_match 是否支持泛匹配，由于客户端发送请求未必严格处理格式，一般该选项不打开
  * @return bool
  */
-function http_request_accept_json(){
-	return http_get_request_header('Accept') == 'application/json';
+function http_request_accept_json($include_generic_match = false){
+	$str = http_get_request_header('Accept');
+	$tmp = http_parse_string_use_q_value($str);
+	$accept_list = array_column($tmp, 'type');
+	return in_array('application/json', $accept_list) ||
+		($include_generic_match && in_array('*/*', $accept_list)); //泛匹配
+}
+
+/**
+ * 以权重方式解析http头部信息， Accept, Accept-Encoding, Accept-Language, TE, Want-Digest
+ * @see https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
+ * @param $str
+ * @return array [[type, q], ...]
+ */
+function http_parse_string_use_q_value($str){
+	$accepts = explode(',', $str);
+	$result = [];
+	foreach ($accepts as $accept) {
+		$parts = explode(';', trim($accept));
+		$type = $parts[0];
+		$q = 1.0; // 默认权重
+		if (isset($parts[1]) && strpos($parts[1], 'q=') === 0) {
+			$q = floatval(substr($parts[1], 2));
+		}
+		$result[] = ['type' => strtolower($type), 'q' => $q];
+	}
+	usort($result, function($a, $b) {
+		return $b['q'] <=> $a['q'];
+	});
+	return $result;
 }
 
 /**

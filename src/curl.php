@@ -50,26 +50,6 @@ function curl_get($url, $data = null, array $curl_option = []){
 }
 
 /**
- * JSON方式发送GET请求
- * @param string $url
- * @param mixed $data
- * @param array $curl_option
- * @return array
- * @throws \Exception
- */
-function curl_get_json($url, $data = null, array $curl_option = []){
-	if($data){
-		$url .= (strpos($url, '?') !== false ? '&' : '?').curl_data2str($data);
-	}
-	return curl_query($url, array_merge_assoc([
-		CURLOPT_HTTPHEADER => [
-			'Content-Type: application/json; charset=utf-8',
-			'Content-Length: '.strlen($data),
-		],
-	], $curl_option, true));
-}
-
-/**
  * POST请求
  * @param string $url
  * @param mixed|null $data
@@ -575,7 +555,7 @@ function curl_query_json_success($query_result, &$ret = null, &$error = '', $for
 		return false;
 	}
 	$tmp = @json_decode($query_result['body'], true);
-	$error = json_last_error();
+	$error = json_last_error_msg();
 	if($error){
 		return false;
 	}
