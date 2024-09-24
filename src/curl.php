@@ -12,8 +12,8 @@ use Exception;
  */
 const CURL_DEFAULT_OPTION_GLOBAL_KEY = __NAMESPACE__.'/curl_default_option';
 $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = [
-	CURLOPT_RETURNTRANSFER => true, //返回内容部分
-	CURLOPT_HEADER         => true, //发送头部信息
+	CURLOPT_RETURNTRANSFER => true, //返回内容部分，来代替直接输出
+	CURLOPT_HEADER         => true, //返回头部信息
 	CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'], //缺省使用请求UA，如果是CLI模式，这里为空
 	CURLOPT_FOLLOWLOCATION => true, //跟随服务端响应的跳转
 	CURLOPT_MAXREDIRS      => 5, //最大跳转次数，跳转次数过多，可能会出现过度性能消耗
@@ -61,7 +61,7 @@ function curl_post($url, $data = null, array $curl_option = []){
 	return curl_query($url, array_merge_assoc($curl_option, [
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
-	]));
+	], true));
 }
 
 /**
@@ -79,7 +79,7 @@ function curl_post_json($url, array $data = [], array $curl_option = []){
 			'Content-Type: application/json; charset=utf-8',
 			'Content-Length: '.strlen($data),
 		],
-	], $curl_option));
+	], $curl_option, true));
 }
 
 /**
@@ -101,7 +101,7 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 	return curl_query($url, array_merge_assoc([
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => $ext_param,
-	], $curl_option));
+	], $curl_option, true));
 }
 
 /**
@@ -116,7 +116,7 @@ function curl_put($url, $data, array $curl_option = []){
 	return curl_query($url, array_merge_assoc([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'PUT',
-	], $curl_option));
+	], $curl_option, true));
 }
 
 /**
@@ -131,7 +131,7 @@ function curl_delete($url, $data, array $curl_option = []){
 	return curl_query($url, array_merge_assoc([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'DELETE',
-	], $curl_option));
+	], $curl_option, true));
 }
 
 /**
@@ -276,20 +276,48 @@ function curl_get_proxy_option($proxy_string){
  * 获取CURL默认选项
  * @return array
  */
-function curl_get_default_option($ext_option = []){
-	return array_merge_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY], $ext_option);
+function curl_get_default_option(array $ext_option = []){
+	if($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER]){
+		$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER]);
+	}
+	if($ext_option[CURLOPT_HTTPHEADER]){
+		$ext_option[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($ext_option[CURLOPT_HTTPHEADER]);
+	}
+	return array_merge_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY], $ext_option, true);
+}
+
+/**
+ * 转换http header数组为关联数组，方便做修改操作
+ * @param array $headers
+ * @return array
+ */
+function curl_convert_http_header_to_assoc($headers){
+	$ret = [];
+	foreach($headers as $key=>$val){
+		//修正索引型header成索引数组
+		if(is_numeric($key) && preg_match('/(.*?):\s*(.*)$/', $val, $matches)){
+			$ret[$matches[1]] = $matches[2];
+		} else {
+			$ret[$key] = $val;
+		}
+	}
+	return $ret;
 }
 
 /**
  * 设置 curl_* 操作默认选项
  * @param array $curl_option
  * @param bool $patch 是否以追加方式添加，默认为覆盖
- * @return array
  */
 function curl_set_default_option(array $curl_option, $patch = false){
 	$default = $patch ? curl_get_default_option() : [];
-	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = array_merge_assoc($default, $curl_option);
-	return $GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY];
+	if($default[CURLOPT_HTTPHEADER]){
+		$default[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($default[CURLOPT_HTTPHEADER]);
+	}
+	if($curl_option[CURLOPT_HTTPHEADER]){
+		$curl_option[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($curl_option[CURLOPT_HTTPHEADER]);
+	}
+	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = array_merge_assoc($default, $curl_option, true);
 }
 
 /**
@@ -327,7 +355,7 @@ function curl_instance($url, array $ext_curl_option = []){
 
 	if($curl_option[CURLOPT_TIMEOUT] && get_max_socket_timeout() < $curl_option[CURLOPT_TIMEOUT]){
 		//warning timeout setting no taking effect
-		error_log('warning timeout setting no taking effect');
+		error_log('warning timeout setting no taking effect as get_max_socket_timeout() more larger.');
 	}
 
 	//忽略自定义选项

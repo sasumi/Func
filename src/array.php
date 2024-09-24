@@ -249,7 +249,7 @@ function array_merge_recursive_distinct(array $array1, array &$array2){
  * 关联数组合并（即使是自然索引数组，也是按照key的逻辑来合并，子项也不例外）
  * @param array $org_arr
  * @param array $new_arr
- * @param $recursive
+ * @param bool $recursive 是否递归合并，针对多重数组深度合并，例如CURLOPT数组
  * @return array
  */
 function array_merge_assoc(array $org_arr, array $new_arr, $recursive = false){
