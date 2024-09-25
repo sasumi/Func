@@ -85,7 +85,7 @@ function curl_post_json($url, array $data = [], array $curl_option = []){
 /**
  * curl post 提交文件
  * @param string $url
- * @param array $file_map [filename=>filepath,...]
+ * @param array $file_map [filename=>file, filename=>[file, mime]...] 文件名称映射，这里如果不提供mime信息，后端接收到的可能是 application/octet-stream
  * @param mixed $ext_param 同时提交的其他post参数
  * @param array $curl_option curl选项
  * @return array curl_query返回结果，包含 [info=>[], head=>'', body=>''] 信息
@@ -93,10 +93,14 @@ function curl_post_json($url, array $data = [], array $curl_option = []){
  */
 function curl_post_file($url, array $file_map, array $ext_param = [], array $curl_option = []){
 	foreach($file_map as $name => $file){
+		$mime = '';
+		if(is_array($file)){
+			list($file, $mime) = $file;
+		}
 		if(!is_file($file)){
 			throw new Exception('file no found:'.$file);
 		}
-		$ext_param[$name] = curl_file_create($file);
+		$ext_param[$name] = curl_file_create($file, $mime);
 	}
 	return curl_query($url, array_merge_assoc([
 		CURLOPT_POST       => true,
@@ -556,7 +560,7 @@ function curl_query_json_success($query_result, &$ret = null, &$error = '', $for
 	}
 	$tmp = @json_decode($query_result['body'], true);
 	if(json_last_error()){
-		$error = json_last_error_msg();
+		$error = json_last_error_msg().' string:'.$query_result['body'];
 		return false;
 	}
 	if($force_array && !is_array($tmp)){
