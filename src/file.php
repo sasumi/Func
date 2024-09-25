@@ -595,6 +595,24 @@ function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
 }
 
 /**
+ * 获取文件上传错误文本
+ * @param int $upload_error_no
+ * @return string
+ */
+function upload_file_error($upload_error_no){
+	return [
+		UPLOAD_ERR_OK         => 'OK',
+		UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+		UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+		UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+		UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
+		UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+		UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+		UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload. PHP does not provide a way to ascertain which extension caused the file upload to stop; examining the list of loaded extensions with phpinfo() may help.',
+	][$upload_error_no] ?: 'Unknown error:'.$upload_error_no;
+}
+
+/**
  * @param string $file 文件
  * @param array $opt 控制选项
  * @return void
@@ -604,8 +622,8 @@ function upload_file_check($file, $opt = [
 	'accept'         => 'image/*', //允许文件格式，具体请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
 	'max_size'       => 0, //最大文件大小
 	'min_size'       => 0, //最小文件大小
-	'image_max_size' => [0, 0], //图片最大尺寸(宽,高)
-	'image_min_size' => [0, 0], //图片最小尺寸(宽,高)
+	'image_max_size' => [], //图片最大尺寸(宽,高)
+	'image_min_size' => [], //图片最小尺寸(宽,高)
 ]){
 	if(!$file){
 		throw new Exception('文件为空');
@@ -626,9 +644,9 @@ function upload_file_check($file, $opt = [
 		}
 	}
 	if($opt['image_max_size'] || $opt['image_min_size']){
-		list($w, $h) = getimagesize($file);
+		[$w, $h] = getimagesize($file);
 		if($opt['image_max_size']){
-			list($max_w, $max_h) = $opt['image_max_size'];
+			[$max_w, $max_h] = $opt['image_max_size'];
 			if($max_w && $max_w < $w){
 				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$max_w.'px)');
 			}
@@ -637,7 +655,7 @@ function upload_file_check($file, $opt = [
 			}
 		}
 		if($opt['image_min_size']){
-			list($min_w, $min_h) = $opt['image_min_size'];
+			[$min_w, $min_h] = $opt['image_min_size'];
 			if($min_w && $min_w > $w){
 				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$min_w.'px)');
 			}
@@ -696,7 +714,7 @@ function mime_match_accept($mime, $accept){
 		if(strcasecmp($acc, $mime) === 0){
 			return true;
 		}
-		list($seg1, $seg2) = explode('/', $acc);
+		[$seg1, $seg2] = explode('/', $acc);
 		if($seg2 === '*' && stripos($mime, $seg1."/") === 0){
 			return true;
 		}
@@ -725,7 +743,7 @@ function file_match_accept($file_name, $accept){
 
 	//文件mime对比单个accept
 	$mime_compare = function($file_mime, $acc){
-		list($seg1, $seg2) = explode('/', $acc);
+		[$seg1, $seg2] = explode('/', $acc);
 		if($seg2 === '*' && stripos($file_mime, $seg1."/") === 0){
 			return true;
 		}
