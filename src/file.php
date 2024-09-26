@@ -731,14 +731,14 @@ function mime_match_accept($mime, $accept){
 
 /**
  * 检测文件是否匹配指定accept定义
- * @param string $file_name 文件路径
+ * @param string $file 文件
  * @param string $accept <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
  * @return bool
  * @throws \Exception
  */
-function file_match_accept($file_name, $accept){
-	$file_ext = resolve_file_extension($file_name);
-	$file_mime = null;
+function file_match_accept($file, $accept){
+	$file_ext = resolve_file_extension($file);
+	$file_mime = mime_content_type($file);
 	$acc_list = explode_by(',', $accept);
 
 	//文件mime对比单个accept
@@ -753,7 +753,7 @@ function file_match_accept($file_name, $accept){
 		//mime模式
 		if(strpos($acc, '/') !== false){
 			if(!$file_mime){
-				$file_mime = mime_content_type($file_name);
+				$file_mime = mime_content_type($file);
 			}
 			if($mime_compare($file_mime, $acc)){
 				return true;
