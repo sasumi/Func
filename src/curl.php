@@ -185,7 +185,7 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 	foreach($file_map as $name => $file){
 		$mime = '';
 		if(is_array($file)){
-			[$file, $mime] = $file;
+			list($file, $mime) = $file;
 		}
 		if(!is_file($file)){
 			throw new Exception('file no found:'.$file);
@@ -453,6 +453,9 @@ function curl_instance($url, array $ext_curl_option = []){
 	//忽略自定义选项
 	foreach($curl_option as $k => $item){
 		if(strpos($k, __NAMESPACE__) === false){
+			if(!is_numeric($k)){
+				throw new Exception('curl option no support:'.$k);
+			}
 			curl_setopt($ch, $k, $item);
 		}
 	}
