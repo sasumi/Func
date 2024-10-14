@@ -148,10 +148,13 @@ function curl_get($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post($url, $data = null, array $curl_option = []){
-	return curl_query($url, array_merge_assoc($curl_option, [
+	return curl_query($url, curl_option_merge($curl_option, [
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
-	], true));
+		CURLOPT_HTTPHEADER => [
+			'Content-Type: application/x-www-form-urlencoded' //POST 默认头部使用 form-urlencoded
+		]
+	]));
 }
 
 /**
@@ -164,12 +167,12 @@ function curl_post($url, $data = null, array $curl_option = []){
  */
 function curl_post_json($url, array $data = [], array $curl_option = []){
 	$data = $data ? json_encode($data) : '';
-	return curl_post($url, $data, array_merge_assoc([
+	return curl_post($url, $data, curl_option_merge([
 		CURLOPT_HTTPHEADER => [
 			'Content-Type: application/json; charset=utf-8',
 			'Content-Length: '.strlen($data),
 		],
-	], $curl_option, true));
+	], $curl_option));
 }
 
 /**
@@ -185,17 +188,17 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
 	foreach($file_map as $name => $file){
 		$mime = '';
 		if(is_array($file)){
-			list($file, $mime) = $file;
+			[$file, $mime] = $file;
 		}
 		if(!is_file($file)){
 			throw new Exception('file no found:'.$file);
 		}
 		$ext_param[$name] = curl_file_create($file, $mime);
 	}
-	return curl_query($url, array_merge_assoc([
+	return curl_query($url, curl_option_merge([
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => $ext_param,
-	], $curl_option, true));
+	], $curl_option));
 }
 
 /**
@@ -207,10 +210,10 @@ function curl_post_file($url, array $file_map, array $ext_param = [], array $cur
  * @throws \Exception
  */
 function curl_put($url, $data, array $curl_option = []){
-	return curl_query($url, array_merge_assoc([
+	return curl_query($url, curl_option_merge([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'PUT',
-	], $curl_option, true));
+	], $curl_option));
 }
 
 /**
@@ -222,10 +225,10 @@ function curl_put($url, $data, array $curl_option = []){
  * @throws \Exception
  */
 function curl_delete($url, $data, array $curl_option = []){
-	return curl_query($url, array_merge_assoc([
+	return curl_query($url, curl_option_merge([
 		CURLOPT_POSTFIELDS    => curl_data2str($data),
 		CURLOPT_CUSTOMREQUEST => 'DELETE',
-	], $curl_option, true));
+	], $curl_option));
 }
 
 /**
@@ -249,7 +252,6 @@ function curl_query($url, array $curl_option){
 		if(isset($curl_option[CURLOPT_PAGE_ENCODING])){
 			$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
 		}
-
 		if($curl_option[CURLOPT_HTML_FIX_RELATIVE_PATH]){
 			//这里使用最后实际URL作为替换标准
 			$ret['body'] = html_fix_relative_path($ret['body'], $ret['info']['url']);
@@ -369,13 +371,23 @@ function curl_get_proxy_option($proxy_string){
  * @return array
  */
 function curl_get_default_option(array $ext_option = []){
-	if($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER]){
-		$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY][CURLOPT_HTTPHEADER]);
+	return curl_option_merge($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY], $ext_option);
+}
+
+/**
+ * 合并CURL选项，尤其是处理 CURLOPT_HTTPHEADER 中重复部分
+ * @param array $old_option
+ * @param array $new_option
+ * @return array
+ */
+function curl_option_merge(array $old_option, array $new_option){
+	if($old_option[CURLOPT_HTTPHEADER] && $new_option[CURLOPT_HTTPHEADER]){
+		$old = curl_convert_http_header_to_assoc($old_option[CURLOPT_HTTPHEADER]);
+		$new = curl_convert_http_header_to_assoc($new_option[CURLOPT_HTTPHEADER]);
+		$old_option[CURLOPT_HTTPHEADER] = array_merge_assoc($old, $new);
+		unset($new_option[CURLOPT_HTTPHEADER]);
 	}
-	if($ext_option[CURLOPT_HTTPHEADER]){
-		$ext_option[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($ext_option[CURLOPT_HTTPHEADER]);
-	}
-	return array_merge_assoc($GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY], $ext_option, true);
+	return array_merge_assoc($old_option, $new_option, true);
 }
 
 /**
@@ -403,13 +415,7 @@ function curl_convert_http_header_to_assoc($headers){
  */
 function curl_set_default_option(array $curl_option, $patch = false){
 	$default = $patch ? curl_get_default_option() : [];
-	if($default[CURLOPT_HTTPHEADER]){
-		$default[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($default[CURLOPT_HTTPHEADER]);
-	}
-	if($curl_option[CURLOPT_HTTPHEADER]){
-		$curl_option[CURLOPT_HTTPHEADER] = curl_convert_http_header_to_assoc($curl_option[CURLOPT_HTTPHEADER]);
-	}
-	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = array_merge_assoc($default, $curl_option, true);
+	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = curl_option_merge($default, $curl_option);
 }
 
 /**
@@ -588,7 +594,7 @@ function curl_urls_to_fetcher($urls, $ext_curl_option = []){
 	}//二维数组，当作CURL OPTION处理
 	else{
 		foreach($urls as $opt){
-			$options[] = array_merge_assoc($opt, $ext_curl_option);
+			$options[] = curl_option_merge($opt, $ext_curl_option);
 		}
 	}
 	return function() use (&$options){
