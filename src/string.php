@@ -169,6 +169,25 @@ function __array_merge_distinct_with_dynamic_key(array $array1, array &$array2, 
 }
 
 /**
+ * 批量调用sprintf
+ * @param string $str
+ * @param array $arr 每个item表示传递给sprintf的参数，可以是数组
+ * @return string[]
+ */
+function asprintf($str, array $arr){
+	$ret = [];
+	foreach($arr as $item){
+		if(is_array($item)){
+			array_unshift($item, $str);
+			$ret[] = call_user_func_array('sprintf', $item);
+		} else {
+			$ret[] = call_user_func('sprintf', $str, $item);
+		}
+	}
+	return $ret;
+}
+
+/**
  * PHP 匹配通配符
  * @param string $wildcard_pattern
  * @param string $haystack
