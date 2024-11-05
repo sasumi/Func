@@ -855,11 +855,18 @@ function static_version_statement_quote($str){
 
 /**
  * 修正浏览器 HTML5 中 input:datetime或者 input:datetime-local 提交过来的数据
- * H5 提交的时间格式可能为 Y-m-dTH:i:s
+ * H5 提交的时间格式可能为 Y-m-d\TH:i
  * @param string $datetime_str_from_h5
- * @return string|null
+ * @param int $fix_seconds 秒修正，H5输入框提交过来没有秒精度，这里可以设置为0（如开始时间），或者59（如结束时间）用于修正秒单位数值
+ * @return string
  * @throws \Exception
  */
-function fix_browser_datetime($datetime_str_from_h5){
-	return $datetime_str_from_h5 ? (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s') : null;
+function fix_browser_datetime($datetime_str_from_h5, $fix_seconds = 0){
+	if(!$datetime_str_from_h5){
+		return '';
+	}
+	if(preg_match('/[^:]\d{2}:\d{2}$/', $datetime_str_from_h5)){
+		$datetime_str_from_h5 .= ':'.str_pad($fix_seconds.'', 2, STR_PAD_LEFT, '0');
+	}
+	return (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s');
 }
