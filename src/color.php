@@ -7,7 +7,7 @@ namespace LFPhp\Func;
 use Exception;
 
 /**
- * 转换16进制颜色格式到rbg格式（数组）
+ * Convert hexadecimal color format to RGB format (array)
  * @param string $hex_color #ff00bb
  * @return array
  * @throws \Exception
@@ -25,7 +25,7 @@ function color_hex2rgb($hex_color){
 }
 
 /**
- * 转换rbg格式到16进制颜色格式
+ * Convert RGB format to hexadecimal color format
  * @param array $rgb [r,g,b]
  * @param string $prefix 前缀
  * @return string
@@ -37,7 +37,7 @@ function color_rgb2hex(array $rgb, $prefix = '#'){
 }
 
 /**
- * 转换RGB格式到HSL格式
+ * Convert RGB format to HSL format
  * @param array $rgb
  * @return float[] [h,s,l]
  */
@@ -67,7 +67,7 @@ function color_rgb2hsl(array $rgb){
 }
 
 /**
- * HSL颜色转换成RGB颜色
+ * Convert HSL format to RGB format
  * @param array $hsl [h,s,l]
  * @return int[] [r,g,b]
  */
@@ -96,7 +96,7 @@ function color_hsl2rgb(array $hsl){
 }
 
 /**
- * 转换rgb颜色到CMYK颜色
+ * Convert RGB format to CMYK format
  * @param array $rgb
  * @return array [c,m,y,k]
  */
@@ -116,7 +116,7 @@ function color_rgb2cmyk(array $rgb){
 }
 
 /**
- * 转换CMYK颜色到RGB颜色
+ * Convert CMYK format to RGB format
  * @param array $cmyk
  * @return int[] [r,g,b]
  */
@@ -137,7 +137,7 @@ function cmyk_to_rgb(array $cmyk) {
 }
 
 /**
- * 转换RGB到HSB
+ * Convert RGB format to HSB format
  * @param array $rgb [r,g,b]
  * @param int $accuracy
  * @return array
@@ -164,9 +164,9 @@ function color_rgb2hsb(array $rgb, $accuracy = 3) {
 }
 
 /**
- * 转换HSB到RGB
+ * Convert HSB format to RGB format
  * @param array $hsb [h,s,b]
- * @param int $accuracy 精确度
+ * @param int $accuracy
  * @return int[] [r,g,b]
  */
 function color_hsb2rgb(array $hsb, $accuracy = 3){
@@ -198,9 +198,9 @@ function color_hsb2rgb(array $hsb, $accuracy = 3){
 }
 
 /**
- * 颜色浓度计算
- * @param string|array $color_val 16进制颜色或rgb数组
- * @param float $inc_pec 百分比，范围：-99 ~ 99
+ * Calculate the molarity of a color
+ * @param string|array $color_val HEX color string, or RGB array
+ * @param float $inc_pec range of percent, from -99 to 99
  * @return array|string
  */
 function color_molarity($color_val, $inc_pec){
@@ -228,7 +228,7 @@ function color_molarity($color_val, $inc_pec){
 }
 
 /**
- * 随机颜色
+ * Random color
  * @return string
  */
 function color_rand(){

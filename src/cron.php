@@ -7,9 +7,9 @@ namespace LFPhp\Func;
 use Exception;
 
 /**
- * 检测cron格式是否匹配指定时间戳
- * @param string $format cron格式。暂不支持年份，格式为：分钟 时钟 天数 月数 星期
- * @param int $time 默认为当前时间戳
+ * Check if the cron format matches the specified timestamp
+ * @param string $format cron format. Currently not supporting year, format is: minutes hours days months weeks
+ * @param int $time Default is current timestamp
  * @param string|null $error mismatch error info
  * @return bool
  * @throws \Exception
@@ -27,10 +27,10 @@ function cron_match($format, $time, &$error = null){
 	}
 	if(!isset($fix_ranges)){
 		/**
-		 * 修正范围，如 1 ~ 20, 23 ~ 7
-		 * @param int $start 开始计算点
-		 * @param int $end 结束计算点
-		 * @param array $all_ranges 限定范围
+		 * Fix range, such as 1 ~ 20, 23 ~ 7
+		 * @param int $start Start calculation point
+		 * @param int $end End calculation point
+		 * @param array $all_ranges Limited range
 		 * @return array
 		 * @throws \Exception
 		 */
@@ -61,7 +61,7 @@ function cron_match($format, $time, &$error = null){
 				break;
 			}
 
-			//*/10 格式
+			//*/10 format
 			else if(preg_match('/^\*\/(\d+)$/', $p, $matches)){
 				if($time_info[$idx]%$matches[1] == 0){
 					$matched = true;
@@ -69,7 +69,7 @@ function cron_match($format, $time, &$error = null){
 				}
 			}
 
-			//23-9/3 格式
+			//23-9/3 format
 			else if(preg_match('/^(\d+)-(\d+)\/(\d+)$/', $p, $matches)){
 				list($_, $st, $ed, $mod) = $matches;
 				$ranges = array_filter($fix_ranges($st, $ed, $full_fills[$idx]), function($item)use($mod){return $item%$mod == 0;});
@@ -78,7 +78,7 @@ function cron_match($format, $time, &$error = null){
 					break;
 				}
 			}
-			//3-7 范围
+			//3-7 range
 			else if(preg_match('/^(\d+)-(\d+)$/', $p, $matches)){
 				$ranges = $fix_ranges($matches[1], $matches[2], $full_fills[$idx]);
 				if(in_array($time_info[$idx], $ranges)){
