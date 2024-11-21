@@ -1,6 +1,6 @@
 <?php
 /**
- * CSP相关操作函数
+ * HTTP CSP Functions
  */
 namespace LFPhp\Func;
 

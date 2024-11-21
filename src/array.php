@@ -1,6 +1,6 @@
 <?php
 /**
- * 数组相关操作函数
+ * Array Enhancement Functions
  */
 namespace LFPhp\Func;
 
@@ -11,7 +11,7 @@ use RecursiveIteratorIterator;
 use stdClass;
 
 /**
- * 數組位置操作
+ * Define array posing
  */
 const ARRAY_POSING_HEAD = 0x001;
 const ARRAY_POSING_BEFORE = 0x002;
@@ -19,41 +19,43 @@ const ARRAY_POSING_AFTER = 0x003;
 const ARRAY_POSING_LAST = 0x004;
 
 /**
+ * Check array is assoc array
+ * @param array $arr
+ * @return boolean
+ */
+function is_assoc_array($arr){
+	return is_array($arr) && array_values($arr) != $arr;
+}
+
+/**
  * Array group by function
  * group array(); by by_key
- * @param array $array 数组
- * @param string $by_key 合并key字符串
- * @param boolean $force_unique
- * @return array handle result
+ * @param array $arr source array, multi-dimensional array (record set)
+ * @param scalar $by_key key to group by
+ * @param boolean $force_unique array key is unique in list
+ * @return array
  */
-function array_group($array, $by_key, $force_unique = false){
-	if(empty ($array) || !is_array($array)){
-		return $array;
+function array_group($arr, $by_key, $force_unique = false){
+	if(empty ($arr) || !is_array($arr)){
+		return $arr;
 	}
 	if($force_unique){
-		return array_column($array, null, $by_key);
+		return array_column($arr, null, $by_key);
 	}
 	$_result = [];
-	foreach($array as $item){
+	foreach($arr as $item){
 		$_result[$item[$by_key]][] = $item;
 	}
 	return $_result;
 }
 
 /**
- * 划分范围，
- * 将指定开始···结束数值按照一定size进行分组。
- * 如对：2 ~ 9 数字进行分组，每组最大个数为3，则结果为： [2,3,4],[5,6,7],[8,9]
- * <pre>
- * 用法：
- * foreach(range_slice(2,9) as list($s, $e)){
- *      echo "$s ~ $e", PHP_EOL;
- * }
- * </pre>
- * @param int $start 开始下标
- * @param int $end 结束下标
- * @param int $size 每页大小
+ * Make chunk from specified number range
+ * @param int $start number start
+ * @param int $end number end
+ * @param int $size chunk size
  * @return \Generator
+ * @example sprite number range: 2-9, chunk size is 3, so function export a generator: [2,3,4],[5,6,7],[8,9]
  */
 function range_slice($start, $end, $size){
 	$page_count = ceil(($end - $start)/$size);
@@ -63,7 +65,7 @@ function range_slice($start, $end, $size){
 }
 
 /**
- * shuffle objects, key original assoc key
+ * Shuffle objects, key original assoc key
  * @param array|object $objects
  * @return array
  */
@@ -78,12 +80,12 @@ function object_shuffle($objects){
 }
 
 /**
- * 随机返回数组元素列表
- * @notice 该方法与array_rand不同，
- * 任何时候返回的都是数组列表，而不是key或者keys，该方法不会对结果进行混淆
- * @param array $arr 源数组，支持自然索引数组与关联数组
- * @param int $count 获取数量
- * @return array 返回指定数量的数组(注意：该处为索引数组，key与元数组key保持一致)
+ * Get random array item
+ * don't like array_rand, this function always return an array
+ * @link http://php.net/manual/zh/function.array-rand.php
+ * @param array $arr source array, can be associative array or indexed array
+ * @param int $count random count
+ * @return array random array, keys will be preserved
  */
 function array_random(array $arr = [], $count = 1){
 	if(!$arr){
@@ -105,17 +107,18 @@ function array_random(array $arr = [], $count = 1){
 }
 
 /**
- * @param array $keys
- * @param array $arr
+ * Check any keys exists in array
+ * @param array $arr source array
+ * @param array $keys keys to check
  * @return bool
  */
-function array_keys_exists(array $keys, array $arr){
+function array_keys_exists(array $arr, array $keys){
 	return !array_diff_key(array_flip($keys), $arr);
 }
 
 /**
- * 数组平铺
- * @param array $arr
+ * Flat array
+ * @param array $arr source array
  * @return array
  */
 function array_flatten(array $arr){
@@ -136,7 +139,7 @@ function array_flatten(array $arr){
 function plain_items($arr, $original_key = '', $original_key_name = 'original_key'){
 	if(count($arr) == count($arr, COUNT_RECURSIVE)){
 		$arr[$original_key_name] = $original_key;
-		return array($arr);
+		return [$arr];
 	}else{
 		$ret = [];
 		foreach($arr as $k => $item){
@@ -147,12 +150,12 @@ function plain_items($arr, $original_key = '', $original_key_name = 'original_ke
 }
 
 /**
- * 将数组转换成对象
+ * Convert array to standard object
  * @param array $arr
  * @return \stdClass
  */
 function array2object($arr){
-	if (is_array($arr)) {
+	if(is_array($arr)){
 		$obj = new StdClass();
 		foreach($arr as $key => $val){
 			$obj->$key = $val;
@@ -164,17 +167,17 @@ function array2object($arr){
 }
 
 /**
- * 将对象转换成数组
- * @param object $obj
+ * Convert object to array
+ * @param object $obj any object can convert, but not resource
  * @return array
  */
 function object2array($obj){
 	$obj = (array)$obj;
-	foreach ($obj as $k => $v) {
-		if (gettype($v) == 'resource') {
+	foreach($obj as $k => $v){
+		if(gettype($v) == 'resource'){
 			return [];
 		}
-		if (gettype($v) == 'object' || gettype($v) == 'array') {
+		if(gettype($v) == 'object' || gettype($v) == 'array'){
 			$obj[$k] = object2array($v);
 		}
 	}
@@ -182,14 +185,13 @@ function object2array($obj){
 }
 
 /**
- * 重新组织PHP $_FILES数组格式
- * 以正确name维度返回数组
- * @param array $input
+ * Restructure $_FILES array to correct name dimension
+ * @param array $PHP_FILES PHP $_FILES variable
  * @return array
  */
-function restructure_files(array $input){
+function restructure_files(array $PHP_FILES){
 	$output = [];
-	foreach($input as $name => $array){
+	foreach($PHP_FILES as $name => $array){
 		foreach($array as $field => $value){
 			$pointer = &$output[$name];
 			if(!is_array($value)){
@@ -213,23 +215,9 @@ function restructure_files(array $input){
 }
 
 /**
- * array copy by fields
- * @param array $array
- * @param array $fields
- * @return array
- */
-function array_copy_by_fields(array $array, array $fields){
-	$tmp = [];
-	foreach($fields as $field){
-		$tmp[$field] = $array[$field];
-	}
-	return $tmp;
-}
-
-/**
- * 检测KEY合并数组，增强array_merge
- * @param array $array1
- * @param array $array2
+ * Merge two arrays recursively and distinctly
+ * @param array $array1 multi-dimensional array (record set)
+ * @param array $array2 multi-dimensional array (record set)
  * @return array
  */
 function array_merge_recursive_distinct(array $array1, array &$array2){
@@ -246,109 +234,201 @@ function array_merge_recursive_distinct(array $array1, array &$array2){
 }
 
 /**
- * 关联数组合并（即使是自然索引数组，也是按照key的逻辑来合并，子项也不例外）
- * @param array $org_arr
- * @param array $new_arr
- * @param bool $recursive 是否递归合并，针对多重数组深度合并，例如CURLOPT数组
+ * Merge two arrays recursively
+ * @param array $org_arr multi-dimensional array (record set)
+ * @param array $new_arr multi-dimensional array (record set)
+ * @param bool $recursive is recursive merge
  * @return array
  */
 function array_merge_assoc(array $org_arr, array $new_arr, $recursive = false){
-	foreach($new_arr as $k=>$val){
+	foreach($new_arr as $k => $val){
 		if($recursive && isset($org_arr[$k]) && is_array($val) && is_array($org_arr[$k])){
 			$org_arr[$k] = array_merge_assoc($org_arr[$k], $val);
-		} else {
+		}else{
 			$org_arr[$k] = $val;
 		}
 	}
 	return $org_arr;
 }
 
-
 /**
- * 清理数组中null的元素
- * @param array|mixed $data
+ * Clean array
+ * @param array $arr multi-dimensional array (record set)
+ * @param bool $clean_empty clear empty item(include empty array)
+ * @param bool $clean_null clean while item is null
+ * @param bool $trim_string trim string while item is string
  * @param bool $recursive
- * @return array|mixed
+ * @return array
  */
-function array_clear_null($data, $recursive = true){
-	if(empty($data) || !is_array($data)){
-		return $data;
+function array_clean($arr, $clean_empty = true, $clean_null = true, $trim_string = true, $recursive = true){
+	if(empty($arr) || !is_array($arr)){
+		return $arr;
 	}
-	foreach($data as $k => $item){
+	foreach($arr as $k => $item){
+		if($trim_string && is_string($item)){
+			$arr[$k] = trim($item);
+		}
+		if($clean_empty && empty($item)){
+			unset($arr[$k]);
+			continue;
+		}
+		if($clean_null && $item === null){
+			unset($arr[$k]);
+		}
 		if($recursive && is_array($item)){
-			$data[$k] = array_clear_null($item);
-		}
-		if($data[$k] === null){
-			unset($data[$k]);
+			$arr[$k] = array_clean($item);
 		}
 	}
-	return $data;
+	return $arr;
 }
 
 /**
- * 清理数组中empty的元素
+ * clean array null value
  * @param array|mixed $data
  * @param bool $recursive
- * @return array|mixed
+ * @return array
  */
-function array_clear_empty($data, $recursive = true){
-	if(empty($data) || !is_array($data)){
-		return $data;
-	}
-	foreach($data as $k => $item){
-		if($recursive && is_array($item)){
-			$data[$k] = array_clear_empty($item);
-		}
-		if(empty($data[$k])){
-			unset($data[$k]);
-		}
-	}
-	return $data;
+function array_clean_null($data, $recursive = true){
+	return array_clean($data, false, true, false, $recursive);
 }
 
 /**
- * 数组元素切换（支持关联数组）
- * @param array $arr 数组
- * @param string|number $item_index_key 需要切换元素的key值（可以是关联数组的key）
- * @param number $dir 移动方向
+ * Clean empty item in array
+ * @param array $data
+ * @param bool $recursive
+ * @return array
+ */
+function array_clean_empty($data, $recursive = true){
+	return array_clean($data, true, false, false, $recursive);
+}
+
+/**
+ * Trim array item
+ * @param array $arr source array
+ * @param scalar[] $specified_fields specified fields, empty for all fields
+ * @param bool $recursive
+ * @return array
+ */
+function array_trim($arr, $specified_fields = [], $recursive = true){
+	foreach($arr as $k => $val){
+		if($recursive && is_array($arr)){
+			$arr[$k] = array_trim($val, $specified_fields, $recursive);
+			continue;
+		}
+		if(is_string($val) && (!$specified_fields || in_array($k, $specified_fields))){
+			$arr[$k] = trim($val);
+		}
+	}
+	return $arr;
+}
+
+/**
+ * Array filter by fields
+ * @param array $arr
+ * @param scalar[] $reserved_fields
+ * @param scalar[] $remove_fields
+ * @param bool $recursive multi-dimensional array support
+ * @return array
+ */
+function array_filter_fields($arr, $reserved_fields = [], $remove_fields = [], $recursive = false){
+	if(!$reserved_fields && !$remove_fields){
+		return $arr;
+	}
+	$ret = [];
+	foreach($arr as $k => $item){
+		//in remove fields, or no in reserved fields(if provided)
+		if(($remove_fields && in_array($k, $remove_fields)) || ($reserved_fields && !in_array($k, $reserved_fields))){
+			//remove item
+		}else{
+			if($recursive && is_array($item)){
+				$item = array_filter_fields($item, $reserved_fields, $remove_fields);
+			}
+			$ret[$k] = $item;
+		}
+	}
+	return $ret;
+}
+
+/**
+ * Array filter by specified reserved values, or remove values
+ * @param array $arr
+ * @param array $reserved_values
+ * @param array $remove_values
+ * @return array
+ */
+function array_filter_values($arr, $reserved_values = [], $remove_values = []){
+	return array_filter_recursive($arr, function($val) use ($reserved_values, $remove_values){
+		if($remove_values && in_array($val, $remove_values)){
+			return false;
+		}
+		if($reserved_values && !in_array($val, $reserved_values)){
+			return false;
+		}
+		return true;
+	});
+}
+
+/**
+ * Array filter recursive
+ * @param array[] $arr any-dimensional array
+ * @param callable $payload $payload($val, $key), if return false, item will be removed
+ * @return array
+ */
+function array_filter_recursive($arr, $payload){
+	$ret = [];
+	foreach($arr as $k => $item){
+		if($payload($item, $k) === false){
+			continue;
+		}
+		if(is_array($item)){
+			$ret[$k] = array_filter_recursive($item, $payload);
+		}
+	}
+	return $ret;
+}
+
+/**
+ * Move specified index item
+ * @param array $arr
+ * @param string|number $target_index the item tobe handled
+ * @param number $dir direction use constants: ARRAY_POSING_HEAD, ARRAY_POSING_BEFORE, ARRAY_POSING_AFTER, ARRAY_POSING_LAST
  * @return array
  * @throws \Exception
  */
-function array_move_item($arr, $item_index_key, $dir){
+function array_move_item($arr, $target_index, $dir){
 	if($dir == ARRAY_POSING_HEAD){
-		$tmp = $arr[$item_index_key];
-		unset($arr[$item_index_key]);
-		array_unshift_assoc($arr, $item_index_key, $tmp);
+		$tmp = $arr[$target_index];
+		unset($arr[$target_index]);
+		array_unshift_assoc($arr, $target_index, $tmp);
 		return $arr;
 	}else if($dir == ARRAY_POSING_LAST){
-		$tmp = $arr[$item_index_key];
-		unset($arr[$item_index_key]);
-		$arr[$item_index_key] = $tmp;
+		$tmp = $arr[$target_index];
+		unset($arr[$target_index]);
+		$arr[$target_index] = $tmp;
 		return $arr;
 	}else if($dir == ARRAY_POSING_BEFORE){
 		$keys = array_keys($arr);
 		$values = array_values($arr);
-		$new_idx = array_index($keys, $item_index_key);
+		$new_idx = array_index($keys, $target_index);
 		if($new_idx == 0){
 			return $arr;
 		}
 		$before = array_combine(array_slice($keys, 0, $new_idx - 1), array_slice($values, 0, $new_idx - 1));
-		$before[$item_index_key] = $arr[$item_index_key]; //當前
+		$before[$target_index] = $arr[$target_index]; //當前
 		$before[$keys[$new_idx - 1]] = $values[$new_idx - 1]; //上一個
 		$after = array_combine(array_slice($keys, $new_idx + 1), array_slice($values, $new_idx + 1));
 		return array_merge($before, $after);
 	}else if($dir == ARRAY_POSING_AFTER){
 		$keys = array_keys($arr);
-
 		$values = array_values($arr);
-		$new_idx = array_index($keys, $item_index_key);
+		$new_idx = array_index($keys, $target_index);
 		if($new_idx == count($arr) - 1){
 			return $arr;
 		}
 		$tmp = array_slice($values, 0, $new_idx);
 		$before = array_combine(array_slice($keys, 0, $new_idx), $tmp);
 		$before[$keys[$new_idx + 1]] = $values[$new_idx + 1]; //下一個
-		$before[$item_index_key] = $arr[$item_index_key]; //當前
+		$before[$target_index] = $arr[$target_index]; //當前
 		$after = array_combine(array_slice($keys, $new_idx + 2), array_slice($values, $new_idx + 2));
 		return array_merge($before, $after);
 	}else{
@@ -357,146 +437,35 @@ function array_move_item($arr, $item_index_key, $dir){
 }
 
 /**
- * 清理数组字段
- * @param array $keep_fields
- * keep_fields 格式：
- * array(
- * 'id',
- * 'title',
- * 'url',
- * 'tags',
- * 'categories' => function($data){
- * if(!empty($data)){
- * foreach($data as $k=>$cat){
- * $data[$k] = array_clear_fields(array('id', 'name', 'url'), $cat);
- * }
- * }
- * return $data;
- * },
- * 'album' => array(
- * 'id',
- * 'cover_image_id',
- * 'cover_image'=>array(
- * 'id',
- * 'title',
- * 'url',
- * 'thumb_url'
- * ),
- * 'url'
- * ),
- * 'liked',
- * 'like_url',
- * 'fav_url',
- * 'thumb_url',
- * 'like_data_url',
- * 'link',
- * 'counter' => array(
- * 'visit_count',
- * 'like_count',
- * 'share_count',
- * 'collect_count'
- * ),
- * )
- * @param array $data
- * @return array
- */
-function array_clear_fields(array $keep_fields, array $data){
-	foreach($data as $k => $item){
-		$keep = false;
-		foreach($keep_fields as $fk => $cfg){
-			if(is_numeric($fk) && is_string($cfg) && $cfg == $k){
-				$keep = true;
-				break;
-			}else if(is_string($fk) && $fk == $k && $data[$fk]){
-				if(is_callable($cfg)){
-					$data[$k] = call_user_func($cfg, $item);
-					$keep = true;
-					break;
-				}else if(is_array($cfg) && $data[$k]){
-					$data[$k] = array_clear_fields($cfg, $item);
-					$keep = true;
-					break;
-				}
-			}
-		}
-
-		if(!$keep){
-			unset($data[$k]);
-		}
-	}
-	return $data;
-}
-
-/**
- * 根据数组项值，删除数组
+ * Get first item of array
  * @param array $arr
- * @param mixed $values
- */
-function array_unset($arr, ...$values){
-	$tmp = [];
-	$assoc_arr = is_assoc_array($arr);
-	foreach($arr as $k=>$val){
-		if(!in_array($val, $values)){
-			$tmp[$k] = $val;
-		}
-	}
-	return $assoc_arr ? $tmp : array_values($tmp);
-}
-
-/**
- * 对数组进行去空白
- * @param array $data 数据
- * @param array $fields 指定字段，为空表示所有字段
- * @param bool $recursive 是否递归处理，如果递归，则data允许为任意维数组
- * @return array
- */
-function array_trim_fields(array $data, array $fields = [], $recursive = true){
-	if(!$data || !is_array($data)){
-		return $data;
-	}
-
-	$copy = [];
-	foreach($data as $k => $item){
-		if($recursive && is_array($item)){
-			$item = array_trim_fields($item, $fields, $recursive);
-		}else if((in_array($k, $fields) || !$fields) && is_string($item)){
-			$item = trim($item);
-		}
-		$copy[$k] = $item;
-	}
-	return $copy;
-}
-
-/**
- * get first item of array
- * @param array $data
- * @param null &$key
+ * @param null &$key matched key
  * @return mixed|null
  */
-function array_first(array $data = [], &$key = null){
-	foreach($data as $key => $item){
+function array_first(array $arr = [], &$key = null){
+	foreach($arr as $key => $item){
 		return $item;
 	}
 	return null;
 }
 
 /**
- * 获取数组最后一个数据
- * @param array $data
- * @param null $key
+ * Get last item of array
+ * @param array $arr
+ * @param null $key matched key
  * @return null
  */
-function array_last(array $data = [], &$key = null){
-	if(!empty($data)){
-		$keys = array_keys($data);
+function array_last(array $arr = [], &$key = null){
+	if(!empty($arr)){
+		$keys = array_keys($arr);
 		$key = array_pop($keys);
-		return $data[$key];
+		return $arr[$key];
 	}
 	return null;
 }
 
 /**
- * 在数组开始位置压入关联数据
+ * Assoc-array unshift
  * @param array &$arr
  * @param string $key
  * @param mixed $val
@@ -510,12 +479,12 @@ function array_unshift_assoc(&$arr, $key, $val){
 }
 
 /**
- * 获取数组第一个项键值对
+ * Assoc-array shift
  * @param array $arr
- * @return array|bool [value, key] 键值对，不存在则返回false
+ * @return array|false return matched [value, key], false while empty
  */
 function array_shift_assoc(array &$arr){
-	foreach($arr as $key=>$val){
+	foreach($arr as $key => $val){
 		unset($arr[$key]);
 		return [$val, $key];
 	}
@@ -523,14 +492,14 @@ function array_shift_assoc(array &$arr){
 }
 
 /**
- * array sort by specified key
- * @param array $src_arr
+ * Array sort by specified key
+ * @param array $arr
  * @return array
  * @example: array_orderby($data, 'volume', SORT_DESC, 'edition', SORT_ASC);
  */
-function array_orderby($src_arr){
-	if(empty($src_arr)){
-		return $src_arr;
+function array_orderby($arr){
+	if(empty($arr)){
+		return $arr;
 	}
 	$args = func_get_args();
 	$data = array_shift($args);
@@ -549,11 +518,11 @@ function array_orderby($src_arr){
 }
 
 /**
- * 数组按照指定值列表排序
- * @param array $src_arr 二维数组
- * @param string $field 字段名称
- * @param scalar[] $values 值列表
- * @param bool $pad_tail_on_mismatch 如果数组元素没有在命中所有值，是否追加在返回结果后面。默认为不追加
+ * Array sort by values
+ * @param array[] $src_arr multi-dimensional array (record set)
+ * @param string $field field name
+ * @param scalar[] $values value list
+ * @param bool $pad_tail_on_mismatch pad tail on mismatch
  * @return array
  */
 function array_orderby_values(array $src_arr, $field, array $values, $pad_tail_on_mismatch = false){
@@ -573,13 +542,13 @@ function array_orderby_values(array $src_arr, $field, array $values, $pad_tail_o
 }
 
 /**
- * 数组按照指定key排序
- * @param array $src_arr
- * @param string[] $keys 键值数组
- * @param bool $miss_match_in_head 未命中值是否排列在头部
+ * Array sort by keys
+ * @param array[] $src_arr
+ * @param string[] $keys
+ * @param bool $mismatch_to_head set mismatch item to head
  * @return array
  */
-function array_orderby_keys($src_arr, $keys, $miss_match_in_head = false){
+function array_orderby_keys($src_arr, $keys, $mismatch_to_head = false){
 	if(empty($src_arr)){
 		return $src_arr;
 	}
@@ -591,13 +560,13 @@ function array_orderby_keys($src_arr, $keys, $miss_match_in_head = false){
 		}
 	}
 	if($src_arr){
-		$tmp = $miss_match_in_head ? array_merge($src_arr, $tmp) : array_merge_after($tmp, $src_arr);
+		$tmp = $mismatch_to_head ? array_merge($src_arr, $tmp) : array_merge_after($tmp, $src_arr);
 	}
 	return $tmp;
 }
 
 /**
- * 获取数组元素key
+ * Get item index
  * @param array $array
  * @param callable|mixed $compare_fn_or_value
  * @return bool|int|string
@@ -618,16 +587,13 @@ function array_index($array, $compare_fn_or_value){
 }
 
 /**
- * 根据指定数组下标进行求和
- * @param array $arr
- * @param string $key
+ * Sum array value
+ * @param array[] $arr multi-dimensional array (record set)
+ * @param string $field
  * @return float|int
  */
-function array_sumby(array $arr, $key = ''){
-	if(!$key){
-		return array_sum($arr);
-	}
-	return array_sum(array_column($arr, $key));
+function array_sumby(array $arr, $field){
+	return array_sum(array_column($arr, $field));
 }
 
 /**
@@ -651,43 +617,7 @@ function array_default(array $arr, array $values, $reset_empty = false){
 }
 
 /**
- * check null in array
- * matched exp: [], [null], ['',null]
- * mismatched exp: ['']
- * @param array $arr
- * @return bool
- */
-function null_in_array(array $arr){
-	if(!$arr){
-		return true;
-	}
-	foreach($arr as $item){
-		if($item === null){
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * 按照指定key值列表过滤数组
- * @param array $arr
- * @param string[]|int[] $keys
- * @return array
- * @example array_filter_by_keys($data, array('key1','key2'));
- * array_filter_by_keys($data, 'key1', 'key2');
- */
-function array_filter_by_keys($arr, $keys){
-	$args = is_array($keys) ? $keys : array_slice(func_get_args(), 1);
-	$data = [];
-	foreach($args as $k){
-		$data[$k] = $arr[$k];
-	}
-	return $data;
-}
-
-/**
- * 创建Excel等电子表格里面的表头序列列表
+ * Create spreadsheet indexing columns
  * @param int $column_size
  * @return array
  */
@@ -700,58 +630,58 @@ function array_make_spreadsheet_columns($column_size){
 }
 
 /**
- * 根据xpath，将数据压入数组
- * @param array $data 目标数组
- * @param string $path_str 路径表达式，如：企微.企业.正式企业数量
- * @param mixed $value 项目值
- * @param string $glue 分隔符
+ * Array push value by specified path
+ * @param array $arr target array
+ * @param string $path_str path string
+ * @param mixed $value
+ * @param string $glue path delimiter, default use dot(.)
  */
-function array_push_by_path(&$data, $path_str, $value, $glue = '.'){
+function array_push_by_path(&$arr, $path_str, $value, $glue = '.'){
 	$paths = explode($glue, trim($path_str, $glue));
 	$path_stm = '';
 	foreach($paths as $path){
 		$path_stm .= "['".addslashes($path)."']";
 	}
 	$val = var_export($value, true);
-	$statement = "\$data$path_stm = $val;";
+	$statement = "\$arr$path_stm = $val;";
 	eval($statement);
 }
 
 /**
- * 根据路径获取数组中的数据
- * @param array $data 源数据
- * @param string $path_str 路径
+ * Fetch array value by path
+ * @param array $arr source array
+ * @param string $path_str path string
  * @param mixed $default 缺省值
- * @param string $delimiter 分隔符
+ * @param string $delimiter path delimiter, default use dot(.)
  * @return mixed
  */
-function array_fetch_by_path($data, $path_str, $default = null, $delimiter = '.'){
+function array_fetch_by_path($arr, $path_str, $default = null, $delimiter = '.'){
 	if(!$path_str){
-		return $data;
+		return $arr;
 	}
-	if(isset($data[$path_str])){
-		return $data[$path_str];
+	if(isset($arr[$path_str])){
+		return $arr[$path_str];
 	}
 	foreach(explode($delimiter, $path_str) as $segment){
-		if((!is_array($data) || !array_key_exists($segment, $data)) && (!$data instanceof ArrayAccess || !$data->offsetExists($segment))){
+		if((!is_array($arr) || !array_key_exists($segment, $arr)) && (!$arr instanceof ArrayAccess || !$arr->offsetExists($segment))){
 			return $default;
 		}
-		$data = $data[$segment];
+		$arr = $arr[$segment];
 	}
-	return $data;
+	return $arr;
 }
 
 /**
- * 根据路径获取数组中的数据
+ * Alias for array_fetch_by_path()
  * @alias for array_fetch_by_path
- * @param array $data 源数据
- * @param string $path_str 路径
- * @param mixed $default 缺省值
- * @param string $delimiter 分隔符
+ * @param array $arr
+ * @param string $path_str
+ * @param mixed $default
+ * @param string $delimiter
  * @return mixed
  */
-function array_get($data, $path_str, $default = null, $delimiter = '.'){
-	return array_fetch_by_path($data, $path_str, $default, $delimiter);
+function array_get($arr, $path_str, $default = null, $delimiter = '.'){
+	return array_fetch_by_path($arr, $path_str, $default, $delimiter);
 }
 
 /**
@@ -769,22 +699,22 @@ function assert_array_has_keys($arr, $keys){
 }
 
 /**
- * 过滤子节点，以目录树方式返回
- * @param string|int $parent_id
- * @param array $all
- * @param array $opt
- * @param int $level
+ * Tree node list filter
+ * @param string|int $parent_id parent node id
+ * @param array[] $nodes tree node list
+ * @param array $opt filter option
+ * @param int $level init level
  * @param array $group_by_parents
  * @return array
  */
-function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by_parents = []){
-	$opt = array_merge(array(
+function array_filter_subtree($parent_id, $nodes, $opt = [], $level = 0, $group_by_parents = []){
+	$opt = array_merge([
 		'return_as_tree' => false,             //以目录树返回，还是以平铺数组形式返回
 		'level_key'      => 'tree_level',      //返回数据中是否追加等级信息,如果选项为空, 则不追加等级信息
 		'id_key'         => 'id',              //主键键名
 		'parent_id_key'  => 'parent_id',       //父级键名
 		'children_key'   => 'children'         //返回子集key(如果是平铺方式返回,该选项无效
-	), $opt);
+	], $opt);
 
 	$pn_k = $opt['parent_id_key'];
 	$lv_k = $opt['level_key'];
@@ -793,16 +723,16 @@ function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by
 	$c_k = $opt['children_key'];
 
 	$result = [];
-	$group_by_parents = $group_by_parents ?: array_group($all, $pn_k);
+	$group_by_parents = $group_by_parents ?: array_group($nodes, $pn_k);
 
-	foreach($all as $item){
+	foreach($nodes as $item){
 		if($item[$pn_k] == $parent_id){
 			$item[$lv_k] = $level;  //set level
 			if(!$opt['return_as_tree']){
 				$result[] = $item;
 			}
 			if(isset($item[$id_k]) && isset($group_by_parents[$item[$id_k]]) && $group_by_parents[$item[$id_k]]){
-				$sub = array_filter_subtree($item[$id_k], $all, $opt, $level + 1, $group_by_parents);
+				$sub = array_filter_subtree($item[$id_k], $nodes, $opt, $level + 1, $group_by_parents);
 				if(!empty($sub)){
 					if($as_tree){
 						$item[$c_k] = $sub;
@@ -820,19 +750,18 @@ function array_filter_subtree($parent_id, $all, $opt = [], $level = 0, $group_by
 }
 
 /**
- * 插入指定数组在指定位置
+ * Array insert after specified key
  * @param array $src_array
  * @param mixed $data
  * @param string $rel_key
  * @return array|int
  */
-function array_insert_after(array $src_array, $data, $rel_key = ''){
+function array_insert_after(array $src_array, $data, $rel_key){
 	if(!in_array($rel_key, array_keys($src_array))){
 		return array_push($src_array, $data);
 	}else{
 		$tmp_array = [];
 		$len = 0;
-
 		foreach($src_array as $key => $src){
 			$tmp_array[$key] = $src;
 			$len++;
@@ -846,13 +775,13 @@ function array_insert_after(array $src_array, $data, $rel_key = ''){
 }
 
 /**
- * 合并数组到指定位置之后
+ * Merge new array after specified key
  * @param array $src_array
  * @param array $new_array
  * @param string $rel_key
  * @return array
  */
-function array_merge_after(array $src_array = [], array $new_array = [], $rel_key = ''){
+function array_merge_after(array $src_array, array $new_array, $rel_key = ''){
 	if(!in_array($rel_key, array_keys($src_array))){
 		return array_merge($src_array, $new_array);
 	}else{
@@ -872,24 +801,14 @@ function array_merge_after(array $src_array = [], array $new_array = [], $rel_ke
 }
 
 /**
- * 检测数组是否为关联数组
- * @param array $array
- * @return boolean
- */
-function is_assoc_array($array){
-	return is_array($array) && array_values($array) != $array;
-}
-
-/**
- * array_transform 支持嵌套转换
+ * Array transform by specified pattern
  * @param array $data
- * @param array $rules = array('dddd' => array('aaaa', 'bbbb'))
- * 转换为 : array['aaaaa']['bbb'] =  xxxx
+ * @param array $patterns new array key pattern, like: array('dddd' => array('aaaa', 'bbbb'))
  * @return mixed
  */
-function array_transform(array $data, array $rules){
+function array_transform(array $data, array $patterns){
 	$ret_array = [];
-	foreach($rules as $key => $value){
+	foreach($patterns as $key => $value){
 		if(!is_int($key) && isset($data[$key])){
 			if(is_array($value) && !empty($value)){
 				$tmp = &$ret_array;
@@ -897,7 +816,7 @@ function array_transform(array $data, array $rules){
 					$tmp = &$tmp[$v];
 				}
 				$tmp = $data[$key];
-			}elseif(is_string($value)){
+			}else if(is_string($value)){
 				$ret_array[$value] = $data[$key];
 			}
 		}else if(is_int($key) && isset($data[$value])){
@@ -908,9 +827,9 @@ function array_transform(array $data, array $rules){
 }
 
 /**
- * 根据指定下标获取多维数组所有值，无下标时获取所有
- * @param string $key
+ * Get Array value recursive
  * @param array $arr
+ * @param string $key if no key specified, return whole array values
  * @return array
  */
 function array_value_recursive(array $arr, $key = ''){

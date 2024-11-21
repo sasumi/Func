@@ -1,7 +1,8 @@
 <?php
 /**
- * CURL网络请求相关操作函数
- * curl相关处理函数返回标准结构：[info=>['url'='', ...], error='', head=>'', body=>'']
+ * CURL Enhancement Functions
+ * Mark: standard structure for curl_get():
+ * [info=>['url'='', ...], error='', head=>'', body=>'']
  */
 namespace LFPhp\Func;
 
@@ -767,91 +768,4 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	} while($state === CURLM_OK);
 	curl_multi_close($mh);
 	return true;
-}
-
-/**
- * 转换CURL信息到HAR格式文件
- * @param array $curl_options
- * @param array $curl_info
- * @param $response_header
- * @param $response_body
- * @return void
- * @todo
- */
-function curl_to_har(array $curl_options, array $curl_info, $response_header, $response_body){
-	$start_time = '';
-	$json = [
-		'log'     => [
-			'version' => '1.2',
-			'creator' => [
-				'name'    => 'WebInspector',
-				'version' => '537.36',
-			],
-		],
-		'pages'   => [],
-		'entries' => [
-			[
-				'startDateTime' => date('j', $start_time),
-				'time'          => $start_time,
-				'request'       => [
-					'method'      => $curl_options[CURLOPT_POST],
-					'url'         => $curl_options[CURLOPT_URL],
-					'httpVersion' => 'http/1.0',
-					'headers'     => [
-						['name' => 'User-Agent', 'value' => $curl_options[CURLOPT_USERAGENT]],
-						['name' => 'Accept', 'value' => $curl_options[CURLOPT_USERAGENT]],
-						['name' => 'Accept-Encoding', 'value' => $curl_options[CURLOPT_USERAGENT]],
-						['name' => 'Accept-Language', 'value' => $curl_options[CURLOPT_USERAGENT]],
-						['name' => 'Cache-Control', 'value' => $curl_options[CURLOPT_USERAGENT]],
-						['name' => 'Connection', 'value' => 'keep-alive'],
-						['name' => 'Host', 'value' => 'host'],
-					],
-					'queryString' => [],
-					'cookies'     => [],
-					'headersSize' => 0,
-					'bodySize'    => 0,
-				],
-				'response'      => [
-					"status"      => 200,
-					"statusText"  => "OK",
-					"httpVersion" => "HTTP/1.1",
-					'headers'     => [
-
-					],
-					'content'     => [
-						'size'          => 33,
-						'mimeType'      => 'text/html',
-						'compression'   => 333,
-						'text'          => 'dfasdfasdf',
-						"redirectURL"   => "",
-						"headersSize"   => 408,
-						"bodySize"      => 1473,
-						"_transferSize" => 1881,
-						"_error"        => null,
-					],
-				],
-
-				"serverIPAddress" => "127.0.0.1",
-				"startedDateTime" => "2023-12-19T05:34:31.467Z",
-				"timings"         => [
-					"blocked"           => 2.5149999914132057,
-					"dns"               => -1,
-					"ssl"               => -1,
-					"connect"           => -1,
-					"send"              => 0.11099999999999999,
-					"wait"              => 1.749999976620078,
-					"receive"           => 0.438000017311424,
-					"_blocked_queueing" => 1.7799999914132059,
-				],
-			],
-		],
-	];
-}
-
-/**
- * @todo
- * curl command to php
- * @see https://curlconverter.com/php/
- */
-function curl_cmd_to_php(){
 }

@@ -489,9 +489,6 @@ function debug_mark_output($as_return = false){
 		}
 		$str .= "{$time_txt} [{$mem_txt}] $tag $callee $file_loc".PHP_EOL;
 	}
-	if($as_return){
-		return $str;
-	}
 	echo $str;
 	return null;
 }

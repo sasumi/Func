@@ -636,7 +636,7 @@ function html_tag_table($data, $headers = [], $caption = '', $attributes = []){
  * @return string
  */
 function html_attributes(array $attributes = []){
-	$attributes = array_clear_null($attributes);
+	$attributes = array_clean_null($attributes);
 	$html = [];
 	foreach($attributes as $k => $v){
 		if($k == 'disabled' && $v === false){

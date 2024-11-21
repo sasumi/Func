@@ -70,7 +70,7 @@ function explode_by($delimiters, $str, $trim_and_clear = true){
 	}
 
 	$tmp = explode($delimiters[0], $str);
-	return $trim_and_clear ? array_clear_empty(array_trim_fields($tmp)) : $tmp;
+	return $trim_and_clear ? array_clean_empty(array_trim($tmp)) : $tmp;
 }
 
 /**
@@ -305,7 +305,7 @@ function calc_formula($stm, array $param, callable $result_decorator = null){
 
 /**
  * 字符串切割（UTF8编码）
- * @param string $str
+ * @param string|array $str
  * @param int $len
  * @param string $tail
  * @param bool $length_exceeded

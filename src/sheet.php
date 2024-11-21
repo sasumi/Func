@@ -40,7 +40,7 @@ function csv_download($filename, $data, array $headers = [], $delimiter = CSV_CO
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	foreach($data as $row){
 		if($fields){
-			echo join($delimiter, csv_format(array_filter_by_keys($row, $fields))).CSV_LINE_SEPARATOR;
+			echo join($delimiter, csv_format(array_filter_fields($row, $fields))).CSV_LINE_SEPARATOR;
 		}else{
 			echo join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
 		}
@@ -62,7 +62,7 @@ function csv_download_chunk($filename, callable $rows_fetcher, array $headers = 
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	while($rows = $rows_fetcher()){
 		foreach($rows as $row){
-			$row = $fields ? array_filter_by_keys($row, $fields) : $row;
+			$row = $fields ? array_filter_fields($row, $fields) : $row;
 			echo join($delimiter, csv_format($row)), CSV_LINE_SEPARATOR;
 		}
 	}

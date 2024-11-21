@@ -773,7 +773,7 @@ function get_screen_size(){
 		];
 	}
 	$cols = getenv('COLUMNS');
-	if(isset($cols)){
+	if($cols){
 		return [getenv('COLUMNS'), getenv('ROWS')];
 	}
 	return null;

@@ -1,6 +1,6 @@
 <?php
 /**
- * 颜色相关操作函数
+ * Color Enhancement Functions
  */
 namespace LFPhp\Func;
 

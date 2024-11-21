@@ -1,6 +1,6 @@
 <?php
 /**
- * crontab相关操作函数
+ * Crontab Enhancement Functions
  */
 namespace LFPhp\Func;
 
