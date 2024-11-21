@@ -1,13 +1,14 @@
 <?php
 /**
- * HTML快速操作函数
+ * HTML quick operation functions
  */
 namespace LFPhp\Func;
+
 use DateTime;
 use Exception;
 
 /**
- * HTML单标签
+ * HTML single tag
  */
 const HTML_SELF_CLOSING_TAGS = [
 	'area',
@@ -30,11 +31,11 @@ const HTML_SELF_CLOSING_TAGS = [
 ];
 
 /**
- * 构建select节点，支持optgroup模式
+ * Build select node, support optgroup mode
  * @param string $name
- * @param array $options 选项数据，
- * 如果是分组模式，格式为：[value=>text, label=>options, ...]
- * 如果是普通模式，格式为：options: [value1=>text, value2=>text,...]
+ * @param array $options option data,
+ * If it is grouping mode, the format is: [value=>text, label=>options, ...]
+ * If it is normal mode, the format is: options: [value1=>text, value2=>text,...]
  * @param string|array $current_value
  * @param string $placeholder
  * @param array $attributes
@@ -43,27 +44,25 @@ const HTML_SELF_CLOSING_TAGS = [
 function html_tag_select($name, array $options, $current_value = null, $placeholder = '', $attributes = []){
 	$attributes = array_merge($attributes, [
 		'name'        => $name ?: null,
-		'placeholder' => $placeholder ?: null
+		'placeholder' => $placeholder ?: null,
 	]);
 
-	//多选
+	//Multiple selection
 	if(is_array($current_value)){
 		$attributes['multiple'] = 'multiple';
 	}
 
 	$option_html = $placeholder ? html_tag_option($placeholder, '') : '';
 
-	//单层option
+	//Single layer option
 	if(count($options, COUNT_RECURSIVE) == count($options, COUNT_NORMAL)){
 		$option_html .= html_tag_options($options, $current_value);
-	}
-
-	//optgroup支持
+	}//optgroup support
 	else{
 		foreach($options as $var1 => $var2){
 			if(is_array($var2)){
 				$option_html .= html_tag_option_group($var1, $var2, $current_value);
-			} else {
+			}else{
 				$option_html .= html_tag_option($var2, $var1, $current_value);
 			}
 		}
@@ -72,9 +71,9 @@ function html_tag_select($name, array $options, $current_value = null, $placehol
 }
 
 /**
- * 构建select选项
- * @param array $options [value=>text,...] option data 选项数组
- * @param string|array $current_value 当前值
+ * Build select options
+ * @param array $options [value=>text,...] option data option array
+ * @param string|array $current_value current value
  * @return string
  */
 function html_tag_options(array $options, $current_value = null){
@@ -86,8 +85,8 @@ function html_tag_options(array $options, $current_value = null){
 }
 
 /**
- * 构建option节点
- * @param string $text 文本，空白将被转义成&nbsp;
+ * Build option node
+ * @param string $text text, spaces will be escaped into &nbsp;
  * @param string $value
  * @param bool $selected
  * @param array $attributes
@@ -101,10 +100,10 @@ function html_tag_option($text, $value = '', $selected = false, $attributes = []
 }
 
 /**
- * 构建optgroup节点
+ * Build optgroup node
  * @param string $label
  * @param array $options
- * @param string|array $current_value 当前值
+ * @param string|array $current_value current value
  * @return string
  */
 function html_tag_option_group($label, $options, $current_value = null){
@@ -113,7 +112,7 @@ function html_tag_option_group($label, $options, $current_value = null){
 }
 
 /**
- * 构建textarea
+ * Build textarea
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -125,7 +124,7 @@ function html_tag_textarea($name, $value = '', $attributes = []){
 }
 
 /**
- * 构建hidden表单节点
+ * Build hidden form node
  * @param string $name
  * @param string $value
  * @return string
@@ -135,8 +134,8 @@ function html_tag_hidden($name, $value = ''){
 }
 
 /**
- * 构建数据hidden列表
- * @param array $data_list 数据列表（可以多维数组）
+ * Build data hidden list
+ * @param array $data_list data list (can be multi-dimensional array)
  * @return string
  */
 function html_tag_hidden_list($data_list){
@@ -152,7 +151,7 @@ function html_tag_hidden_list($data_list){
 }
 
 /**
- * 构建Html数字输入
+ * Build html digital input
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -167,15 +166,15 @@ function html_tag_number_input($name, $value = '', $attributes = []){
 
 /**
  * @param string $name
- * @param array $options 选项[value=>title,...]格式
+ * @param array $options options [value=>title,...] format
  * @param string $current_value
- * @param string $wrapper_tag 每个选项外部包裹标签，例如li、div等
- * @param array $radio_extra_attributes 每个radio额外定制属性
+ * @param string $wrapper_tag Each option wraps the tag outside, such as li, div, etc.
+ * @param array $radio_extra_attributes Extra custom attributes for each radio
  * @return string
  */
 function html_tag_radio_group($name, $options, $current_value = '', $wrapper_tag = '', $radio_extra_attributes = []){
 	$html = [];
-	foreach($options as $val=>$ti){
+	foreach($options as $val => $ti){
 		$html[] = html_tag_radio($name, $val, $ti, html_value_compare($val, $current_value), $radio_extra_attributes);
 	}
 
@@ -185,14 +184,14 @@ function html_tag_radio_group($name, $options, $current_value = '', $wrapper_tag
 			$rst .= ' '.html_tag($wrapper_tag, [], $h);
 		}
 		return $rst;
-	} else {
+	}else{
 		return join(' ', $html);
 	}
 }
 
 /**
- * 构建 radio按钮
- * 使用 label>(input:radio+{text}) 结构
+ * Build the radio button
+ * Use label>(input:radio+{text}) structure
  * @param string $name
  * @param mixed $value
  * @param string $title
@@ -212,15 +211,15 @@ function html_tag_radio($name, $value, $title = '', $checked = false, $attribute
 
 /**
  * @param string $name
- * @param array $options 选项[value=>title,...]格式
+ * @param array $options options [value=>title,...] format
  * @param string|array $current_value
- * @param string $wrapper_tag 每个选项外部包裹标签，例如li、div等
- * @param array $checkbox_extra_attributes 每个checkbox额外定制属性
+ * @param string $wrapper_tag Each option wraps the tag outside, such as li, div, etc.
+ * @param array $checkbox_extra_attributes Extra custom attributes for each checkbox
  * @return string
  */
 function html_tag_checkbox_group($name, $options, $current_value = null, $wrapper_tag = '', $checkbox_extra_attributes = []){
 	$html = [];
-	foreach($options as $val=>$ti){
+	foreach($options as $val => $ti){
 		$html[] = html_tag_checkbox($name, $val, $ti, html_value_compare($val, $current_value), $checkbox_extra_attributes);
 	}
 	if($wrapper_tag){
@@ -229,14 +228,14 @@ function html_tag_checkbox_group($name, $options, $current_value = null, $wrappe
 			$rst .= ' '.html_tag($wrapper_tag, [], $h);
 		}
 		return $rst;
-	} else {
+	}else{
 		return join(' ', $html);
 	}
 }
 
 /**
- * 构建 checkbox按钮
- * 使用 label>(input:checkbox+{text}) 结构
+ * Build a checkbox button
+ * Use label>(input:checkbox+{text}) structure
  * @param string $name
  * @param mixed $value
  * @param string $title
@@ -259,7 +258,7 @@ function html_tag_checkbox($name, $value, $title = '', $checked = false, $attrib
 }
 
 /**
- * 构建进度条（如果没有设置value，可充当loading效果使用）
+ * Build progress bar (if no value is set, it can be used as loading effect)
  * @param null|number $value
  * @param null|number $max
  * @param array $attributes
@@ -267,18 +266,18 @@ function html_tag_checkbox($name, $value, $title = '', $checked = false, $attrib
  * @throws \Exception
  */
 function html_tag_progress($value = null, $max = null, $attributes = []){
-	//如果有max，必须大于0
+	//If there is a max, it must be greater than 0
 	if(isset($max) && floatval($max) <= 0){
 		throw new Exception('Progress max should bigger or equal to zero');
 	}
 	if(isset($value)){
-		//有设置max，value范围必须在0~max
+		//If max is set, the value range must be 0~max
 		if(isset($max) && $value > $max){
 			throw new Exception('Progress value should less or equal than max');
 		}
-		//没有设置max，value范围必须在0~1
+		//No max is set, value must be in the range of 0 to 1
 		if($value > 1 || $value < 0){
-			throw new Exception('Progress value should between 0 to 1');
+			throw new Exception('Progress value should be between 0 to 1');
 		}
 	}
 	$attributes['max'] = $max;
@@ -287,7 +286,7 @@ function html_tag_progress($value = null, $max = null, $attributes = []){
 }
 
 /**
- * HTML <img> 标签
+ * HTML <img> tag
  * @param $src
  * @param $attributes
  * @return string
@@ -301,7 +300,7 @@ function html_tag_img($src, $attributes = [
 }
 
 /**
- * Html循环滚动进度条
+ * Html loop scrolling progress bar
  * alias to htmlProgress
  * @param array $attributes
  * @return string
@@ -311,12 +310,12 @@ function html_loading_bar($attributes = []){
 }
 
 /**
- * Html范围选择器
+ * Html range selector
  * @param string $name
- * @param string $value 当前值
- * @param int $min 最小值
- * @param int $max 最大值
- * @param int $step 步长
+ * @param string $value current value
+ * @param int $min minimum value
+ * @param int $max maximum value
+ * @param int $step step length
  * @param array $attributes
  * @return string
  */
@@ -331,13 +330,13 @@ function html_tag_range($name, $value, $min = 0, $max = 100, $step = 1, $attribu
 }
 
 /**
- * 获取HTML摘要信息
+ * Get HTML summary information
  * @param string $html_content
  * @param int $len
  * @return string
  */
 function html_abstract($html_content, $len = 200){
-	$str = str_replace(array("\n", "\r"), "", $html_content);
+	$str = str_replace(["\n", "\r"], "", $html_content);
 	$str = preg_replace('/<br([^>]*)>/i', '$$NL', $str);
 	//todo convert <p> <div> to line break
 	$str = strip_tags($str);
@@ -345,14 +344,14 @@ function html_abstract($html_content, $len = 200){
 	$str = h($str, $len);
 	$str = str_replace('$$NL', '<br/>', $str);
 
-	//移除头尾空白行
+	//Remove leading and trailing blank lines
 	$str = preg_replace('/^(<br[^>]*>)*/i', '', $str);
 	$str = preg_replace('/(<br[^>]*>)*$/i', '', $str);
 	return $str;
 }
 
 /**
- * 构建Html input:text文本输入框
+ * Build html input:text text input box
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -366,7 +365,7 @@ function html_tag_input_text($name, $value = '', $attributes = []){
 }
 
 /**
- * 构建Html日期输入框
+ * Build html date input box
  * @param string $name
  * @param string $date_or_timestamp
  * @param array $attributes
@@ -376,13 +375,13 @@ function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'date';
 	$attributes['name'] = $name;
 	if($date_or_timestamp){
-		$attributes['value'] = is_numeric($date_or_timestamp) ? date('Y-m-d', $date_or_timestamp) : date('Y-m-d', strtotime($date_or_timestamp));
+		$attributes['value'] = is_numeric($date_or_timestamp) ? date('Ymd', $date_or_timestamp) : date('Ymd', strtotime($date_or_timestamp));
 	}
 	return html_tag('input', $attributes);
 }
 
 /**
- * 构建Html日期输入框
+ * Build html date input box
  * @param string $name
  * @param string $time_str
  * @param array $attributes
@@ -398,7 +397,7 @@ function html_tag_time($name, $time_str = '', $attributes = []){
 }
 
 /**
- * 构建Html日期+时间输入框
+ * Build html date + time input box
  * @param string $name
  * @param string $datetime_or_timestamp
  * @param array $attributes
@@ -407,38 +406,38 @@ function html_tag_time($name, $time_str = '', $attributes = []){
 function html_tag_datetime($name, $datetime_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'datetime-local';
 	$attributes['name'] = $name;
-	$attributes['step'] = 1; //必须填充step 才能在空值情况出现秒的选择
+	$attributes['step'] = 1; //Step must be filled in order to select seconds in the case of an empty value
 	if($datetime_or_timestamp){
-		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-d\TH:i:s', $datetime_or_timestamp) : date('Y-m-d\TH:i:s', strtotime($datetime_or_timestamp));
-	} else {
+		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Ymd\TH:i:s', $datetime_or_timestamp) : date('Ymd\TH:i:s', strtotime($datetime_or_timestamp));
+	}else{
 		$attributes['value'] = '0000-00-00T00:00:00';
 	}
 	return html_tag('input', $attributes);
 }
 
 /**
- * 构建Html月份选择器
+ * Build html month selector
  * @param string $name
- * @param int|null $current_month 当前月份，范围1~12表示
- * @param string $format 月份格式，与date函数接受格式一致
- * @param array $attributes 属性
+ * @param int|null $current_month Current month, range 1~12
+ * @param string $format Month format, consistent with the format accepted by the date function
+ * @param array $attributes attributes
  * @return string
  */
 function html_tag_month_select($name, $current_month = null, $format = 'm', $attributes = []){
 	$opts = [];
 	$format = $format ?: 'm';
-	for($i=1; $i<=12; $i++){
+	for($i = 1; $i <= 12; $i++){
 		$opts[$i] = date($format, strtotime('1970-'.$current_month.'-01'));
 	}
 	return html_tag_select($name, $opts, $current_month, $attributes['placeholder'], $attributes);
 }
 
 /**
- * 构建Html年份选择器
+ * Build html year selector
  * @param string $name
- * @param int|null $current_year 当前年份
- * @param int $start_year 开始年份（缺省为1970）
- * @param string $end_year 结束年份（缺省为今年）
+ * @param int|null $current_year Current year
+ * @param int $start_year starting year (default is 1970)
+ * @param string $end_year Ending year (default is this year)
  * @param array $attributes
  * @return string
  */
@@ -446,14 +445,14 @@ function html_tag_year_select($name, $current_year = null, $start_year = 1970, $
 	$start_year = $start_year ?: 1970;
 	$end_year = $end_year ?: date('Y');
 	$opts = [];
-	for($i = $start_year; $i<=$end_year; $i++){
+	for($i = $start_year; $i <= $end_year; $i++){
 		$opts[$i] = $i;
 	}
 	return html_tag_select($name, $opts, $current_year, $attributes['placeholder'], $attributes);
 }
 
 /**
- * 构建HTML节点
+ * Build html node
  * @param string $tag
  * @param array $attributes
  * @param string $inner_html
@@ -464,7 +463,7 @@ function html_tag($tag, $attributes = [], $inner_html = ''){
 	$single_tag = in_array($tag, HTML_SELF_CLOSING_TAGS);
 	$html = "<$tag ";
 
-	//针对textarea标签，识别value填充到inner_html中
+	//For the textarea tag, identify the value and fill it into inner_html
 	if($tag === 'textarea' && isset($attributes['value'])){
 		$inner_html = $inner_html ?: h($attributes['value']);
 		unset($attributes['value']);
@@ -476,7 +475,7 @@ function html_tag($tag, $attributes = [], $inner_html = ''){
 }
 
 /**
- * 构建HTML链接
+ * Construct HTML link
  * @param string $inner_html
  * @param string $href
  * @param array $attributes
@@ -488,7 +487,7 @@ function html_tag_link($inner_html, $href = '', $attributes = []){
 }
 
 /***
- * 构建css节点
+ * Build css node
  * @param string $href
  * @param array $attributes
  * @return string
@@ -498,12 +497,12 @@ function html_tag_css($href, $attributes = []){
 		'type'  => 'text/css',
 		'rel'   => 'stylesheet',
 		'media' => 'all',
-		'href'  => $href
+		'href'  => $href,
 	], $attributes));
 }
 
 /***
- * 构建js节点
+ * Build js node
  * @param string $src
  * @param array $attributes
  * @return string
@@ -517,7 +516,7 @@ function html_tag_js($src, $attributes = []){
 }
 
 /**
- * 构建Html日期输入
+ * Build html date input
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -526,12 +525,12 @@ function html_tag_js($src, $attributes = []){
 function html_tag_date_input($name, $value = '', $attributes = []){
 	$attributes['type'] = 'date';
 	$attributes['name'] = $name;
-	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Y-m-d', strtotime($value)) : '';
+	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Ymd', strtotime($value)) : '';
 	return html_tag('input', $attributes);
 }
 
 /**
- * 构建Html时间输入
+ * Build html time input
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -540,14 +539,14 @@ function html_tag_date_input($name, $value = '', $attributes = []){
 function html_tag_date_time_input($name, $value = '', $attributes = []){
 	$attributes['type'] = 'datetime-local';
 	$attributes['name'] = $name;
-	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Y-m-d H:i:s', strtotime($value)) : '';
+	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Ymd H:i:s', strtotime($value)) : '';
 	return html_tag('input', $attributes);
 }
 
 /**
- * 构建DataList
+ * Build DataList
  * @param string $id
- * @param array $data_map 索引数组：[val=>title,...]，或者自然增长数组：[title1, title2,...]
+ * @param array $data_map index array: [val=>title,...], or natural growth array: [title1, title2,...]
  * @return string
  */
 function html_tag_data_list($id, $data_map = []){
@@ -569,8 +568,8 @@ function html_tag_data_list($id, $data_map = []){
  * @param array $attributes
  * @return string
  */
-function html_tag_input_submit($value, $attributes=[]){
-	$attributes['type'] ='submit';
+function html_tag_input_submit($value, $attributes = []){
+	$attributes['type'] = 'submit';
 	$attributes['value'] = $value;
 	return html_tag('input', $attributes);
 }
@@ -590,15 +589,15 @@ function html_tag_no_script($html){
  * @param array $attributes
  * @return string
  */
-function html_tag_button_submit($inner_html, $attributes=[]){
-	$attributes['type'] ='submit';
+function html_tag_button_submit($inner_html, $attributes = []){
+	$attributes['type'] = 'submit';
 	return html_tag('button', $attributes, $inner_html);
 }
 
 /**
- * 构建table节点
+ * Build table node
  * @param array $data
- * @param array|false $headers 表头列表 [字段名 => 别名, ...]，如为false，表示不显示表头
+ * @param array|false $headers header list [field name => alias, ...], if false, it means do not display the header
  * @param string $caption
  * @param array $attributes
  * @return string
@@ -630,8 +629,8 @@ function html_tag_table($data, $headers = [], $caption = '', $attributes = []){
 }
 
 /**
- * 构建HTML节点属性
- * 修正pattern，disabled在false情况下HTML表现
+ * Construct HTML node attributes
+ * Fix pattern, disabled HTML display when false
  * @param array $attributes
  * @return string
  */
@@ -644,20 +643,19 @@ function html_attributes(array $attributes = []){
 		}
 		if($k == 'pattern'){
 			$html[] = "$k=\"".$v."\"";
-		} else{
+		}else{
 			$html[] = "$k=\"".ha($v)."\"";
 		}
 	}
 	return join(' ', $html);
 }
 
-
 /**
- * 转义、截断html内字符串
+ * Escape and truncate strings in HTML
  * @param string $str
- * @param number|null $len 截断长度，为空表示不截断
- * @param null|string $tail 追加尾串字符
- * @param bool $length_exceeded 超长长度
+ * @param number|null $len truncation length, empty means no truncation
+ * @param null|string $tail append tail string character
+ * @param bool $length_exceeded Exceeded length
  * @return string
  */
 function h($str, $len = null, $tail = '...', &$length_exceeded = false){
@@ -666,11 +664,11 @@ function h($str, $len = null, $tail = '...', &$length_exceeded = false){
 }
 
 /**
- * 转义、截断html节点属性字符串
+ * Escape and truncate HTML node attribute string
  * @param string $str
- * @param int $len 截断长度，为空表示不截断
- * @param string $tail 追加尾串字符
- * @param bool $length_exceeded 超长长度
+ * @param int $len truncation length, empty means no truncation
+ * @param string $tail append tail string character
+ * @param bool $length_exceeded Exceeded length
  * @return string
  */
 function ha($str, $len = 0, $tail = '...', &$length_exceeded = false){
@@ -679,7 +677,7 @@ function ha($str, $len = 0, $tail = '...', &$length_exceeded = false){
 }
 
 /**
- * 转化明文文本到HTML
+ * Convert plain text to HTML
  * @param string $text
  * @param null $len
  * @param string $tail
@@ -692,17 +690,17 @@ function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
 	}
 	$html = htmlspecialchars($text);
 	$html = str_replace("\r", '', $html);
-	return str_replace(array(' ', "\n", "\t"), array('&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $html);
+	return str_replace([' ', "\n", "\t"], ['&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'], $html);
 }
 
 /**
- * 修正html中相对路径
+ * Correct relative paths in HTML
  * @param string $html
  * @param string $page_url
- * @return string 替换失败返回原来的html
+ * @return string Return the original HTML if replacement fails
  */
 function html_fix_relative_path($html, $page_url){
-	//匹配替换所有 src="", href="" 模式标签
+	//Match and replace all src="", href="" pattern tags
 	$new_html = preg_replace_callback('/(<[^>]*?\s)(src|href)(=\s*[\'"])(.*?)([\'"])/iu', function($matches) use ($page_url){
 		$matches[4] = http_fix_relative_url($matches[4], $page_url);
 		array_shift($matches);
@@ -727,11 +725,11 @@ function html_to_text($html, $option){
 }
 
 /**
- * 高亮文本
+ * Highlight text
  * @param string $text
  * @param string $keyword
  * @param string $template
- * @return string 返回HTML转义过的字符串
+ * @return string Returns the HTML escaped string
  */
 function html_text_highlight($text, $keyword, $template = '<span class="highlight">%s</span>'){
 	if(!$keyword){
@@ -743,7 +741,7 @@ function html_text_highlight($text, $keyword, $template = '<span class="highligh
 }
 
 /**
- * 构建HTML meta标签
+ * Construct HTML meta tags
  * @param string $equiv
  * @param string $content
  * @return string
@@ -753,9 +751,9 @@ function html_tag_meta($equiv, $content = ''){
 }
 
 /**
- * 使用 html meta 进行页面跳转
- * @param string $url 跳转目标路径
- * @param int $timeout_sec 超时时间
+ * Use html meta to redirect pages
+ * @param string $url jump target path
+ * @param int $timeout_sec timeout
  * @return string html
  */
 function html_meta_redirect($url, $timeout_sec = 0){
@@ -763,7 +761,7 @@ function html_meta_redirect($url, $timeout_sec = 0){
 }
 
 /**
- * 构建 CSP meta标签
+ * Build CSP meta tag
  * @param array $csp_rules
  * @param string $report_uri
  * @param bool $report_only
@@ -781,10 +779,10 @@ function html_meta_csp(array $csp_rules, $report_uri = '', $report_only = false)
 }
 
 /**
- * HTML数值比较（通过转换成字符串之后进行严格比较）
+ * HTML numeric comparison (converted to a string and then strictly compared)
  * @param string|number $str1
  * @param string|number|array $data
- * @return bool 是否相等
+ * @return bool whether they are equal
  */
 function html_value_compare($str1, $data){
 	$str1 = (string)$str1;
@@ -800,14 +798,14 @@ function html_value_compare($str1, $data){
 }
 
 /**
- * 设置静态资源版本控制项
- * @param array $patch_config 版本配置表，格式如：abc/foo.js => '2020'，优先匹配长度短的规则
- * @return array 所有配置
+ * Set static resource version control items
+ * @param array $patch_config version configuration table, format such as: abc/foo.js => '2020', priority is given to matching rules with shorter lengths
+ * @return array all configurations
  */
 function static_version_set(array $patch_config = []){
 	static $_config = [];
 	if($patch_config){
-		foreach($patch_config as $k=>$v){
+		foreach($patch_config as $k => $v){
 			$_config[$k] = $v;
 		}
 		uksort($_config, function($k1, $k2){
@@ -818,7 +816,7 @@ function static_version_set(array $patch_config = []){
 }
 
 /**
- * 静态资源版本补丁
+ * Static resource version patch
  * @param string $src
  * @param bool $matched
  * @return string
@@ -839,25 +837,25 @@ function static_version_patch($src, &$matched = false){
 }
 
 /**
- * 静态资源版本通配符转义
+ * Static resource version wildcard escape
  * @param string $str
  * @return string
  */
 function static_version_statement_quote($str){
-	$map = array(
+	$map = [
 		':' => '\\:',
 		'.' => '\\.',
 		'*' => '.*?',
-	);
+	];
 	$str = str_replace(array_keys($map), array_values($map), $str);
 	return "|$str|";
 }
 
 /**
- * 修正浏览器 HTML5 中 input:datetime或者 input:datetime-local 提交过来的数据
- * H5 提交的时间格式可能为 Y-m-d\TH:i
+ * Fix the data submitted by input:datetime or input:datetime-local in HTML5 browser
+ * The time format submitted by H5 may be Ymd\TH:i
  * @param string $datetime_str_from_h5
- * @param int $fix_seconds 秒修正，H5输入框提交过来没有秒精度，这里可以设置为0（如开始时间），或者59（如结束时间）用于修正秒单位数值
+ * @param int $fix_seconds Second correction. The H5 input box does not have second precision when submitted. This can be set to 0 (such as the start time) or 59 (such as the end time) to correct the second unit value.
  * @return string
  * @throws \Exception
  */
@@ -868,5 +866,5 @@ function fix_browser_datetime($datetime_str_from_h5, $fix_seconds = 0){
 	if(preg_match('/[^:]\d{2}:\d{2}$/', $datetime_str_from_h5)){
 		$datetime_str_from_h5 .= ':'.str_pad($fix_seconds.'', 2, STR_PAD_LEFT, '0');
 	}
-	return (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s');
+	return (new DateTime($datetime_str_from_h5))->format('Ymd H:i:s');
 }

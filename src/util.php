@@ -1,6 +1,6 @@
 <?php
 /**
- * 杂项操作函数
+ * Miscellaneous Functions
  */
 namespace LFPhp\Func;
 
@@ -11,10 +11,10 @@ use ReflectionClass;
 use ReflectionObject;
 
 /**
- * 步进方式调试
- * @param int $step 步长
- * @param string $fun 调试函数，默认使用dump
- * @deprecated PHP 7.2 已被官方禁用跨文件调用
+ * Step-by-step debugging
+ * @param int $step step length
+ * @param string $fun debug function, dump is used by default
+ * @deprecated PHP 7.2 has officially disabled cross-file calls
  */
 function tick_dump($step = 1, $fun = '\dump'){
 	register_tick_function($fun);
@@ -22,7 +22,7 @@ function tick_dump($step = 1, $fun = '\dump'){
 }
 
 /**
- * 读取控制台行输入，如果系统安装了扩展，优先使用扩展函数
+ * Read console line input. If the system has an extension installed, the extension function is used first.
  */
 function readline($msg){
 	$fh = fopen('php://stdin', 'r');
@@ -35,10 +35,10 @@ function readline($msg){
 }
 
 /**
- * 尝试调用函数
- * @param callable $payload 处理函数，返回 FALSE 表示中断后续尝试
- * @param int $tries 出错时额外尝试次数（不包含第一次正常执行）
- * @return int 总尝试次数（不包含第一次正常执行）
+ * Try calling the function
+ * @param callable $payload processing function, returning FALSE means aborting subsequent attempts
+ * @param int $tries The number of additional attempts when an error occurs (excluding the first normal execution)
+ * @return int total number of attempts (excluding the first normal execution)
  */
 function try_many_times($payload, $tries = 0){
 	$tryCount = 0;
@@ -54,8 +54,8 @@ function try_many_times($payload, $tries = 0){
 }
 
 /**
- * 程序调试函数
- * 调用方式：dump($var1, $var2, ..., 1) ，当最后一个数值为1时，表示退出（die）程序运行
+ * Program debugging function
+ * Calling method: dump($var1, $var2, ..., 1), when the last value is 1, it means to exit (die) the program
  */
 function dump(){
 	$params = func_get_args();
@@ -88,11 +88,11 @@ function dump(){
 }
 
 /**
- * 检测变量是否可以打印输出（如字符串、数字、包含toString方法对象等）
- * 布尔值、资源等属于不可打印输出变量
+ * Check whether the variable can be printed (such as strings, numbers, objects containing toString methods, etc.)
+ * Boolean values, resources, etc. are not printable variables
  * @param mixed $var
- * @param string $print_str 可打印字符串
- * @return bool 是否可打印
+ * @param string $print_str printable string
+ * @return bool whether it is printable
  */
 function printable($var, &$print_str = ''){
 	$type = gettype($var);
@@ -112,10 +112,10 @@ function printable($var, &$print_str = ''){
 }
 
 /**
- * 打印异常信息
+ * Print exception information
  * @param \Exception $ex
- * @param bool $include_external_properties 是否包含额外异常信息
- * @param bool $as_return 是否以返回方式（不打印异常）处理
+ * @param bool $include_external_properties whether to include additional exception information
+ * @param bool $as_return whether to process in return mode (not printing exceptions)
  * @return string
  */
 function print_exception(Exception $ex, $include_external_properties = false, $as_return = false){
@@ -142,7 +142,7 @@ function print_exception(Exception $ex, $include_external_properties = false, $a
 }
 
 /**
- * 打印trace信息
+ * Print trace information
  * @param array $trace
  * @param bool $with_callee
  * @param bool $with_index
@@ -177,7 +177,7 @@ function print_trace($trace, $with_callee = false, $with_index = false, $as_retu
 }
 
 /**
- * 打印系统错误及trace跟踪信息
+ * Print system errors and trace information
  * @param integer $code
  * @param string $msg
  * @param string $file
@@ -195,7 +195,7 @@ function print_sys_error($code, $msg, $file = null, $line = null, $trace_string 
 		array_shift($bs);
 		foreach($bs as $k => $b){
 			echo count($bs) - $k." {$b['class']}{$b['type']}{$b['function']}\n";
-			echo "  {$b['file']}  #{$b['line']} \n\n";
+			echo " {$b['file']} #{$b['line']} \n\n";
 		}
 	}else{
 		echo $trace_string;
@@ -204,25 +204,25 @@ function print_sys_error($code, $msg, $file = null, $line = null, $trace_string 
 }
 
 /**
- * 转换错误码值到字符串
+ * Convert error code value to string
  * @param int $code
  * @return string
  */
 function error2string($code){
 	$level_names = array(
-		E_ERROR           => 'E_ERROR',
-		E_WARNING         => 'E_WARNING',
-		E_PARSE           => 'E_PARSE',
-		E_NOTICE          => 'E_NOTICE',
-		E_CORE_ERROR      => 'E_CORE_ERROR',
-		E_CORE_WARNING    => 'E_CORE_WARNING',
-		E_COMPILE_ERROR   => 'E_COMPILE_ERROR',
+		E_ERROR => 'E_ERROR',
+		E_WARNING => 'E_WARNING',
+		E_PARSE => 'E_PARSE',
+		E_NOTICE => 'E_NOTICE',
+		E_CORE_ERROR => 'E_CORE_ERROR',
+		E_CORE_WARNING => 'E_CORE_WARNING',
+		E_COMPILE_ERROR => 'E_COMPILE_ERROR',
 		E_COMPILE_WARNING => 'E_COMPILE_WARNING',
-		E_USER_ERROR      => 'E_USER_ERROR',
-		E_USER_WARNING    => 'E_USER_WARNING',
-		E_USER_NOTICE     => 'E_USER_NOTICE',
+		E_USER_ERROR => 'E_USER_ERROR',
+		E_USER_WARNING => 'E_USER_WARNING',
+		E_USER_NOTICE => 'E_USER_NOTICE',
 	);
-	if(defined('E_STRICT')){
+	if (defined ('E_STRICT')) {
 		$level_names[E_STRICT] = 'E_STRICT';
 	}
 	$levels = array();
@@ -239,7 +239,7 @@ function error2string($code){
 }
 
 /**
- * 转换错误码到具体的码值
+ * Convert error codes to specific code values
  * @param string $string
  * @return int
  * @example string2error('E_ALL')
@@ -257,7 +257,7 @@ function string2error($string){
 }
 
 /**
- * 转换exception对象为其他指定exception类对象
+ * Convert the exception object to other specified exception class objects
  * @param Exception $exception
  * @param string $target_class
  * @return mixed
@@ -268,7 +268,7 @@ function exception_convert(Exception $exception, $target_class){
 }
 
 /**
- * 注册将PHP错误转换异常抛出
+ * Register to convert PHP errors into exceptions
  * @param int $error_levels
  * @param \ErrorException|null $exception_class
  * @return callable|null
@@ -276,28 +276,28 @@ function exception_convert(Exception $exception, $target_class){
  */
 function register_error2exception($error_levels = E_ALL, ErrorException $exception_class = null){
 	return set_error_handler(function($err_severity, $err_str, $err_file, $err_line) use ($exception_class){
-		if(error_reporting() === 0){
+		if (error_reporting() === 0) {
 			return false;
 		}
 		if($exception_class){
 			throw new $exception_class($err_str, 0, $err_severity, $err_file, $err_line);
 		}
 		$err_severity_map = [
-			E_ERROR             => ErrorException::class,
-			E_WARNING           => WarningException::class,
-			E_PARSE             => ParseException::class,
-			E_NOTICE            => NoticeException::class,
-			E_CORE_ERROR        => CoreErrorException::class,
-			E_CORE_WARNING      => CoreWarningException::class,
-			E_COMPILE_ERROR     => CompileErrorException::class,
-			E_COMPILE_WARNING   => CoreWarningException::class,
-			E_USER_ERROR        => UserErrorException::class,
-			E_USER_WARNING      => UserWarningException::class,
-			E_USER_NOTICE       => UserNoticeException::class,
-			E_STRICT            => StrictException::class,
+			E_ERROR => ErrorException::class,
+			E_WARNING => WarningException::class,
+			E_PARSE => ParseException::class,
+			E_NOTICE => NoticeException::class,
+			E_CORE_ERROR => CoreErrorException::class,
+			E_CORE_WARNING => CoreWarningException::class,
+			E_COMPILE_ERROR => CompileErrorException::class,
+			E_COMPILE_WARNING => CoreWarningException::class,
+			E_USER_ERROR => UserErrorException::class,
+			E_USER_WARNING => UserWarningException::class,
+			E_USER_NOTICE => UserNoticeException::class,
+			E_STRICT => StrictException::class,
 			E_RECOVERABLE_ERROR => RecoverableErrorException::class,
-			E_DEPRECATED        => DeprecatedException::class,
-			E_USER_DEPRECATED   => UserDeprecatedException::class,
+			E_DEPRECATED => DeprecatedException::class,
+			E_USER_DEPRECATED => UserDeprecatedException::class,
 		];
 		$exp_class = isset($err_severity_map[$err_severity]) ? $err_severity_map[$err_severity] : ErrorException::class;
 		throw new $exp_class($err_str, 0, $err_severity, $err_file, $err_line);
@@ -305,7 +305,7 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
 }
 
 /**
- * 检测是否为函数
+ * Check if it is a function
  * @param mixed $f
  * @return boolean
  */
@@ -314,8 +314,8 @@ function is_function($f){
 }
 
 /**
- * 获取对象、类的所有继承的父类(包含 trait 类)
- * 如果无需trait,试用class_parents即可
+ * Get all inherited parent classes of objects and classes (including trait classes)
+ * If you don't need traits, try class_parents
  * @param string|object $class_or_object
  * @return string[]
  */
@@ -331,7 +331,7 @@ function class_uses_recursive($class_or_object){
 }
 
 /**
- * 递归方式获取trait
+ * Get traits recursively
  * @param string $trait
  * @return array
  */
@@ -344,9 +344,9 @@ function trait_uses_recursive($trait){
 }
 
 /**
- * 获取指定类常量名称
- * @param string $class 类名
- * @param mixed $const_val 常量值
+ * Get the name of the specified class constant
+ * @param string $class class name
+ * @param mixed $const_val constant value
  * @return string|null
  * @throws \ReflectionException
  */
@@ -362,10 +362,10 @@ function get_constant_name($class, $const_val){
 }
 
 /**
- * 通过抛异常方式处理断言
- * @param mixed $expression 断言值
+ * Handle assertions by throwing exceptions
+ * @param mixed $expression assertion value
  * @param string $err_msg
- * @param string $exception_class 异常类，缺省使用 \Exception
+ * @param string $exception_class exception class, default is \Exception
  */
 function assert_via_exception($expression, $err_msg, $exception_class = Exception::class){
 	if(!$expression){
@@ -392,7 +392,7 @@ function pdog($fun, $handler){
 }
 
 /**
- * 获取当前上下文GUID
+ * Get the current context GUID
  * @return mixed
  */
 function guid(){
@@ -401,9 +401,9 @@ function guid(){
 }
 
 /**
- * 使用最小格式导出变量（类似var_export）
+ * Export variables using minimal format (similar to var_export)
  * @param mixed $var
- * @param bool $return 是否以返回方式返回，缺省为输出到终端
+ * @param bool $return whether to return in return mode, the default is to output to the terminal
  * @return string|null
  */
 function var_export_min($var, $return = false){
@@ -425,9 +425,9 @@ function var_export_min($var, $return = false){
 }
 
 /**
- * 检测内存溢出，正式运行代码不建议开启该项检查，避免损失性能
+ * Detect memory overflow. It is not recommended to enable this check when running the code to avoid performance loss.
  * @param int $threshold
- * @param callable|string $leak_payload 内存泄露时调用函数
+ * @param callable|string $leak_payload Function called when memory leaks
  */
 function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
 	static $last_usage;
@@ -441,7 +441,7 @@ function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
 }
 
 /**
- * 代码打点
+ * Code management
  * @param string $tag
  * @param bool $trace_location
  * @param bool $mem_usage
@@ -466,25 +466,25 @@ function debug_mark($tag = '', $trace_location = true, $mem_usage = true){
 }
 
 /**
- * 输出打点信息
+ * Output dot information
  * @param bool $as_return
  * @return string|null
  */
 function debug_mark_output($as_return = false){
 	$k = __NAMESPACE__.'\\debug_mark';
 	$list = $GLOBALS[$k];
-	//补上PHP服务开始时间
+	//Fill in the PHP service start time
 	array_unshift($list, ['server request', $_SERVER['REQUEST_TIME_FLOAT'], null, 0]);
 	if($as_return){
 		return $list;
 	}
 	$str = '';
-	foreach($list as list($tag, $float_time, $trace, $mem)){
+	foreach($list as [$tag, $float_time, $trace, $mem]){
 		$time_txt = float_time_to_date($float_time);
 		$mem_txt = $mem ? format_size($mem) : '';
 		$callee = $file_loc = '';
 		if($trace){
-			$callee = $trace['class'] ? "{$trace['class']}{$trace['type']}{$trace['function']}()" : "{$trace['function']}()";
+			$callee = $trace['class'] ? "{$trace['class']}{$trace['type']}{$trace['function']}()" : "{$trace['function ']}()";
 			$file_loc = $trace['file'].'#'.$trace['line'];
 		}
 		$str .= "{$time_txt} [{$mem_txt}] $tag $callee $file_loc".PHP_EOL;

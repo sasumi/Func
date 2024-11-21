@@ -1,18 +1,18 @@
 <?php
 /**
- * CSV、电子表格相关操作函数
- * 如果正常开放性业务，建议使用 XLSXBuilder (https://github.com/sasumi/XLSXBuilder)
- * 或类似处理excel的其他技术方案。
+ * CSV, spreadsheet related operation functions
+ * For normal open business, it is recommended to use XLSXBuilder (https://github.com/sasumi/XLSXBuilder)
+ * Or other technical solutions similar to processing Excel.
  */
 namespace LFPhp\Func;
 
-const CSV_LINE_SEPARATOR = PHP_EOL; //CSV行分隔符
-const CSV_COMMON_DELIMITER = ','; //默认数据分隔符
+const CSV_LINE_SEPARATOR = PHP_EOL; //CSV line separator
+const CSV_COMMON_DELIMITER = ','; //Default data separator
 
 /**
- * 获取Excel等电子表格中列名
- * @param integer $column 列序号，由1开始
- * @return string 电子表格中的列名，格式如：A1、E3
+ * Get the column names in Excel and other spreadsheets
+ * @param integer $column column number, starting from 1
+ * @return string The column name in the spreadsheet, format such as: A1, E3
  */
 function spreadsheet_get_column_index($column){
 	$numeric = ($column - 1)%26;
@@ -26,11 +26,11 @@ function spreadsheet_get_column_index($column){
 }
 
 /**
- * 输出CSV文件到浏览器下载
- * @param string $filename 下载文件名
+ * Output CSV file to browser for download
+ * @param string $filename Download file name
  * @param array $data
- * @param array|string[] $headers 字段列表，格式为：[field=>alias,...]，或 [‘name', 'password'] 纯字符串数组
- * @param string $delimiter 分隔符
+ * @param array|string[] $headers field list, format: [field=>alias,...], or ['name', 'password'] pure string array
+ * @param string $delimiter delimiter
  */
 function csv_download($filename, $data, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
@@ -48,11 +48,11 @@ function csv_download($filename, $data, array $headers = [], $delimiter = CSV_CO
 }
 
 /**
- * 分块输出CSV文件到浏览器下载
- * @param string $filename 下载文件名
- * @param callable $rows_fetcher 数据获取函数，返回二维数组
- * @param array|string[] $headers 字段列表，格式为：[field=>alias,...]，或 [‘name', 'password'] 纯字符串数组
- * @param string $delimiter 分隔符
+ * Output CSV files in chunks to browser for download
+ * @param string $filename Download file name
+ * @param callable $rows_fetcher data acquisition function, returns a two-dimensional array
+ * @param array|string[] $headers field list, format: [field=>alias,...], or ['name', 'password'] pure string array
+ * @param string $delimiter delimiter
  */
 function csv_download_chunk($filename, callable $rows_fetcher, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
@@ -69,13 +69,13 @@ function csv_download_chunk($filename, callable $rows_fetcher, array $headers = 
 }
 
 /**
- * 分块读取CSV文件
- * @param string $file 文件名称
- * @param callable $output 数据输出处理函数，传入参数：rows， 返回参数若为false，则中断读取
- * @param array $headers 字段列表，格式为：[field=>alias,...] 映射字段名
- * @param int $chunk_size 分块大小
- * @param int $start_line 开始读取行数，默认为第1行
- * @param string $delimiter 分隔符
+ * Read CSV file in chunks
+ * @param string $file file name
+ * @param callable $output data output processing function, input parameter: rows, if the return parameter is false, the reading will be interrupted
+ * @param array $headers field list, format: [field=>alias,...] mapping field name
+ * @param int $chunk_size chunk size
+ * @param int $start_line The number of lines to start reading, the default is line 1
+ * @param string $delimiter delimiter
  * @throws \Exception
  */
 function csv_read_file_chunk($file, callable $output, $headers = [], $chunk_size = 100, $start_line = 1, $delimiter = CSV_COMMON_DELIMITER){
@@ -112,12 +112,12 @@ function csv_read_file_chunk($file, callable $output, $headers = [], $chunk_size
 }
 
 /**
- * CSV 读取
-  * @param string $file 文件路径
- * @param string[] $keys 返回数组key配置，为空返回自然索引数组
- * @param int $start_line 开始读取行数，默认为第1行
- * @param string $delimiter 分隔符
- * @return array 数据，格式为：[[key1=>val, key2=>val, ...], ...]， 如果没有配置key，返回二维自然索引数组
+ * CSV Reading
+ * @param string $file file path
+ * @param string[] $keys returns the array key configuration, if empty, returns the natural index array
+ * @param int $start_line The number of lines to start reading, the default is line 1
+ * @param string $delimiter delimiter
+ * @return array data, the format is: [[key1=>val, key2=>val, ...], ...], if no key is configured, return a two-dimensional natural index array
  */
 function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMMON_DELIMITER){
 	$fp = fopen($file, 'r');
@@ -141,11 +141,11 @@ function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMM
 }
 
 /**
- * 写入文件
- * @param string $file 文件
- * @param array[] $rows 二维数组
- * @param string $delimiter 分隔符
- * @param string $mode 文件打开模式 fopen(, mode)
+ * Write to file
+ * @param string $file file
+ * @param array[] $rows two-dimensional array
+ * @param string $delimiter delimiter
+ * @param string $mode file opening mode fopen(, mode)
  */
 function csv_save_file($file, $rows, $delimiter = CSV_COMMON_DELIMITER, $mode = 'a+'){
 	$fh = fopen($file, $mode);
@@ -154,19 +154,19 @@ function csv_save_file($file, $rows, $delimiter = CSV_COMMON_DELIMITER, $mode = 
 }
 
 /**
- * 使用文件句柄方式写入文件（写入完成不会关闭句柄）
- * 相比 csv_save_file()，该函数可以提供给周期性连续写入文件的场景，例如数据流处理
- * @param resource $file_handle 文件句柄
- * @param array[] $rows 二维数组
- * @param string $delimiter 分隔符
+ * Use the file handle method to write to the file (the handle will not be closed after writing is completed)
+ * Compared with csv_save_file(), this function can be used for scenarios where files are written periodically and continuously, such as data stream processing
+ * @param resource $file_handle file handle
+ * @param array[] $rows two-dimensional array
+ * @param string $delimiter delimiter
  */
 function csv_save_file_handle($file_handle, $rows, $delimiter = CSV_COMMON_DELIMITER){
-	$buffer_rows = 100; //每100行缓冲成字符串后写入文件，提高写入性能
+	$buffer_rows = 100; // Buffer every 100 lines into strings and write them to the file to improve writing performance
 	$buffer_line = '';
 	$bf_counter = 0;
 	foreach($rows as $row){
 		$buffer_line .= join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
-		$bf_counter ++;
+		$bf_counter++;
 		if($bf_counter >= $buffer_rows){
 			fwrite($file_handle, $buffer_line);
 			$buffer_line = '';
@@ -178,7 +178,7 @@ function csv_save_file_handle($file_handle, $rows, $delimiter = CSV_COMMON_DELIM
 }
 
 /**
- * 格式化CSV单元格内容
+ * Format CSV cell contents
  * @param mixed $val
  * @return string|array
  */

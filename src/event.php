@@ -1,22 +1,22 @@
 <?php
 /**
- * 自定义事件函数
+ * Custom Event Functions
  */
 namespace LFPhp\Func;
 
 use Exception;
 
-const EVENT_PAYLOAD_HIT = 1; //事件命中
-const EVENT_PAYLOAD_BREAK_NEXT = 2; //事件命中，且中断后续执行
-const EVENT_PAYLOAD_NULL = 3; //未命中事件
+const EVENT_PAYLOAD_HIT = 1; //Event hit
+const EVENT_PAYLOAD_BREAK_NEXT = 2; //Event hit, and interrupt subsequent execution
+const EVENT_PAYLOAD_NULL = 3; //Event miss
 
 global $__FUNC_EVENT_MAP__;
 $__FUNC_EVENT_MAP__ = [];
 
 /**
- * 触发事件（事件触发参数采用引用方式传参，支持修改）
+ * Trigger event (event trigger parameters are passed by reference and can be modified)
  * @param string $event
- * @return int 返回状态标记：EVENT_PAYLOAD_
+ * @return int return status flag: EVENT_PAYLOAD_
  */
 function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, &$p5 = null, &$p6 = null){
 	$arg_limit = 7;
@@ -30,7 +30,7 @@ function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, 
 		return EVENT_PAYLOAD_NULL;
 	}
 	$hit = EVENT_PAYLOAD_NULL;
-	foreach($handle_list as list($id, $payload)){
+	foreach($handle_list as [$id, $payload]){
 		$hit = EVENT_PAYLOAD_HIT;
 		if($payload($p1, $p2, $p3, $p4, $p5, $p6) === false){
 			return EVENT_PAYLOAD_BREAK_NEXT;
@@ -40,7 +40,7 @@ function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, 
 }
 
 /**
- * 注册事件
+ * Event register
  * @param string $event
  * @param callable $payload
  * @return string
@@ -56,7 +56,7 @@ function event_register($event, $payload){
 }
 
 /**
- * 根据事件类型反注册事件
+ * Unregister events based on event type
  * @param string $event
  */
 function event_unregister_by_type($event){
@@ -65,14 +65,14 @@ function event_unregister_by_type($event){
 }
 
 /**
- * 根据id反注册事件
+ * Deregister event based on id
  * @param string $reg_id
  */
 function event_unregister_by_id($reg_id){
 	global $__FUNC_EVENT_MAP__;
 	foreach($__FUNC_EVENT_MAP__ as $ev => $handle_list){
 		$tmp = [];
-		foreach($handle_list as list($id, $payload)){
+		foreach($handle_list as [$id, $payload]){
 			if($id !== $reg_id){
 				$tmp[] = [$id, $payload];
 			}

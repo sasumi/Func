@@ -1,13 +1,13 @@
 <?php
 
 /**
- * session 相关操作函数
+ * Session Enhancement Functions
  */
 namespace LFPhp\Func;
 
 /**
- * 开启session一次
- * 如原session状态未开启，则读取完session自动关闭，避免session锁定
+ * Open a session once
+ * If the original session status is not open, the session will be automatically closed after reading to avoid session locking
  * @return bool
  */
 function session_start_once(){
@@ -23,20 +23,19 @@ function session_start_once(){
 }
 
 /**
- * 立即提交session数据，同时根据上下文环境，选择性关闭session
+ * Submit session data immediately and selectively close the session based on the context
  */
 function session_write_once(){
-	session_write_scope(function(){
-	});
+	session_write_scope(function(){});
 }
 
 /**
- * 自动判断当前session状态，将$_SESSION写入数据到session中
- * 如原session状态时未开启，则写入操作完毕自动关闭session避免session锁定，否则保持不变
- * 调用方法：
+ * Automatically determine the current session status and write data from $_SESSION to the session
+ * If the original session status is not open, the session will be automatically closed after the write operation is completed to avoid session locking, otherwise it will remain unchanged
+ * Calling method:
  * session_write_scope(function(){
- *      $_SESSION['hello'] = 'world';
- *      unset($_SESSION['info']);
+ * $_SESSION['hello'] = 'world';
+ * unset($_SESSION['info']);
  * });
  * @param callable $handler
  * @return bool
@@ -48,7 +47,7 @@ function session_write_scope(callable $handler){
 	}
 	$initialized = session_status() === PHP_SESSION_ACTIVE;
 	if(!$initialized && !headers_sent()){
-		$exists_session = $_SESSION; //原PHP session_start()方法会覆盖 $_SESSION 变量，这里需要做一次恢复。
+		$exists_session = $_SESSION; //The original PHP session_start() method will overwrite the $_SESSION variable, so a recovery is required here.
 		session_start();
 		$_SESSION = $exists_session;
 	}
@@ -60,19 +59,19 @@ function session_write_scope(callable $handler){
 }
 
 /**
- * 以指定时间启动session
- * @param int $expire_seconds 秒
+ * Start the session at the specified time
+ * @param int $expire_seconds seconds
  * @return void
  */
 function session_start_in_time($expire_seconds = 0){
-	//设置 session.gc_maxlifetime
+	//Set session.gc_maxlifetime
 	if($expire_seconds == 0){
 		$expire_seconds = ini_get('session.gc_maxlifetime');
 	}else{
 		ini_set('session.gc_maxlifetime', $expire_seconds);
 	}
 
-	//设置 session.cache_expire
+	//Set session.cache_expire
 	session_cache_expire($expire_seconds);
 	if(empty($_COOKIE['PHPSESSID'])){
 		session_set_cookie_params($expire_seconds);

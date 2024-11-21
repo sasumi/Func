@@ -71,7 +71,7 @@ function cron_match($format, $time, &$error = null){
 
 			//23-9/3 format
 			else if(preg_match('/^(\d+)-(\d+)\/(\d+)$/', $p, $matches)){
-				list($_, $st, $ed, $mod) = $matches;
+				[$_, $st, $ed, $mod] = $matches;
 				$ranges = array_filter($fix_ranges($st, $ed, $full_fills[$idx]), function($item)use($mod){return $item%$mod == 0;});
 				if(in_array($time_info[$idx], $ranges)){
 					$matched = true;
@@ -102,9 +102,8 @@ function cron_match($format, $time, &$error = null){
 
 /**
  * @param array $rules
- * @param callable $on_before_call
+ * @param callable|null $on_before_call
  * @param int $check_interval seconds, must min than one minutes
- * @throws \Exception
  */
 function cron_watch_commands(array $rules, callable $on_before_call = null, $check_interval = 30){
 	$list = [];
@@ -117,7 +116,7 @@ function cron_watch_commands(array $rules, callable $on_before_call = null, $che
 	}
 	while(true){
 		$now = time();
-		foreach($list as $k => list($format, $cmd)){
+		foreach($list as $k => [$format, $cmd]){
 			if(cron_match($format, $now)){
 				if($on_before_call && $on_before_call($cmd, $now) === false){
 					unset($list[$k]);

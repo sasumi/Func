@@ -37,6 +37,7 @@ $fp = fopen($output_file, 'w');
 $files = glob_recursive(PRJ_ROOT.'/src/*');
 $mod_index = 0;
 foreach($files as $f){
+	echo "Processing file: $f", PHP_EOL;
 	$first_doc = [];
 	$mod_name = preg_replace('/\..*$/', '', basename($f));
 	$file_content = file_get_contents($f);
@@ -84,7 +85,7 @@ foreach($files as $f){
 				$r_str = '';
 
 				if(isset($meta['params'])){
-					$p_str = '#### 参数'.NL;
+					$p_str = '#### Parameters'.NL;
 					foreach($meta['params'] as $name => $p){
 						$type = isset($p['type']) ? $p['type'] : 'mixed';
 						$desc = isset($p['description']) ? $p['description'] : '';
@@ -95,7 +96,7 @@ foreach($files as $f){
 
 				if(isset($meta['return'])){
 					$desc = isset($meta['return']['description']) ? $meta['return']['description'] : '';
-					$r_str = NL.'#### 返回值'.NL.' - '.$meta['return']['type']." ".$desc.NL.NL;
+					$r_str = NL.'#### Returns'.NL.' - '.$meta['return']['type']." ".$desc.NL.NL;
 					$rs = ': '.$meta['return']['type'];
 				}
 				$ps = join(",", $ps);
@@ -109,3 +110,4 @@ foreach($files as $f){
 }
 
 fclose($fp);
+echo "DONE";

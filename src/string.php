@@ -1,17 +1,17 @@
 <?php
 /**
- * 字符串相关操作函数
+ * String Enhancement Functions
  */
 namespace LFPhp\Func;
 
 use Exception;
 
 /**
- * utf-8中英文截断（两个英文一个数量单位）
- * @param string $string 串
- * @param int $length 切割长度
- * @param string $tail 尾部追加字符串
- * @param bool $length_exceeded 是否超长
+ * UTF-8 Chinese and English truncation (two English words for one unit of quantity)
+ * @param string $string string
+ * @param int $length cutting length
+ * @param string $tail append string to the end
+ * @param bool $length_exceeded whether it is too long
  * @return string
  */
 function substr_utf8($string, $length, $tail = '...', &$length_exceeded = false){
@@ -25,7 +25,7 @@ function substr_utf8($string, $length, $tail = '...', &$length_exceeded = false)
 		}else{
 			$n++;
 		}
-		//非英文字节,
+		//Non-English bytes,
 		$k = $n/3 + $m/2;
 		$l = $n/3 + $m;
 		$i++;
@@ -41,7 +41,7 @@ function substr_utf8($string, $length, $tail = '...', &$length_exceeded = false)
 }
 
 /**
- * 检测字符串是否为JSON
+ * Check if the string is JSON
  * @param $str
  * @return bool
  */
@@ -52,10 +52,10 @@ function is_json($str){
 }
 
 /**
- * 按照指定边界字符列表，拆分字符串
+ * Split the string according to the specified boundary character list
  * @param array|string $delimiters eg: [',', '-'] or ",-"
  * @param string $str
- * @param bool $trim_and_clear 去除空白及空值
+ * @param bool $trim_and_clear removes blanks and empty values
  * @return array
  */
 function explode_by($delimiters, $str, $trim_and_clear = true){
@@ -74,7 +74,7 @@ function explode_by($delimiters, $str, $trim_and_clear = true){
 }
 
 /**
- * 获取指定 class 名称中的命名空间部分
+ * Get the namespace part of the specified class name
  * @param $class
  * @return string
  */
@@ -88,7 +88,7 @@ function get_namespace($class){
 }
 
 /**
- * 获取指定 class 中类名部分
+ * Get the class name part of the specified class
  * @param string $class
  * @return string
  */
@@ -102,7 +102,7 @@ function get_class_without_namespace($class){
 }
 
 /**
- * 突破 max_input_vars 限制，通过解析字符串方式获取变量
+ * Break through the max_input_vars limit and get variables by parsing strings
  * @param string $string
  * @param bool $extra_to_post
  * @return array
@@ -169,9 +169,9 @@ function __array_merge_distinct_with_dynamic_key(array $array1, array &$array2, 
 }
 
 /**
- * 批量调用sprintf
+ * Batch call sprintf
  * @param string $str
- * @param array $arr 每个item表示传递给sprintf的参数，可以是数组
+ * @param array $arr Each item represents the parameter passed to sprintf, which can be an array
  * @return string[]
  */
 function asprintf($str, array $arr){
@@ -188,7 +188,7 @@ function asprintf($str, array $arr){
 }
 
 /**
- * PHP 匹配通配符
+ * PHP wildcard matching
  * @param string $wildcard_pattern
  * @param string $haystack
  * @return boolean
@@ -199,7 +199,7 @@ function match_wildcard($wildcard_pattern, $haystack){
 }
 
 /**
- * 按照指定字符编码拆分字符串
+ * Split the string according to the specified character encoding
  * @param string $str
  * @param int $len
  * @param string $charset
@@ -215,10 +215,10 @@ function str_split_by_charset($str, $len = 1, $charset = 'UTF-8'){
 }
 
 /**
- * 检测字符串是否以另一个字符串开始
- * @param string $str 待检测字符串
- * @param string|array $starts 匹配字符串或字符串数组
- * @param bool $case_sensitive 是否大小写敏感
+ * Check if a string starts with another string
+ * @param string $str string to be detected
+ * @param string|array $starts matches string or string array
+ * @param bool $case_sensitive is it case sensitive
  * @return bool
  */
 function str_start_with($str, $starts, $case_sensitive = false){
@@ -235,7 +235,7 @@ function str_start_with($str, $starts, $case_sensitive = false){
 }
 
 /**
- * 转换整型（整型数组）到字符串（字符串数组）
+ * Convert integer (int array) to string (string array)
  * @param mixed $data
  * @return array|string
  */
@@ -251,16 +251,16 @@ function int2str($data){
 }
 
 /**
- * 公式运算
- * @param string $stm 表达式，变量以$符号开始，小括号中表示该变量的描述文本（可为空）,结构如：$var1(变量1)
- * @param array $param 传入变量，[key=>val]结构
- * @param callable|null $result_decorator 计算结果修饰回调（仅影响计算过程中的结果，不影响真实计算结果）
- * @return array [计算结果, 计算公式， 计算过程]
+ * Formula calculation
+ * @param string $stm expression, the variable starts with a $ sign, the parentheses indicate the description text of the variable (can be empty), the structure is like: $var1 (variable 1)
+ * @param array $param passed in variable, [key=>val] structure
+ * @param callable|null $result_decorator calculation result decoration callback (only affects the result during the calculation process, not the actual calculation result)
+ * @return array [calculation result, calculation formula, calculation process]
  * @throws \Exception
- * @example 表达式例子： $order_sum(订单总金额) * (1 - $tax_rate(税率)) - $shipping - $refund(退款)
+ * @example Expression example: $order_sum (total order amount) * (1 - $tax_rate (tax rate)) - $shipping - $refund (refund)
  */
 function calc_formula($stm, array $param, callable $result_decorator = null){
-	//提取备注
+	//Extract notes
 	$var_descriptions = [];
 	$stm = preg_replace_callback('/(\$[\w]+)(\([^)]+\))/', function($matches)use(&$var_descriptions){
 		$k = substr($matches[1], 1);
@@ -291,7 +291,7 @@ function calc_formula($stm, array $param, callable $result_decorator = null){
 	$_RESULT_STR = is_callable($result_decorator) ? call_user_func($result_decorator, $_RESULT_) : $_RESULT_;
 	$full_statement = preg_replace_callback('/\$([\w]+)/', function($matches) use ($param){
 			return $param[$matches[1]] ?: 0;
-		}, $stm)." = $_RESULT_STR";
+		}, $stm). " = $_RESULT_STR";
 
 	if($var_descriptions){
 		$formula = preg_replace_callback('/\$([\w]+)/', function($matches) use ($var_descriptions){
@@ -304,7 +304,7 @@ function calc_formula($stm, array $param, callable $result_decorator = null){
 }
 
 /**
- * 字符串切割（UTF8编码）
+ * String cutting (UTF8 encoding)
  * @param string|array $str
  * @param int $len
  * @param string $tail
@@ -332,9 +332,9 @@ function cut_string($str, $len = 0, $tail = '...', &$length_exceeded = false){
 }
 
 /**
- * 使用制表符生成多级option样式
- * @param array $tree 菜单树结构，结构为 [{name, value, children=>[]}, ...]
- * @param string $prefix 前置字符串（自动计算）
+ * Use tabs to generate multi-level option styles
+ * @param array $tree menu tree structure, the structure is [{name, value, children=>[]}, ...]
+ * @param string $prefix prefix string (automatically calculated)
  * @return array [[text, value], ...]
  */
 function print_tree_to_options($tree, $prefix = ''){
@@ -344,7 +344,7 @@ function print_tree_to_options($tree, $prefix = ''){
 	$space = ' ';
 	foreach($tree as $k => $item){
 		$last = ($k == $n - 1) ;
-		$text = $prefix.($last ? '└'.str_repeat('─', $tab_size - 2).$space : '├'.str_repeat('─', $tab_size - 2).$space).h($item['name']);
+		$text = $prefix.($last ? '└'.str_repeat('─', $tab_size - 2).$space : '├'.str_repeat('─', $tab_size - 2).$space).h ($item['name']);
 		$options[] = [$text, ha($item['value'])];
 		if($item['children']){
 			$p = $last ? $prefix.str_repeat($space, $tab_size) : $prefix.'│'.str_repeat($space, $tab_size);
@@ -355,19 +355,19 @@ function print_tree_to_options($tree, $prefix = ''){
 }
 
 /**
- * XML字符转义
+ * XML character escape
  * @param string $val
  * @return string
  */
 function xml_special_chars($val){
 	//note, bad_chars does not include \t\n\r (\x09\x0a\x0d)
-	static $bad_chars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
-	static $good_chars = "                              ";
+	static $bad_chars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x0e\x0f\x10\x11 \x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
+	static $good_chars = " ";
 	return strtr(htmlspecialchars($val, ENT_QUOTES|ENT_XML1), $bad_chars, $good_chars);//strtr appears to be faster than str_replace
 }
 
 /**
- * 移除 UTF-8 BOM头
+ * Remove UTF-8 BOM header
  * @param string $text
  * @return string
  */
@@ -377,14 +377,14 @@ function remove_utf8_bom($text){
 }
 
 /**
- * 数字金额转换成中文大写金额的函数
- * @param int $num 要转换的小写数字或小写字符串（单位：元）
+ * Function to convert digital amount into Chinese uppercase amount
+ * @param int $num The lowercase number or lowercase string to be converted (unit: yuan)
  * @return string
  * @throws \Exception
  */
 function get_traditional_currency($num){
-	$c1 = "零壹贰叁肆伍陆柒捌玖";
-	$c2 = "分角元拾佰仟万拾佰仟亿";
+	$c1 = "zero one two three four five six seven eighty nine";
+	$c2 = "100 million yuan, 100 million yuan, 100 million yuan";
 	$num = round($num, 2);
 	$num = $num*100;
 	if(strlen($num) > 10){
@@ -400,7 +400,7 @@ function get_traditional_currency($num){
 		}
 		$p1 = substr($c1, 3*$n, 3);
 		$p2 = substr($c2, 3*$i, 3);
-		if($n != '0' || ($n == '0' && ($p2 == '亿' || $p2 == '万' || $p2 == '元'))){
+		if($n != '0' || ($n == '0' && ($p2 == '100 million' || $p2 == 'ten thousand' || $p2 == 'yuan'))){
 			$c = $p1.$p2.$c;
 		}else{
 			$c = $p1.$c;
@@ -416,7 +416,7 @@ function get_traditional_currency($num){
 	$s_len = strlen($c);
 	while($j < $s_len){
 		$m = substr($c, $j, 6);
-		if($m == '零元' || $m == '零万' || $m == '零亿' || $m == '零零'){
+		if($m == 'zero yuan' || $m == 'zero thousand' || $m == 'zero billion' || $m == 'zero zero'){
 			$left = substr($c, 0, $j);
 			$right = substr($c, $j + 3);
 			$c = $left.$right;
@@ -426,18 +426,18 @@ function get_traditional_currency($num){
 		$j = $j + 3;
 	}
 
-	if(substr($c, strlen($c) - 3, 3) == '零'){
+	if(substr($c, strlen($c) - 3, 3) == 'zero'){
 		$c = substr($c, 0, strlen($c) - 3);
 	}
 	if(empty($c)){
-		return "零元整";
+		return "zero yuan";
 	}else{
-		return $c."整";
+		return $c."whole";
 	}
 }
 
 /**
- * 密码检测
+ * Password detection
  * @param string $password
  * @param array $rules
  * @throws \Exception
@@ -445,30 +445,30 @@ function get_traditional_currency($num){
 function password_check($password, $rules = array()){
 	$rules = array_merge(array(
 		'MIN_LEN' => 6,
-		'UC'      => true,
-		'LC'      => true,
-		'NUM'     => null,
-		'SYM'     => null,
-		'SPC'     => null,
+		'UC' => true,
+		'LC' => true,
+		'NUM' => null,
+		'SYM' => null,
+		'SPC' => null,
 	), $rules);
 
 	$str_map = array(
-		'UC'  => ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', '大写字母'],
-		'LC'  => ['abcdefghijklmnopqrstuvwxyz', '小写字母'],
-		'NUM' => ['0123456789', '数字'],
-		'SYM' => ['!@#$%^&*?[_~', '符号'],
-		'SPC' => [' ', '空格'],
+		'UC' => ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'Uppercase letters'],
+		'LC' => ['abcdefghijklmnopqrstuvwxyz', 'Lowercase letters'],
+		'NUM' => ['0123456789', 'Number'],
+		'SYM' => ['!@#$%^&*?[_~', 'Symbol'],
+		'SPC' => [' ', 'Space'],
 	);
 
 	if($rules['MIN_LEN'] && strlen($password) < $rules['MIN_LEN']){
-		throw new Exception("密码长度至少{$rules['MIN_LEN']}位");
+		throw new Exception("The password must be at least {$rules['MIN_LEN']} characters long");
 	}
 	unset($rules['MIN_LEN']);
 
 	foreach($rules as $k => $set){
 		if($set !== null){
 			if(str_contains($password, $str_map[$k][0]) != $set){
-				$ex = $set ? "密码必须包含{$str_map[$k][1]}" : "密码不允许包含{$str_map[$k][1]}";
+				$ex = $set ? "The password must contain {$str_map[$k][1]}" : "The password is not allowed to contain {$str_map[$k][1]}";
 				throw new Exception($ex);
 			}
 		}
@@ -476,7 +476,7 @@ function password_check($password, $rules = array()){
 }
 
 /**
- * 检测字符串中是否包含指定字符集
+ * Check whether the string contains the specified character set
  * @param string $str
  * @param string $char_list
  * @return bool
@@ -491,9 +491,9 @@ function str_contains($str, $char_list){
 }
 
 /**
- * 随机字符串
- * @param int $len 长度
- * @param string $source 字符源
+ * Random string
+ * @param int $len length
+ * @param string $source character source
  * @return string
  */
 function rand_string($len = 6, $source = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPRSTUVWXYZ23456789'){
@@ -505,9 +505,9 @@ function rand_string($len = 6, $source = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPR
 }
 
 /**
- * 格式化大小
- * @param int $size 比特值
- * @param int $dot 预留小数点位数
+ * Format size
+ * @param int $size bit value
+ * @param int $dot reserved decimal places
  * @return string
  */
 function format_size($size, $dot = 2){
@@ -525,8 +525,8 @@ function format_size($size, $dot = 2){
 }
 
 /**
- * 解析文件实际大小表达式
- * @param string $val 文件大小，如 12.3m, 43k
+ * Parse the actual file size expression
+ * @param string $val file size, such as 12.3m, 43k
  * @return int
  */
 function resolve_size($val){
@@ -543,9 +543,9 @@ function resolve_size($val){
 }
 
 /**
- * 文字混淆
- * @param string $text 文字模板，占位符采用 {VAR.SUB_VAR} 格式
- * @param array $param 混淆变量 ,key => $var 格式
+ * Text obfuscation
+ * @param string $text text template, the placeholder uses the {VAR.SUB_VAR} format
+ * @param array $param obfuscation variable, key => $var format
  * @return string
  */
 function str_mixing($text, $param = []){
@@ -563,7 +563,7 @@ function str_mixing($text, $param = []){
 }
 
 /**
- * 检测字符串是否为 URL， 格式同时包含 // 这种省略协议的模式
+ * Check if the string is a URL, the format also contains // This mode omits the protocol
  * @param string $url
  * @return bool
  */
@@ -572,11 +572,11 @@ function is_url($url){
 }
 
 /**
- * url base64 安全编码
- * 将base64中 + / = 符号分别替换成 - _ ''
+ * URL base64 security encoding
+ * Replace the + / = symbols in base64 with - _ ''
  * @param string $str
  * @return string
- * base64编码
+ * base64 encoding
  */
 function url_safe_b64encode($str){
 	$data = base64_encode($str);
@@ -584,10 +584,10 @@ function url_safe_b64encode($str){
 }
 
 /**
- * url base64 安全解码
+ * URL base64 safe decoding
  * @param string $str
  * @return string
- * base64解码
+ * base64 decoding
  */
 function url_safe_b64decode($str){
 	$data = str_replace(array('-', '_'), array('+', '/'), $str);
@@ -599,7 +599,7 @@ function url_safe_b64decode($str){
 }
 
 /**
- * 检测字符串是否符合 PHP 变量命名规则
+ * Check if the string complies with PHP variable naming rules
  * @param string $str
  * @return false|string
  */
@@ -608,7 +608,7 @@ function check_php_var_name_legal($str){
 }
 
 /**
- * 文件名清洗（根据Windows标准）
+ * File name cleaning (according to Windows standards)
  * @param string $filename
  * @return string|string[]
  * @see http://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx
@@ -621,19 +621,19 @@ function filename_sanitize($filename){
 }
 
 /**
- * 帕斯卡式转化成下划线格式
- * (同时清理多个下划线连在一起的情况）
+ * Pascal style converted to underscore format
+ * (Clean up multiple underscores at the same time)
  * @param string $str
  * @return string
  */
 function pascalcase_to_underscores($str){
-	return preg_replace('/_+/', '_', strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $str)));
+	return preg_replace('/_+/', '_', strtolower(preg_replace('/(?<!^)[AZ]/', '_$0', $str)));
 }
 
 /**
- * 下划线格式转化成帕斯卡式
+ * Convert underscore format to Pascal format
  * @param string $str
- * @param bool $capitalize_first 是否使用大驼峰格式
+ * @param bool $capitalize_first whether to use upper camel case format
  * @return string
  */
 function underscores_to_pascalcase($str, $capitalize_first = false){
@@ -643,8 +643,8 @@ function underscores_to_pascalcase($str, $capitalize_first = false){
 }
 
 /**
- * 安全地解析json字符串，错误则抛出异常。
- * 建议在业务代码中代替使用php原生的json_decode。
+ * Safely parse the json string and throw an exception if an error occurs.
+ * It is recommended to use PHP's native json_decode instead in business code.
  * @param string $str
  * @param bool $associative
  * @param int $depth
@@ -680,7 +680,7 @@ function encodeURIComponent($string){
 
 function encodeURIComponentByCharacter($char){
 	$map = array(
-		"+"   => "%20",
+		"+" => "%20",
 		"%21" => "!",
 		"%27" => '"',
 		"%28" => "(",
@@ -830,7 +830,7 @@ function decodeURIComponent($string){
 		for($p = 0; $p <= 8; $p++){
 			$dec_str .= $string[$i + $p];
 		}
-		list($ds, $num) = decodeURIComponentByCharacter($dec_str);
+		[$ds, $num] = decodeURIComponentByCharacter($dec_str);
 		$result .= urldecode($ds);
 		$i += $num;
 	}
@@ -1729,7 +1729,7 @@ function decodeURI($string){
 		for($p = 0; $p <= 8; $p++){
 			$dec_str .= $string[$i + $p];
 		}
-		list($ds, $num) = decodeURIByCharacter($dec_str);
+		[$ds, $num] = decodeURIByCharacter($dec_str);
 		$result .= urldecode($ds);
 		$i += $num;
 	}
@@ -2311,7 +2311,7 @@ function unescape($string){
 		for($p = 0; $p <= 5; $p++){
 			$dec_str .= $string[$i + $p];
 		}
-		list($ds, $num) = unEscapeByCharacter($dec_str);
+		[$ds, $num] = unEscapeByCharacter($dec_str);
 		$result .= urldecode($ds);
 		$i += $num;
 	}
@@ -2447,16 +2447,16 @@ function generate_guid($trim = true){
 	// OSX/Linux
 	if(function_exists('openssl_random_pseudo_bytes') === true){
 		$data = openssl_random_pseudo_bytes(16);
-		$data[6] = chr(ord($data[6])&0x0f|0x40);    // set version to 0100
-		$data[8] = chr(ord($data[8])&0x3f|0x80);    // set bits 6-7 to 10
+		$data[6] = chr(ord($data[6])&0x0f|0x40); // set version to 0100
+		$data[8] = chr(ord($data[8])&0x3f|0x80); // set bits 6-7 to 10
 		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 	}
 
 	// Fallback (PHP 4.2+)
 	mt_srand((double)microtime()*10000);
 	$char_id = strtolower(md5(uniqid(rand(), true)));
-	$hyphen = chr(45);                  // "-"
-	$lbrace = $trim ? "" : chr(123);    // "{"
-	$rbrace = $trim ? "" : chr(125);    // "}"
+	$hyphen = chr(45); // "-"
+	$lbrace = $trim ? "" : chr(123); // "{"
+	$rbrace = $trim ? "" : chr(125); // "}"
 	return $lbrace.substr($char_id, 0, 8).$hyphen.substr($char_id, 8, 4).$hyphen.substr($char_id, 12, 4).$hyphen.substr($char_id, 16, 4).$hyphen.substr($char_id, 20, 12).$rbrace;
 }

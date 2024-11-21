@@ -1,13 +1,13 @@
 <?php
 /**
- * 平台函数相关操作函数
+ * Platform function related operation functions
  */
 namespace LFPhp\Func;
 
 use Exception;
 
 /**
- * 检测服务器是否在视窗系统中运行
+ * Check if the server is running on Windows
  * @return bool
  */
 function server_in_windows(){
@@ -15,7 +15,7 @@ function server_in_windows(){
 }
 
 /**
- * 检测服务器是否在HTTPS协议中运行
+ * Check if the server is running in HTTPS protocol
  * @return bool
  */
 function server_in_https(){
@@ -23,9 +23,9 @@ function server_in_https(){
 }
 
 /**
- * 获取PHP允许上传的最大文件尺寸
- * 依赖：最大上传文件尺寸，最大POST尺寸
- * @param bool $human_readable 是否以可读方式返回
+ * Get the maximum file size allowed for upload by PHP
+ * Depends on: maximum upload file size, maximum POST size
+ * @param bool $human_readable whether to return in readable mode
  * @return string|number
  */
 function get_upload_max_size($human_readable = false){
@@ -41,24 +41,24 @@ function get_upload_max_size($human_readable = false){
 }
 
 /**
- * 获取最大socket可用超时时间
- * @param int $ttf 允许提前时长
- * @return int 超时时间（秒），如为0，表示不限制超时时间
+ * Get the maximum available socket timeout
+ * @param int $ttf allowed advance time
+ * @return int timeout (seconds), if 0, it means no timeout limit
  */
 function get_max_socket_timeout($ttf = 0){
 	$max_execute_timeout = ini_get('max_execution_time') ?: 0;
 	$max_socket_timeout = ini_get('default_socket_timeout') ?: 0;
 	$max = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) : min($max_execute_timeout, $max_socket_timeout);
 	if($ttf && $max){
-		return max($max - $ttf, 1); //最低保持1s，避免0值
+		return max($max - $ttf, 1); //Keep at least 1s, avoid 0 value
 	}
 	return $max;
 }
 
 /**
- * 获取客户端IP
- * 优先获取定义的 x-forward-for 代理IP（可能有一定风险）
- * @return string 客户端IP，获取失败返回空字符串
+ * Get the client IP
+ * Prioritize the defined x-forward-for proxy IP (may have certain risks)
+ * @return string client IP, return an empty string if failed
  */
 function get_client_ip(){
 	$ip = '';
@@ -75,7 +75,7 @@ function get_client_ip(){
 }
 
 /**
- * 获取所有命令行选项，格式规则与 getopt 一致
+ * Get all command line options, the format rules are consistent with getopt
  * @return array
  */
 function get_all_opt(){
@@ -85,7 +85,7 @@ function get_all_opt(){
 
 	while ($arg = array_shift($args)) {
 		if (substr($arg, 0, 2) === '--') {
-			// 处理长选项
+			// Handling long options
 			$option = substr($arg, 2);
 			if (strpos($option, '=') !== false) {
 				[$key, $value] = explode('=', $option, 2);
@@ -94,7 +94,7 @@ function get_all_opt(){
 				$options[$option] = true;
 			}
 		} elseif (substr($arg, 0, 1) === '-') {
-			// 处理短选项
+			// Handling short options
 			$option = substr($arg, 1);
 			if (strlen($option) > 1) {
 				foreach (str_split($option) as $char) {
@@ -110,7 +110,7 @@ function get_all_opt(){
 				}
 			}
 		} else {
-			// 处理位置参数
+			// Handling positional parameters
 			$options[] = $arg;
 		}
 	}
@@ -119,7 +119,7 @@ function get_all_opt(){
 }
 
 /**
- * 获取PHP配置信息
+ * Get PHP configuration information
  * @return array
  */
 function get_php_info(){
@@ -174,7 +174,7 @@ function get_php_info(){
 }
 
 /**
- * 控制台前景色映射集合
+ * Console foreground color map collection
  */
 const CONSOLE_FOREGROUND_COLOR_MAP = [
 	'default'      => '0:39',
@@ -197,7 +197,7 @@ const CONSOLE_FOREGROUND_COLOR_MAP = [
 ];
 
 /**
- * 控制台背景色映射集合
+ * Console background color mapping collection
  */
 const CONSOLE_BACKGROUND_COLOR_MAP = [
 	'black'      => '40',
@@ -211,11 +211,11 @@ const CONSOLE_BACKGROUND_COLOR_MAP = [
 ];
 
 /**
- * 生成携带颜色的CLI字符串
+ * Generate CLI strings with colors
  * @param string $text
  * @param string $fore_color
  * @param string $back_color
- * @param bool $override 是否覆盖原来的颜色设置
+ * @param bool $override Whether to overwrite the original color setting
  * @return string
  */
 function console_color($text, $fore_color = '', $back_color = '', $override = false){
@@ -241,7 +241,7 @@ function console_color($text, $fore_color = '', $back_color = '', $override = fa
 }
 
 /**
- * 清理颜色控制字符
+ * Clean up color control characters
  * @param string $text
  * @return string
  */
@@ -250,12 +250,12 @@ function console_color_clean($text){
 }
 
 /**
- * 显示进度条
+ * Show progress bar in console
  * @param int $index
  * @param int $total
  * @param string|callable $patch_text
- * 补充显示文本，可以是一个闭包函数，函数内所有echo字符串均会被当成进度文本输出，如果是闭包函数由于php cli的ob会造成一定的延时
- * @param int $start_timestamp 开始时间戳，为空函数内初始化全局唯一一个时间戳
+ * Supplementary display text, can be a closure function, all echo strings in the function will be output as progress text, if it is a closure function, due to the ob of php cli, there will be a certain delay
+ * @param int $start_timestamp start timestamp, initialize the global unique timestamp in the empty function
  */
 function show_progress($index, $total, $patch_text = '', $start_timestamp = null){
 	if(is_callable($patch_text)){
@@ -302,9 +302,9 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 }
 
 /**
- * loading 方式输出控制台字符串
- * @param string $patch_text 显示文本
- * @param string[] $loading_chars loading字符序列，例如可以为：['\\', '|', '/', '-']
+ * Loading mode outputs console string
+ * @param string $patch_text Display text
+ * @param string[] $loading_chars Loading character sequence, for example: ['\\', '|', '/', '-']
  * @return void
  */
 function show_loading($patch_text, $loading_chars = ''){
@@ -322,10 +322,10 @@ function show_loading($patch_text, $loading_chars = ''){
 }
 
 /**
- * 运行终端命令
- * @param string $command 命令
- * @param array $param 参数
- * @param bool $async 是否以异步方式执行
+ * Run command
+ * @param string $command command
+ * @param array $param parameter
+ * @param bool $async whether to execute asynchronously
  * @return bool|string|null
  * @throws \Exception
  */
@@ -365,8 +365,8 @@ function run_command($command, array $param = [], $async = false){
 }
 
 /**
- * 以携带进度文本方式，并发运行命令。
- * 调用参数请参考函数：run_command_parallel()
+ * Run commands concurrently with progress text.
+ * For calling parameters, please refer to the function: run_command_parallel()
  * @param string $command
  * @param array $param_batches
  * @param array $options
@@ -398,17 +398,17 @@ function run_command_parallel_width_progress($command, array $param_batches, arr
 }
 
 /**
- * 并发运行命令
- * @param string $command 执行命令
- * @param array $param_batches 任务参数列表，参数按照长参数方式传入command，具体实现可参考：build_command() 函数实现。
- * @param array $options 参数如下：
- * - callable|null $on_start($param, $param_index, $start_time) 返回false中断执行
- * - callable|null $on_running($param, $param_index) 返回false中断执行
- * - callable|null $on_finish($param, $param_index, $output, $cost_time, $status_code, $error) 返回false中断执行
- * - int $parallel_num 并发数量，缺省为20
- * - int $check_interval 状态检测间隔（单位：毫秒），缺省为100ms
- * - int $process_max_execution_time 进程最大执行时间（单位：毫秒），缺省为不设置
- * @return bool 是否正常结束
+ * Concurrently run commands
+ * @param string $command Execute command
+ * @param array $param_batches Task parameter list. Parameters are passed to command as long parameters. For specific implementation, please refer to: build_command() function implementation.
+ * @param array $options parameters are as follows:
+ * - callable|null $on_start($param, $param_index, $start_time) returns false to interrupt execution
+ * - callable|null $on_running($param, $param_index) returns false to interrupt execution
+ * - callable|null $on_finish($param, $param_index, $output, $cost_time, $status_code, $error) returns false to interrupt execution
+ * - int $parallel_num concurrent number, default is 20
+ * - int $check_interval status check interval (unit: milliseconds), default is 100ms
+ * - int $process_max_execution_time maximum process execution time (unit: milliseconds), default is not set
+ * @return bool whether it ends normally
  * @throws \Exception
  */
 function run_command_parallel($command, array $param_batches, array $options = []){
@@ -431,13 +431,13 @@ function run_command_parallel($command, array $param_batches, array $options = [
 		}
 	};
 
-	//剩余任务，或者还有任务执行中，程序继续
+	//There are still tasks left, or there are tasks in progress, the program continues
 	while($param_batches || $running_process_list){
-		//检测进程状态
+		//Check process status
 		foreach($running_process_list as $k => [$process, $param, $param_index, $stdout, $stderr, $start_time]){
 			$status = proc_get_status($process);
 
-			//执行结束
+			//Execution ends
 			if(!$status['running']){
 				unset($running_process_list[$k]);
 				$status_code = (int)$status['exitcode'];
@@ -451,7 +451,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 				continue;
 			}
 
-			//执行超时
+			//Execution timeout
 			if($process_max_execution_time && microtime(true) - $start_time > $process_max_execution_time){
 				unset($running_process_list[$k]);
 				$close_process($process, $stdout, $stderr, true);
@@ -461,7 +461,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 				continue;
 			}
 
-			//运行中
+			//Executing
 			if($on_running && call_user_func($on_running, $param, $param_index) === false){
 				unset($running_process_list[$k]);
 				$close_process($process, $stdout, $stderr, true);
@@ -469,7 +469,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 			}
 		}
 
-		//新启进程
+		//Setup new process
 		if(count($running_process_list) < $parallel_num && $param_batches){
 			$start_count = min($parallel_num - count($running_process_list), count($param_batches));
 			while($start_count-- > 0){
@@ -502,7 +502,7 @@ function run_command_parallel($command, array $param_batches, array $options = [
 }
 
 /**
- * 构建命令行
+ * Build command line
  * @param string $cmd_line
  * @param array $param
  * @return string
@@ -526,7 +526,7 @@ function build_command($cmd_line, array $param = []){
 }
 
 /**
- * 转义window下argv参数
+ * Escape argv parameters under Windows
  * @param string|int $value
  * @return string
  * @throws \Exception
@@ -601,7 +601,7 @@ function noshell_exec($command){
 }
 
 /**
- * 检查命令是否存在
+ * Check if the command exists
  * @param string $command
  * @return bool
  */
@@ -624,9 +624,9 @@ function command_exists($command){
 }
 
 /**
- * 获取Windows进程网络占用情况
- * @param bool $include_process_info 是否包含进程信息（标题、程序文件名），该功能需要Windows管理员模式
- * @return array 格式:[protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
+ * Get the network usage of Windows process
+ * @param bool $include_process_info whether to include process information (title, program file name), this function requires Windows administrator mode
+ * @return array format: [protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
  * @throws \Exception
  */
 function windows_get_port_usage($include_process_info = false){
@@ -702,8 +702,8 @@ function windows_get_port_usage($include_process_info = false){
 }
 
 /**
- * 获取Linux下端口占用情况
- * @return array 格式:[protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
+ * Get port occupancy status under Linux
+ * @return array format: [protocol='', local_ip='', local_port='', foreign_ip='', foreign_port='', state='', pid='', 'process_name'='', 'process_file_id'=>'']
  * @throws \Exception
  */
 function unix_get_port_usage(){
@@ -762,8 +762,8 @@ function unix_get_port_usage(){
 }
 
 /**
- * 获取控制台屏幕宽度及高度
- * @return array|null 返回格式：[列数，行数】，当前环境不支持则返回 null
+ * Get the width and height of the console screen
+ * @return array|null Return format: [number of columns, number of rows], if the current environment does not support it, it will return null
  */
 function get_screen_size(){
 	if(command_exists('tput')){
@@ -780,8 +780,8 @@ function get_screen_size(){
 }
 
 /**
- * 杀死进程
- * @param int $pid 进程ID
+ * Kill process
+ * @param int $pid Process ID
  * @return bool
  */
 function process_kill($pid){
@@ -797,8 +797,8 @@ function process_kill($pid){
 }
 
 /**
- * 检测指定进程是否运行中
- * @param int $pid 进程ID
+ * Check whether the specified process is running
+ * @param int $pid Process ID
  * @return bool
  */
 function process_running($pid){
@@ -814,7 +814,7 @@ function process_running($pid){
 }
 
 /**
- * 进程信号监听
+ * Process signal monitoring
  * @param $signal
  * @param $handle
  * @return bool
@@ -828,9 +828,9 @@ function process_signal($signal, $handle){
 }
 
 /**
- * 发送进程信号量
- * @param int $pid 进程ID
- * @param int $sig_num 信号量
+ * Send process semaphore
+ * @param int $pid Process ID
+ * @param int $sig_num semaphore
  * @return bool
  */
 function process_send_signal($pid, $sig_num){
@@ -842,15 +842,15 @@ function process_send_signal($pid, $sig_num){
 }
 
 /**
- * 守护进程状态保存目录
+ * Define directory where daemon status is saved
  */
 if(!defined(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH')){
 	define(__NAMESPACE__.'\DAEMON_PROCESS_STATE_PATH', sys_get_temp_dir().'/daemon_task_process');
 }
 
 /**
- * 重播当前脚本命令
- * @return false|int 返回新开启的进程ID，false 为失败返回
+ * Replay the current script command
+ * @return false|int Returns the newly opened Process ID, false is returned if failed
  */
 function replay_current_script(){
 	$cmd = "php ".join(' ', $_SERVER['argv']);

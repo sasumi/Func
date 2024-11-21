@@ -1,6 +1,6 @@
 <?php
 /**
- * 数据库操作（PDO）相关操作函数
+ * Database operation (PDO) related operation functions
  */
 namespace LFPhp\Func;
 
@@ -9,7 +9,7 @@ use PDO;
 use PDOException;
 
 /**
- * 数据库类型，当前只支持MySQL
+ * Database type, currently only supports MySQL
  */
 const DB_TYPE_MYSQL = 'mysql';
 
@@ -192,7 +192,7 @@ function db_query_field(PDO $pdo, $sql, $field = null){
 }
 
 /**
- * 追加limit语句到sql上
+ * Append limit statement to sql
  * @param string $sql
  * @param int $start_offset
  * @param int|null $size
@@ -208,7 +208,7 @@ function db_sql_patch_limit($sql, $start_offset, $size = null){
 }
 
 /**
- * 查询记录数
+ * Query count
  * @param \PDO $pdo
  * @param string $sql
  * @return int
@@ -217,8 +217,8 @@ function db_sql_patch_limit($sql, $start_offset, $size = null){
 function db_query_count(PDO $pdo, $sql){
 	$sql = str_replace(array("\n", "\r"), '', trim($sql));
 
-	//为了避免order中出现field，在select里面定义，select里面被删除了，导致order里面的field未定义。
-	//同时提升Count性能
+	//To avoid the field appearing in the order, it is defined in the select, but deleted in the select, resulting in the field in the order being undefined.
+	//Also improve the Count performance
 	$sql = preg_replace('/\sorder\s+by\s.*$/i', '', $sql);
 
 	if(preg_match('/^\s*SELECT.*?\s+FROM\s+/i', $sql)){
@@ -236,12 +236,12 @@ function db_query_count(PDO $pdo, $sql){
 }
 
 /**
- * 分页查询
+ * Pagination Query
  * @param \PDO $pdo
  * @param string $sql
  * @param int $page
  * @param int $page_size
- * @return array [列表, 总数]
+ * @return array return [list, count]
  * @throws \Exception
  */
 function db_query_paginate(PDO $pdo, $sql, $page, $page_size){
@@ -253,14 +253,13 @@ function db_query_paginate(PDO $pdo, $sql, $page, $page_size){
 	$sql = db_sql_patch_limit($sql, $start, $page_size);
 	return [db_query_all($pdo, $sql), $total];
 }
-
 /**
- * 分块读取
+ * Chunk reading
  * @param \PDO $pdo
  * @param string $sql
- * @param callable $handler 批次处理函数，传入参数($rows, $page, $finish)，如返回false，则中断执行
+ * @param callable $handler Batch processing function, pass in parameters ($rows, $page, $finish), if false is returned, the execution is interrupted
  * @param int $chunk_size
- * @return bool 是否为正常结束，false表示为批处理函数中断导致
+ * @return bool Whether it is a normal end, false means that the batch processing function is interrupted
  * @throws \Exception
  */
 function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
@@ -276,13 +275,12 @@ function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
 }
 
 /**
- * 数据监听
+ * Block reading
  * @param \PDO $pdo
  * @param string $sql
- * @param callable $watcher 批次处理函数，传入参数($rows)，如返回false，则中断执行
- * @param int $chunk_size 分块大小
- * @param int $sleep_interval 睡眠间隔时间（秒）
- * @return bool 是否为正常结束，false表示为批处理函数中断导致
+ * @param callable $handler Batch processing function, pass in parameters ($rows, $page, $finish), if false is returned, the execution is interrupted
+ * @param int $chunk_size
+ * @return bool Whether it is a normal end, false means that the batch processing function is interrupted
  * @throws \Exception
  */
 function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_interval = 3){
@@ -305,7 +303,7 @@ function db_watch(PDO $pdo, $sql, callable $watcher, $chunk_size = 50, $sleep_in
 }
 
 /**
- * 字段转义，目前仅支持字符串
+ * Field escape, currently only supports strings
  * @param array|string|int $data
  * @return array|string
  */
@@ -321,7 +319,7 @@ function db_quote_value($data){
 }
 
 /**
- * 数据库表字段转义
+ * Database table field escape
  * @param string|array $fields
  * @return array|string
  * @throws \Exception
@@ -342,7 +340,7 @@ function db_quote_field($fields){
 }
 
 /**
- * 获取查询影响行数
+ * Get the number of rows affected by the query
  * @param \PDOStatement $result
  * @return int|false
  */
@@ -380,7 +378,7 @@ function db_sql_prepare(...$args){
 }
 
 /**
- * 删除数据
+ * Delete data
  * @param \PDO $pdo
  * @param int $limit
  * @param string $table
@@ -397,7 +395,7 @@ function db_delete(PDO $pdo, $limit, $table, ...$statement){
 }
 
 /**
- * 插入数据
+ * Insert data
  * @param \PDO $pdo
  * @param string $table
  * @param array $data
@@ -423,7 +421,7 @@ function db_insert(PDO $pdo, $table, array $data){
 }
 
 /**
- * 更新数据
+ * Update data
  * @param \PDO $pdo
  * @param array $data
  * @param string $table
@@ -469,9 +467,9 @@ function db_increase(PDO $pdo, $table, $increase_field, $increment_count = 1, ..
 }
 
 /**
- * 事务处理
+ * Transaction processing
  * @param \PDO $pdo
- * @param callable $handler 处理器，如果返回false或抛出异常，将中断提交，执行回滚操作
+ * @param callable $handler handler, if it returns false or throws an exception, it will interrupt the submission and perform a rollback operation
  * @return bool|mixed
  * @throws \Exception
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * 时间相关操作函数
+ * Time-related operation functions
  */
 namespace LFPhp\Func;
 
@@ -8,7 +8,7 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 
-const DATETIME_FMT = 'Y-m-d H:i:s';
+const DATETIME_FMT = 'Ymd H:i:s';
 const ONE_MINUTE = 60;
 const ONE_HOUR = 3600;
 const ONE_DAY = 86400;
@@ -19,7 +19,7 @@ const ONE_YEAR365 = 31536000; //one year, 365 days
 const ONE_YEAR366 = 31622400; //one year, 366 days
 
 /**
- * 获取制定开始时间、结束时间的上中下旬分段数组
+ * Get the upper, middle and lower segment arrays of the specified start and end time
  * @param string $start_str
  * @param string $end_str
  * @return array [[period_th, start_time, end_time],...]
@@ -40,9 +40,9 @@ function time_get_month_period_ranges($start_str, $end_str){
 	$start_period = $start_d > 20 ? 2 : ($start_d > 10 ? 1 : 0);
 	$end_period = $end_d > 20 ? 2 : ($end_d > 10 ? 1 : 0);
 
-	//in same month
-	if(date('Y-m', $start) == date('Y-m', $end)){
-		$ym_str = date('Y-m', $end);
+	//in the same month
+	if(date('Ym', $start) == date('Ym', $end)){
+		$ym_str = date('Ym', $end);
 		for($i = $start_period; $i <= $end_period; $i++){
 			$s = max(strtotime($ym_str.$period_map[$i]), $start);
 			$e = $i == $end_period ? $end : min(strtotime($ym_str.$period_map[$i + 1]) - 1, $end);
@@ -50,15 +50,15 @@ function time_get_month_period_ranges($start_str, $end_str){
 		}
 		return $ranges;
 	}//in next month
-	else if(date('Y-m', strtotime('+1 month', strtotime(date('Y-m-01', $start)))) == date('Y-m', $end)){
-		$st_ym_str = date('Y-m', $start);
-		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Y-m-d H:i:s', $start), $st_ym_str.'-'.date("t", strtotime($st_ym_str.'-01')).' 23:59:59'));
-		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Y-m-01 00:00:00', $end), date('Y-m-d H:i:s', $end)));
+	else if(date('Ym', strtotime('+1 month', strtotime(date('Ym-01', $start)))) == date('Ym', $end)){
+		$st_ym_str = date('Ym', $start);
+		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Ymd H:i:s', $start), $st_ym_str.'-'.date("t", strtotime($st_ym_str.'-01')). '23:59:59'));
+		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Ym-01 00:00:00', $end), date('Ymd H:i:s', $end)));
 	}//sep by months
 	else{
 		//start of first month
-		$st_ym_str = date('Y-m', $start);
-		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Y-m-d H:i:s', $start), $st_ym_str.'-'.date("t", strtotime($st_ym_str.'-01')).' 23:59:59'));
+		$st_ym_str = date('Ym', $start);
+		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Ymd H:i:s', $start), $st_ym_str.'-'.date("t", strtotime($st_ym_str.'-01')). '23:59:59'));
 
 		//middle months
 		$s = new DateTime();
@@ -67,9 +67,9 @@ function time_get_month_period_ranges($start_str, $end_str){
 		$e->setTimestamp($end);
 		$months = $s->diff($e)->m + $s->diff($e)->y*12;
 		for($m = 1; $m < $months; $m++){
-			$tmp = strtotime("+$m month", strtotime(date('Y-m-01', $start)));
-			$month_st = date('Y-m-01 00:00:00', $tmp);
-			$month_ed = date('Y-m-'.date('t', $tmp).' 23:59:59', $tmp);
+			$tmp = strtotime("+$m month", strtotime(date('Ym-01', $start)));
+			$month_st = date('Ym-01 00:00:00', $tmp);
+			$month_ed = date('Ym-'.date('t', $tmp).' 23:59:59', $tmp);
 
 			if(strtotime($month_ed) > $end){
 				break;
@@ -78,13 +78,13 @@ function time_get_month_period_ranges($start_str, $end_str){
 		}
 
 		//end of last month
-		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Y-m-01 00:00:00', $end), date('Y-m-d H:i:s', $end)));
+		$ranges = array_merge($ranges, time_get_month_period_ranges(date('Ym-01 00:00:00', $end), date('Ymd H:i:s', $end)));
 	}
 	return $ranges;
 }
 
 /**
- * 调用间隔保证
+ * Call interval guarantee
  * @param string $timer_key
  * @param int $interval
  */
@@ -111,9 +111,9 @@ function get_timezone_offset_min_between_gmt($timezone_title) {
 }
 
 /**
- * 获取剩余时间（秒）
- * 如果是CLI模式，该函数不进行计算
- * @return int|null 秒，null表示无限制
+ * Get the remaining time (seconds)
+ * If it is CLI mode, this function does not perform calculations
+ * @return int|null seconds, null means unlimited
  */
 function get_time_left(){
 	$sys_max_exe_time = ini_get('max_execution_time');
@@ -125,26 +125,26 @@ function get_time_left(){
 }
 
 /**
- * 过滤时间范围，补充上时分秒
- * @param array $ranges 时间范围（开始，结束）
- * @param string|int $default_start 默认开始时间
- * @param string|int $default_end 默认结束时间
- * @param bool $as_datetime 是否以日期+时间形式返回
- * @return array [开始时间,结束时间]
+ * Filter time range, add hours, minutes and seconds
+ * @param array $ranges time range (start, end)
+ * @param string|int $default_start default start time
+ * @param string|int $default_end default end time
+ * @param bool $as_datetime whether to return in date + time format
+ * @return array [start time, end time]
  */
 function filter_date_range($ranges, $default_start = null, $default_end = null, $as_datetime = false){
-	list($start, $end) = $ranges ?: [];
+	[$start, $end] = $ranges ?: [];
 	if(!isset($start) && $default_start){
-		$start = is_numeric($default_start) ? date('Y-m-d', $default_start) : $default_start;
+		$start = is_numeric($default_start) ? date('Ymd', $default_start) : $default_start;
 	}
 	if($as_datetime && $start){
-		$start .= ' 00:00:00';
+		$start .= '00:00:00';
 	}
 	if(!isset($end) && $default_end){
-		$end = is_numeric($default_end) ? date('Y-m-d', $default_end) : $default_end;
+		$end = is_numeric($default_end) ? date('Ymd', $default_end) : $default_end;
 	}
 	if($as_datetime && $end){
-		$end .= ' 23:59:59';
+		$end .= '23:59:59';
 	}
 	return [$start, $end];
 }
@@ -159,8 +159,8 @@ function microtime_diff($start, $end = null){
 	if(!$end){
 		$end = microtime();
 	}
-	list($start_usec, $start_sec) = explode(" ", $start);
-	list($end_usec, $end_sec) = explode(" ", $end);
+	[$start_usec, $start_sec] = explode(" ", $start);
+	[$end_usec, $end_sec] = explode(" ", $end);
 	$diff_sec = intval($end_sec) - intval($start_sec);
 	$diff_usec = floatval($end_usec) - floatval($start_usec);
 	return floatval($diff_sec) + $diff_usec;
@@ -177,14 +177,14 @@ function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 	$tks = [
 		ONE_YEAR365 => ['year', 'yr'],
 		ONE_MONTH30 => ['month', 'mo'],
-		ONE_WEEK    => ['week', 'wk'],
-		ONE_DAY     => ['day', 'd'],
-		ONE_HOUR    => ['hour', 'h'],
-		ONE_MINUTE  => ['minute', 'm'],
-		1           => ['second', 's'],
+		ONE_WEEK => ['week', 'wk'],
+		ONE_DAY => ['day', 'd'],
+		ONE_HOUR => ['hour', 'h'],
+		ONE_MINUTE => ['minute', 'm'],
+		1 => ['second', 's'],
 	];
 	$text = '';
-	foreach($tks as $s => list($fd, $sd)){
+	foreach($tks as $s => [$fd, $sd]){
 		if($secs > $s){
 			$offset = round($secs/$s);
 			$text .= $offset.($full_desc ? $fd : $sd);
@@ -197,14 +197,14 @@ function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
 }
 
 /**
- * 转换微秒到指定时间格式
- * @param string $microtime 微秒字符串，通过 microtime(false) 产生
- * @param string $format 时间格式
- * @param int $precision 精度（秒之后）
+ * Convert microseconds to the specified time format
+ * @param string $microtime microsecond string, generated by microtime(false)
+ * @param string $format time format
+ * @param int $precision precision (seconds later)
  * @return string
  */
-function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
-	list($usec, $sec) = explode(' ', $microtime);
+function microtime_to_date($microtime, $format = 'Ymd H:i:s', $precision = 3){
+	[$usec, $sec] = explode(' ', $microtime);
 	$usec_str = '';
 	if($precision){
 		$usec_str = '.';
@@ -214,14 +214,14 @@ function microtime_to_date($microtime, $format = 'Y-m-d H:i:s', $precision = 3){
 }
 
 /**
- * 转换秒（浮点数）到指定时间格式
- * @param float $float_time 时间，通过 microtime(true) 产生
- * @param string $format 时间格式
- * @param int $precision 精度（秒之后）
+ * Convert seconds (floating point number) to the specified time format
+ * @param float $float_time time, generated by microtime(true)
+ * @param string $format time format
+ * @param int $precision precision (seconds later)
  * @return string
  */
-function float_time_to_date($float_time, $format = 'Y-m-d H:i:s', $precision = 3){
-	list($timestamp, $decimals) = explode('.', $float_time.'');
+function float_time_to_date($float_time, $format = 'Ymd H:i:s', $precision = 3){
+	[$timestamp, $decimals] = explode('.', $float_time.'');
 	if($precision){
 		$decimals = $decimals ?: '0';
 		$decimals = substr($decimals, 0, $precision);
@@ -240,9 +240,9 @@ function time_empty($time_str){
 }
 
 /**
- * 格式化友好显示时间
+ * Format the time to display in a friendly way
  * @param int $timestamp
- * @param bool $as_html 是否使用span包裹
+ * @param bool $as_html whether to use span wrapping
  * @return string
  */
 function pretty_time($timestamp, $as_html = false){
@@ -251,16 +251,16 @@ function pretty_time($timestamp, $as_html = false){
 	$before = $offset > 0;
 	$offset = abs($offset);
 	$unit_cal = array(
-		'年'  => ONE_YEAR365,
-		'个月' => ONE_MONTH30,
-		'天'  => ONE_DAY,
-		'小时' => ONE_HOUR,
-		'分钟' => ONE_MINUTE,
+		'Year' => ONE_YEAR365,
+		'Month' => ONE_MONTH30,
+		'day' => ONE_DAY,
+		'hour' => ONE_HOUR,
+		'minute' => ONE_MINUTE,
 	);
 	if($offset > 30 && $offset < 60){
-		$str = $before ? '刚才' : '等下';
+		$str = $before ? 'Just now' : 'Wait';
 	}else if($offset <= 30){
-		$str = $before ? '刚刚' : '马上';
+		$str = $before ? 'Just now' : 'Immediately';
 	}else{
 		$us = array();
 		foreach($unit_cal as $u){
@@ -270,22 +270,22 @@ function pretty_time($timestamp, $as_html = false){
 		}
 		foreach($us as $k => $u){
 			if($u){
-				$str = $u.array_keys($unit_cal)[$k].($before ? '前' : '后');
+				$str = $u.array_keys($unit_cal)[$k].($before ? 'before' : 'after');
 				break;
 			}
 		}
 	}
-	return $as_html ? '<span title="'.date('Y-m-d H:i:s', $timestamp).'">'.$str.'</span>' : $str;
+	return $as_html ? '<span title="'.date('Ymd H:i:s', $timestamp).'">'.$str.'</span>' : $str;
 }
 
 /**
- * 补充日期范围，填充中间空白天数
- * @param string|int $start 开始时间（允许开始时间大于结束时间）
- * @param string|int $end 结束时间
- * @param string $format 结果日期格式，如果设置为月份，函数自动去重
+ * Supplement the date range and fill in the blank days in the middle
+ * @param string|int $start start time (start time is allowed to be greater than end time)
+ * @param string|int $end end time
+ * @param string $format result date format, if set to month, the function will automatically remove duplicates
  * @return array
  */
-function make_date_ranges($start, $end = '', $format = 'Y-m-d'){
+function make_date_ranges($start, $end = '', $format = 'Ymd'){
 	$end = $end ?: time();
 	$st = is_string($start) ? strtotime($start) : $start;
 	$ed = is_string($end) ? strtotime($end) : $end;
@@ -301,11 +301,11 @@ function make_date_ranges($start, $end = '', $format = 'Y-m-d'){
 }
 
 /**
- * 获取从$start开始经过$days个工作日后的日期
- * 实际日期 = 工作日数 + 周末天数 -1
- * @param string $start 开始日期
- * @param int $days 工作日天数 正数为往后，负数为往前
- * @return string Y-m-d 日期
+ * Get the date after $days working days from $start
+ * Actual date = number of working days + number of weekend days - 1
+ * @param string $start start date
+ * @param int $days Number of working days: positive number means going backward, negative number means going forward
+ * @return string Ymd date
  */
 function calc_actual_date($start, $days){
 	$t = date('N', strtotime($start));
@@ -313,25 +313,25 @@ function calc_actual_date($start, $days){
 		return $start;
 	}
 	if($days > 0){
-		//正推
-		$thisWeekWork = (6 - $t) > 0 ? (6 - $t) : 0;//本周的工作日
-		$weeks = ($days - $thisWeekWork)%5 ? floor(($days - $thisWeekWork)/5)*2 : ((($days - $thisWeekWork)/5) - 1)*2;//从下周一开始算的总周末数
-		$diff_days = $weeks + $days + 1;//周末数+工作日+加上本周末-1
-		$expect = date("Y-m-d", strtotime($start) + $diff_days*ONE_DAY);
+		//Forward
+		$thisWeekWork = (6 - $t) > 0 ? (6 - $t) : 0; //Working days this week
+		$weeks = ($days - $thisWeekWork)%5 ? floor(($days - $thisWeekWork)/5)*2 : ((($days - $thisWeekWork)/5) - 1)*2; //Total number of weekends starting from next Monday
+		$diff_days = $weeks + $days + 1; //weekend number + weekdays + plus this weekend - 1
+		$expect = date("Ymd", strtotime($start) + $diff_days*ONE_DAY);
 	}else{
 		$days = abs($days);
-		//逆推
-		$thisWeekWork = $t > 5 ? 5 : $t;//本周的工作日
-		$thisWeekends = $t > 5 ? ($t - 5) : 0;//本周周末天数
-		$weeks = ceil(($days - $thisWeekWork)/5)*2;//剩下的周末数
-		$diff_days = $thisWeekends + $weeks + $days - 1;//本周周末天数+剩余周末天数+工作日-1
-		$expect = date("Y-m-d", strtotime($start) - $diff_days*ONE_DAY);
+		//Reverse
+		$thisWeekWork = $t > 5 ? 5 : $t; //Working day of this week
+		$thisWeekends = $t > 5 ? ($t - 5) : 0; //Number of weekend days this week
+		$weeks = ceil(($days - $thisWeekWork)/5)*2; // remaining weekends
+		$diff_days = $thisWeekends + $weeks + $days - 1; //weekend days this week + remaining weekend days + working days - 1
+		$expect = date("Ymd", strtotime($start) - $diff_days*ONE_DAY);
 	}
 	return $expect;
 }
 
 /**
- * 计算时间差到文本
+ * Calculate time difference to text
  * @param string $start
  * @param string $end
  * @return string
@@ -341,11 +341,11 @@ function time_range($start, $end){
 }
 
 /**
- * 计算预计结束时间 ETA
- * @param int $start_time 开始时间
- * @param int $index 当前处理序号
- * @param int $total 总数量
- * @param bool $pretty 是否以文字方式返回剩余时间，设置false则返回秒数
+ * Calculate the estimated end time ETA
+ * @param int $start_time start time
+ * @param int $index Current processing sequence number
+ * @param int $total total quantity
+ * @param bool $pretty whether to return the remaining time in text format, set false to return seconds
  * @return int|string
  */
 function time_get_eta($start_time, $index, $total, $pretty = true){
@@ -354,7 +354,7 @@ function time_get_eta($start_time, $index, $total, $pretty = true){
 }
 
 /**
- * 转化时间长度到字符串
+ * Convert time length to string
  * <pre>
  * $str = time_range_v(3601);
  * //1H 0M 1S
@@ -380,10 +380,10 @@ function time_range_v($seconds){
 function mk_utc($timestamp = null, $short = false){
 	$timestamp = $timestamp ?: time();
 	if(!$short){
-		$str = date('Y-m-d H:i:s', $timestamp);
+		$str = date('Ymd H:i:s', $timestamp);
 		$str = str_replace(' ', 'T', $str).'.000Z';
 	}else{
-		$str = date('Y-m-d H:i', $timestamp);
+		$str = date('Ymd H:i', $timestamp);
 		$str = str_replace(' ', 'T', $str);
 	}
 	return $str;

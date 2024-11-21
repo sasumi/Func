@@ -1,12 +1,12 @@
 <?php
 /**
- * HTTP操作函数
+ * HTTP Enhancement Function
  */
 namespace LFPhp\Func;
 
 use Exception;
 
-//HTTP状态码翻译
+//HTTP status code translation
 const HTTP_STATUS_MESSAGE_MAP = [
 	100 => 'Continue',
 	101 => 'Switching Protocols',
@@ -19,7 +19,7 @@ const HTTP_STATUS_MESSAGE_MAP = [
 	206 => 'Partial Content',
 	300 => 'Multiple Choices',
 	301 => 'Moved Permanently',
-	302 => 'Moved Temporarily ',
+	302 => 'Moved Temporarily',
 	303 => 'See Other',
 	304 => 'Not Modified',
 	305 => 'Use Proxy',
@@ -51,7 +51,7 @@ const HTTP_STATUS_MESSAGE_MAP = [
 	509 => 'Bandwidth Limit Exceeded',
 ];
 
-//HTTP Method定义，由于 HTTP_METH_GET在http扩展中，使用起来不方便，这里做简单定义
+//HTTP Method definition. Since HTTP_METH_GET is in the http extension, it is not convenient to use. Here is a simple definition
 const HTTP_METHOD_GET = 'GET';
 const HTTP_METHOD_HEAD = 'HEAD';
 const HTTP_METHOD_POST = 'POST';
@@ -81,16 +81,16 @@ const HTTP_METHOD_MKACTIVITY = 'MKACTIVITY';
 const HTTP_METHOD_ACL = 'ACL';
 
 /**
- * 发送HTTP状态码
- * @param int $status http 状态码
+ * Send HTTP status code
+ * @param int $status http status code
  * @return bool
  */
 function http_send_status($status){
 	$message = http_get_status_message($status);
 	if(!headers_sent() && $message){
-		if(substr(php_sapi_name(), 0, 3) == 'cgi'){//CGI 模式
+		if(substr(php_sapi_name(), 0, 3) == 'cgi'){//CGI mode
 			header("Status: $status $message");
-		}else{ //FastCGI模式
+		}else{ //FastCGI mode
 			header("{$_SERVER['SERVER_PROTOCOL']} $status $message");
 		}
 		return true;
@@ -99,18 +99,18 @@ function http_send_status($status){
 }
 
 /**
- * 开启 httpd 服务器分块输出
+ * Enable httpd server chunk output
  */
 function http_chunk_on(){
-	@ob_end_clean(); //强制php直接输出内容到浏览器，不加入缓冲区
-	ob_implicit_flush(true); //设置nginx或apache不缓冲，直接输出
-	header('X-Accel-Buffering: no'); //关键是加了这一行。
+	@ob_end_clean(); //Force PHP to output content directly to the browser without adding buffer
+	ob_implicit_flush(true); //Set nginx or apache to not buffer and output directly
+	header('X-Accel-Buffering: no'); //The key is to add this line.
 }
 
 /**
- * 返回跨域CORS头信息
- * @param string[] $allow_hosts 允许通过的域名列表，为空表示允许所有来源域名
- * @param string $http_origin 来源请求，格式为：http://www.abc.com，缺省从 HTTP_ORIGIN 或 HTTP_REFERER获取
+ * Return cross-domain CORS header information
+ * @param string[] $allow_hosts List of domain names allowed to pass through, empty means all source domain names are allowed
+ * @param string $http_origin origin request, format: http://www.abc.com, by default obtained from HTTP_ORIGIN or HTTP_REFERER
  * @throws \Exception
  */
 function http_send_cors($allow_hosts = [], $http_origin = null){
@@ -125,7 +125,7 @@ function http_send_cors($allow_hosts = [], $http_origin = null){
 	if($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))){
 		throw new Exception('request host:'.$request_host.' no in allow host list('.json_encode($allow_hosts).')');
 	}
-	if(headers_sent()){
+	if (headers_sent()) {
 		throw new Exception('header already sent');
 	}
 	header("Access-Control-Allow-Origin: $http_scheme://$request_host");
@@ -134,12 +134,12 @@ function http_send_cors($allow_hosts = [], $http_origin = null){
 }
 
 /**
- * 发送 HTTP 头部字符集
+ * Send HTTP header character set
  * @param string $charset
- * @return bool 是否成功
+ * @return bool whether it is successful
  */
 function http_send_charset($charset){
-	if(!headers_sent()){
+	if (!headers_sent()) {
 		header('Content-Type:text/html; charset='.$charset);
 		return true;
 	}
@@ -147,7 +147,7 @@ function http_send_charset($charset){
 }
 
 /**
- * 获取HTTP状态码对应描述
+ * Get the corresponding description of the HTTP status code
  * @param int $status
  * @return string|null
  */
@@ -156,9 +156,9 @@ function http_get_status_message($status){
 }
 
 /**
- * HTTP方式跳转
- * @param string $url 跳转路径
- * @param bool $permanently 是否为长期资源重定向
+ * HTTP redirect
+ * @param string $url jump path
+ * @param bool $permanently whether it is a long-term resource redirection
  */
 function http_redirect($url, $permanently = false){
 	http_send_status($permanently ? 301 : 302);
@@ -166,7 +166,7 @@ function http_redirect($url, $permanently = false){
 }
 
 /**
- * 获取HTTP请求头信息数组
+ * Get HTTP request header information array
  * @return array [key=>val]
  */
 function http_get_request_headers(){
@@ -194,8 +194,8 @@ function http_get_request_headers(){
 }
 
 /**
- * 获取HTTP请求头中指定key值
- * @param string $key 不区分大小写
+ * Get the specified key value in the HTTP request header
+ * @param string $key case-insensitive
  * @return mixed|null
  */
 function http_get_request_header($key){
@@ -209,7 +209,7 @@ function http_get_request_header($key){
 }
 
 /**
- * 解析 http头信息
+ * Parse http header information
  * @param $header_str
  * @return array
  */
@@ -217,10 +217,10 @@ function http_parse_headers($header_str){
 	$headers = [];
 	foreach(explode("\n", $header_str) as $h){
 		[$k, $v] = explode(':', $h, 2);
-		//由于HTTP HEADER没有约束大小写，这里为了避免传入数据不规范导致，全部格式化小写
+		//Since HTTP HEADER has no case constraints, in order to avoid irregular data input, all the data is formatted in lower case
 		$k = strtolower($k);
 		if(isset($v)){
-			if(!isset($headers[$k])){
+			if (!isset($headers[$k])){
 				$headers[$k] = trim($v);
 			}else if(is_array($headers[$k])){
 				$tmp = array_merge($headers[$k], array(trim($v)));
@@ -235,7 +235,7 @@ function http_parse_headers($header_str){
 }
 
 /**
- * 判断请求方式是否为 JSON 方式
+ * Determine whether the request method is JSON
  * @return bool
  */
 function http_from_json_request(){
@@ -243,9 +243,9 @@ function http_from_json_request(){
 }
 
 /**
- * 获取http请求头中content-type
+ * Get the content-type in the http request header
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type#directives
- * @param array $directives 额外指令，例如 ['charset'=>'utf-8']，或['boundary'=>'ExampleBoundaryString']
+ * @param array $directives additional directives, such as ['charset'=>'utf-8'], or ['boundary'=>'ExampleBoundaryString']
  * @return string
  */
 function http_get_content_type(&$directives = []){
@@ -258,8 +258,8 @@ function http_get_content_type(&$directives = []){
 }
 
 /**
- * 判断请求是否接收SON格式
- * @param bool $include_generic_match 是否支持泛匹配，由于客户端发送请求未必严格处理格式，一般该选项不打开
+ * Determine whether the request is received in SON format
+ * @param bool $include_generic_match Whether to support generic matching. Since the client may not strictly process the format of the request, this option is generally not enabled.
  * @return bool
  */
 function http_request_accept_json($include_generic_match = false){
@@ -267,11 +267,11 @@ function http_request_accept_json($include_generic_match = false){
 	$tmp = http_parse_string_use_q_value($str);
 	$accept_list = array_column($tmp, 'type');
 	return in_array('application/json', $accept_list) ||
-		($include_generic_match && in_array('*/*', $accept_list)); //泛匹配
+		($include_generic_match && in_array('*/*', $accept_list)); //generic match
 }
 
 /**
- * 以权重方式解析http头部信息， Accept, Accept-Encoding, Accept-Language, TE, Want-Digest
+ * Parse http header information in a weighted manner, Accept, Accept-Encoding, Accept-Language, TE, Want-Digest
  * @see https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
  * @param $str
  * @return array [[type, q], ...]
@@ -282,7 +282,7 @@ function http_parse_string_use_q_value($str){
 	foreach ($accepts as $accept) {
 		$parts = explode(';', trim($accept));
 		$type = $parts[0];
-		$q = 1.0; // 默认权重
+		$q = 1.0; // default weight
 		if (isset($parts[1]) && strpos($parts[1], 'q=') === 0) {
 			$q = floatval(substr($parts[1], 2));
 		}
@@ -295,7 +295,7 @@ function http_parse_string_use_q_value($str){
 }
 
 /**
- * 请求来自POST
+ * Request comes from POST
  * @return bool
  */
 function request_in_post(){
@@ -303,7 +303,7 @@ function request_in_post(){
 }
 
 /**
- * 请求来自于GET
+ * Request comes from GET
  * @return bool
  */
 function request_in_get(){
@@ -311,8 +311,8 @@ function request_in_get(){
 }
 
 /**
- * 获取当前页面地址
- * @param bool $with_protocol 是否包含协议头
+ * Get the current page address
+ * @param bool $with_protocol whether to include the protocol header
  * @return string
  */
 function http_get_current_page_url($with_protocol = true, $with_port = false){
@@ -320,10 +320,10 @@ function http_get_current_page_url($with_protocol = true, $with_port = false){
 }
 
 /**
- * 获取当前页面域名
- * @param bool $with_protocol 是否包含协议头：http, https
- * @param bool $with_port 是否包含端口（仅非http:80, https:443情况有效）
- * @return string 如 http://www.abc.com  http://www.abc.com:81 结尾不包含斜杠
+ * Get the domain name of the current page
+ * @param bool $with_protocol whether to include the protocol header: http, https
+ * @param bool $with_port whether to include the port (valid only for non-http:80, https:443)
+ * @return string such as http://www.abc.com http://www.abc.com:81 does not contain a slash at the end
  */
 function http_get_current_host($with_protocol = true, $with_port = false){
 	$server_port = $_SERVER['SERVER_PORT'];
@@ -336,11 +336,11 @@ function http_get_current_host($with_protocol = true, $with_port = false){
 }
 
 /**
- * 文件流方式下载文件
- * @param string $file 文件路径
- * @param string $download_name 下载文件名
- * @param string $disposition 头类型
- * @return false|int 成功下载文件尺寸，false为失败
+ * Download files by file streaming
+ * @param string $file file path
+ * @param string $download_name Download file name
+ * @param string $disposition header type
+ * @return false|int Successfully downloaded file size, false means failed
  */
 function http_download_stream($file, $download_name = '', $disposition = 'attachment'){
 	http_header_download($download_name, $disposition);
@@ -365,7 +365,7 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
 }
 
 /**
- * 响应json数据
+ * Response json data
  * @param mixed $json
  * @param int $json_option
  * @return void
@@ -376,7 +376,7 @@ function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
 }
 
 /**
- * 响应JSON返回头
+ * Response JSON return header
  * @param string $charset
  */
 function http_header_json_response($charset = 'utf-8'){
@@ -384,7 +384,7 @@ function http_header_json_response($charset = 'utf-8'){
 }
 
 /**
- * 发送文件下载头信息
+ * Send file download header information
  * @param string $download_name
  * @param string $disposition
  */
@@ -400,8 +400,8 @@ function http_header_download($download_name = '', $disposition = 'attachment'){
 }
 
 /**
- * 发送CSP头
- * @param string[] $csp_rules 建议使用csp_content_rule()方法产生的规则
+ * Send CSP header
+ * @param string[] $csp_rules It is recommended to use the rules generated by the csp_content_rule() method
  * @param string $report_uri
  * @param bool $report_only
  * @throws \Exception
@@ -417,7 +417,7 @@ function http_header_csp(array $csp_rules, $report_uri = '', $report_only = fals
 }
 
 /**
- * 发送浏览器设置 Report API
+ * Send browser settings Report API
  * @param string[] $endpoint_urls
  * @param string $group
  * @param number $max_age_sec
@@ -428,7 +428,7 @@ function http_header_report_api(array $endpoint_urls, $group = 'default', $max_a
 }
 
 /**
- * 发送浏览器错误日志上报 Report API
+ * Send browser error logs to Report API
  * @param string[] $endpoint_urls
  * @param string $group
  * @param number $max_age_sec
@@ -440,7 +440,7 @@ function http_header_report_api_nel(array $endpoint_urls, $group = 'network-erro
 }
 
 /**
- * 生成 Report API
+ * Generate Report API
  * @param string[] $endpoint_urls
  * @param string $group
  * @param number $max_age_sec
@@ -453,15 +453,15 @@ function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_
 		$endpoints_obj[] = ['url' => $url];
 	}
 	return [
-		'group'              => $group,
-		'max_age'            => $max_age_sec,
+		'group' => $group,
+		'max_age' => $max_age_sec,
 		'include_subdomains' => $include_subdomains,
-		'endpoints'          => $endpoints_obj,
+		'endpoints' => $endpoints_obj,
 	];
 }
 
 /**
- * 解析cookie字符串为一个哈希数组
+ * Parse the cookie string into a hash array
  * @param string $cookie_str
  * @return array
  */
@@ -471,9 +471,9 @@ function http_parse_cookie($cookie_str){
 }
 
 /**
- * 修正相对URL成绝对URL
+ * Correct relative URL to absolute URL
  * @param string $url
- * @param string $base_url 基本url（如页面url）
+ * @param string $base_url base url (such as page url)
  * @return string|string[]
  */
 function http_fix_relative_url($url, $base_url){
@@ -484,23 +484,23 @@ function http_fix_relative_url($url, $base_url){
 		return $url;
 	}
 
-	//url已经包含schema，或者使用相对协议[//]，不用继续匹配
+	//The url already contains a schema, or uses a relative protocol [//], so no further matching is required
 	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//'){
 		return $url;
 	}
 
-	//查询语句，或锚点
+	//Query statement, or anchor
 	if ($url[0]=='#' || $url[0]=='?'){
 		return $base_url.$url;
 	}
 
-	// [../] 修正为 [./]
+	// [../] is corrected to [./]
 	if(strpos($url, '../') === 0){
 		$url = substr($url, 1);
 	}
 
 	/* parse base URL and convert to local variables:
-	 $scheme, $host, $path */
+	$scheme, $host, $path */
 	extract(parse_url($base_url));
 
 	/* remove non-directory element from path */

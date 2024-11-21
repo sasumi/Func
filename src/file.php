@@ -1,6 +1,6 @@
 <?php
 /**
- * 文件相关操作函数
+ * File Enhancement Functions
  */
 namespace LFPhp\Func;
 
@@ -9,7 +9,7 @@ use Exception;
 use RuntimeException;
 
 /**
- * 递归的glob
+ * Glob recursive
  * Does not support flag GLOB_BRACE
  * @param string $pattern
  * @param int $flags
@@ -21,7 +21,7 @@ function glob_recursive($pattern, $flags = 0){
 		$files = array_merge($files, glob_recursive($dir.'/'.basename($pattern), $flags));
 	}
 
-	//修正目录分隔符
+	//Fix directory separator
 	array_walk($files, function(&$file){
 		$file = str_replace(array('/', '\\'), array(DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR), $file);
 	});
@@ -29,9 +29,9 @@ function glob_recursive($pattern, $flags = 0){
 }
 
 /**
- * 递归的unlink
- * @param string $path 需要删除的文件夹
- * @param bool $verbose 是否打印调试信息
+ * Recursive unlink
+ * @param string $path Folder to be deleted
+ * @param bool $verbose Whether to print debug information
  * @return void
  */
 function unlink_recursive($path, $verbose = false){
@@ -82,18 +82,18 @@ function unlink_recursive($path, $verbose = false){
 }
 
 /**
- * 检查文件是否存在，且名称严格匹配大小写
+ * Check if the file exists and the name strictly matches the upper and lower case
  * @param string $file
  * @return bool|null
- * true：文件存在，false：文件不存在，null：文件存在但大小写不一致
+ * true: the file exists, false: the file does not exist, null: the file exists but the case is inconsistent
  */
 function file_exists_case_sensitive($file){
-	//Linux文件系统严格匹配大小写，因此直接使用is_file判断即可
+	//The Linux file system strictly matches upper and lower case, so you can just use is_file to judge
 	if(!server_in_windows()){
 		return !!is_file($file);
 	}
 
-	//windows如果文件不存在，不需要检查
+	//[windows] If the file does not exist, no need to check
 	if(!is_file($file)){
 		return false;
 	}
@@ -103,7 +103,7 @@ function file_exists_case_sensitive($file){
 }
 
 /**
- * 断言文件包含于指定文件夹中（文件必须存在）
+ * Assert that the file is contained in the specified folder (the file must exist)
  * @param string $file
  * @param string $dir
  * @param string $exception_class
@@ -113,10 +113,10 @@ function assert_file_in_dir($file, $dir, $exception_class = Exception::class){
 }
 
 /**
- * 判断文件是否包含于指定文件夹中
- * @param string $file_path 文件路径
- * @param string $dir_path 目录路径
- * @return bool 文件不存在目录当中，或文件实际不存在
+ * Determine whether the file is contained in the specified folder
+ * @param string $file_path file path
+ * @param string $dir_path directory path
+ * @return bool The file does not exist in the directory, or the file does not actually exist
  */
 function file_in_dir($file_path, $dir_path, $ignore_file_and_dir_exists = false){
 	if(!$ignore_file_and_dir_exists){
@@ -126,7 +126,7 @@ function file_in_dir($file_path, $dir_path, $ignore_file_and_dir_exists = false)
 		$file_path = resolve_absolute_path($file_path);
 		$dir_path = resolve_absolute_path($dir_path);
 	}
-	//windows 平台不区分文件名称大小写
+	//windows is not case-sensitive for file names
 	if(stripos(PHP_OS, 'win') !== false){
 		return stripos($file_path, $dir_path) === 0;
 	}
@@ -134,12 +134,12 @@ function file_in_dir($file_path, $dir_path, $ignore_file_and_dir_exists = false)
 }
 
 /**
- * 解析路径字符串真实路径，去除相对路径信息
- * 相对于realpath，该函数不需要检查文件是否存在
+ * Parse the real path of the path string and remove the relative path information
+ * Compared with realpath, this function does not need to check whether the file exists
  * <pre>
- * 调用格式：resolve_absolute_path("c:/a/b/./../../windows/system32");
- * 返回：c:/windows/system32
- * @param string $file_or_path 目录路径或文件路径字符串
+ * Calling format: resolve_absolute_path("c:/a/b/./../../windows/system32");
+ * Return: c:/windows/system32
+ * @param string $file_or_path directory path or file path string
  * @return string
  */
 function resolve_absolute_path($file_or_path){
@@ -159,9 +159,9 @@ function resolve_absolute_path($file_or_path){
 }
 
 /**
- * 根据文件名获取文件扩展
- * @param string $filename 文件名
- * @param bool $to_lower_case 是否转换成小写，缺省为转换为小写
+ * Get file extension based on file name
+ * @param string $filename file name
+ * @param bool $to_lower_case whether to convert to lower case, default is to convert to lower case
  * @return string|null string or null,no extension detected
  */
 function resolve_file_extension($filename, $to_lower_case = true){
@@ -173,7 +173,7 @@ function resolve_file_extension($filename, $to_lower_case = true){
 }
 
 /**
- * 检查文件是否存在，且名称允许大小写混淆
+ * Check if the file exists and that the name can be case-insensitive
  * @param string $file
  * @param null $parent
  * @return bool
@@ -212,7 +212,7 @@ function file_put_contents_safe($file, $data, $flags = 0, $context = null){
 }
 
 /**
- * 递归拷贝目录
+ * Copy directories recursively
  * @param string $src
  * @param string $dst
  * @throw Exception
@@ -233,11 +233,11 @@ function copy_recursive($src, $dst){
 }
 
 /**
- * 批量创建目录
- * @param string[] $dirs 目录路径列表
- * @param bool $break_on_error 是否在创建失败时抛出异常
- * @param int $permissions 目录缺省权限
- * @return string[] 创建失败的目录清单，成功则返回空数组
+ * Create directories in batches
+ * @param string[] $dirs Directory path list
+ * @param bool $break_on_error Whether to throw an exception when creation fails
+ * @param int $permissions Directory default permissions
+ * @return string[] Directory list that failed to be created, and returns an empty array if successful
  * @throws \Exception
  */
 function mkdir_batch($dirs, $break_on_error = true, $permissions = 0x777){
@@ -254,10 +254,10 @@ function mkdir_batch($dirs, $break_on_error = true, $permissions = 0x777){
 }
 
 /**
- * 根据目标文件路径创建文件夹
+ * Create a folder based on the target file path
  * @param string $file
- * @param int $permissions 目录权限
- * @return string 创建成功目录路径
+ * @param int $permissions directory permissions
+ * @return string successfully created directory path
  * @throws \Exception
  */
 function mkdir_by_file($file, $permissions = 0777){
@@ -269,7 +269,7 @@ function mkdir_by_file($file, $permissions = 0777){
 }
 
 /**
- * 获取模块文件夹列表
+ * Get directories recursive
  * @param string $dir
  * @return array
  **/
@@ -289,9 +289,9 @@ function get_dirs($dir){
 }
 
 /**
- * 获取文件行数
- * @param string|resource $file 文件路径或文件句柄
- * @param string $line_separator 换行符
+ * Get the number of lines in a file
+ * @param string|resource $file file path or file handle
+ * @param string $line_separator line break character
  * @return int
  */
 function file_lines($file, $line_separator = "\n"){
@@ -311,11 +311,11 @@ function file_lines($file, $line_separator = "\n"){
 }
 
 /**
- * 文件tail功能
+ * Tail
  * @param string|resource $file
- * @param int $lines 读取行数
- * @param int $buffer 缓冲大小
- * @return string[] 每一行内容
+ * @param int $lines Number of lines to read
+ * @param int $buffer Buffer size
+ * @return string[] Content of each line
  * @throws \Exception
  */
 function tail($file, $lines = 10, $buffer = 4096){
@@ -373,12 +373,12 @@ function tail($file, $lines = 10, $buffer = 4096){
 }
 
 /**
- * 逐行读取文件
- * @param string $file 文件名称
- * @param callable $handle 处理函数，传入参数：($line_str, $line), 若函数返回false，则中断处理
- * @param int $start_line 开始读取行数（由 1 开始）
- * @param int $buff_size 缓冲区大小
- * @return bool 是否为处理函数中断返回
+ * Read file line by line
+ * @param string $file file name
+ * @param callable $handle processing function, pass in parameters: ($line_str, $line), if the function returns false, the processing is interrupted
+ * @param int $start_line start reading line number (starting from 1)
+ * @param int $buff_size buffer size
+ * @return bool whether it is a processing function interrupt return
  * @throws \Exception
  */
 function file_read_by_line($file, $handle, $start_line = 1, $buff_size = 1024){
@@ -414,7 +414,7 @@ function file_read_by_line($file, $handle, $start_line = 1, $buff_size = 1024){
 }
 
 /**
- * 渲染PHP文件
+ * Render php file and return as string
  * @param $php_file
  * @param array $vars
  * @return false|string
@@ -429,7 +429,7 @@ function render_php_file($php_file, $vars = []){
 }
 
 /**
- * 递归查询文件夹大小
+ * Calculate folder size recursively
  * @param string $path
  * @return int
  */
@@ -451,13 +451,13 @@ function get_folder_size($path){
 }
 
 /**
- * log 记录到文件
- * @param string $file 文件
- * @param mixed $content 记录内容
- * @param float|int $max_size 单文件最大尺寸，默认
- * @param int $max_files 最大记录文件数
- * @param string|null $pad_str 记录文件名追加字符串
- * @return bool|int 文件是否记录成功
+ * log records to file
+ * @param string $file file
+ * @param mixed $content record content
+ * @param float|int $max_size maximum size of a single file, default
+ * @param int $max_files maximum number of recorded files
+ * @param string|null $pad_str record file name append string
+ * @return bool|int whether the file is recorded successfully
  */
 function log($file, $content, $max_size = 10*1024*1024, $max_files = 5, $pad_str = null){
 	if(!is_string($content)){
@@ -493,7 +493,7 @@ function log($file, $content, $max_size = 10*1024*1024, $max_files = 5, $pad_str
 }
 
 /**
- * 读取文件锁
+ * Read file lock
  * @param string $key
  * @return false|string|null
  */
@@ -506,7 +506,7 @@ function read_file_lock($key){
 }
 
 /**
- * 写入文件锁
+ * Write file lock
  * @param string $key
  * @param string $lock_flag
  * @return string
@@ -533,7 +533,7 @@ function remove_file_lock($key){
 }
 
 /**
- * 初始化文件锁
+ * Init file lock
  * @param string $key
  * @param bool $is_new
  * @return resource 锁文件操作句柄
@@ -575,11 +575,11 @@ function log_tmp_file($filename, $content, $max_size = 10*1024*1024, $max_files 
 }
 
 /**
- * 创建临时文件
- * @param string $dir 文件所在目录
- * @param string $prefix 文件名前缀
- * @param string $ext 文件名后缀
- * @param numeric $mod 权限，缺省为777
+ * Create a temporary file
+ * @param string $dir The directory where the file is located
+ * @param string $prefix The file name prefix
+ * @param string $ext The file name suffix
+ * @param numeric $mod Permission, default is 777
  * @return string
  */
 function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
@@ -595,7 +595,7 @@ function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
 }
 
 /**
- * 获取文件上传错误文本
+ * Get file upload error message via PHP file upload error number
  * @param int $upload_error_no
  * @return string
  */
@@ -613,34 +613,34 @@ function upload_file_error($upload_error_no){
 }
 
 /**
- * @param string $file 文件
- * @param array $opt 控制选项
+ * Upload file check by option
+ * @param string $file
+ * @param array $opt
  * @return void
  * @throws \Exception
  */
 function upload_file_check($file, $opt = [
-	'accept'         => 'image/*', //允许文件格式，具体请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
-	'max_size'       => 0, //最大文件大小
-	'min_size'       => 0, //最小文件大小
-	'image_max_size' => [], //图片最大尺寸(宽,高)
-	'image_min_size' => [], //图片最小尺寸(宽,高)
-]){
-	if(!$file){
-		throw new Exception('文件为空');
-	}
+	'accept' => 'image/*', //Allowed file formats, please refer to: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+	'max_size' => 0, //Maximum file size
+	'min_size' => 0, //Minimum file size
+	'image_max_size' => [], //Maximum image size (width, height)
+	'image_min_size' => [], //Minimum image size (width, height)
+]){if(!$file){
+	throw new Exception('File is empty');
+}
 	if(!is_uploaded_file($file)){
-		throw new Exception('文件禁止访问');
+		throw new Exception('File access denied');
 	}
 	if($opt['accept'] && !file_match_accept($file, $opt['accept'])){
-		throw new Exception('文件格式错误');
+		throw new Exception('File format error');
 	}
 	if($opt['max_size'] || $opt['min_size']){
 		$file_size = filesize($file);
 		if($opt['max_size'] && $file_size > $opt['max_size']){
-			throw new Exception('文件大小('.format_size($opt['max_size']).')超过允许值');
+			throw new Exception('File size ('.format_size($opt['max_size']).') exceeds the allowed value');
 		}
 		if($opt['min_size'] && $file_size < $opt['min_size']){
-			throw new Exception('文件大小('.format_size($file_size).')小于允许值');
+			throw new Exception('File size ('.format_size($file_size).') is less than the allowed value');
 		}
 	}
 	if($opt['image_max_size'] || $opt['image_min_size']){
@@ -648,19 +648,19 @@ function upload_file_check($file, $opt = [
 		if($opt['image_max_size']){
 			[$max_w, $max_h] = $opt['image_max_size'];
 			if($max_w && $max_w < $w){
-				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$max_w.'px)');
+				throw new Exception('Image width ('.$w.'px) exceeds the limit size ('.$max_w.'px)');
 			}
 			if($max_h && $max_h < $h){
-				throw new Exception('图片高度('.$w.'px)超过限制大小('.$max_w.'px)');
+				throw new Exception('Image height ('.$w.'px) exceeds the limit size ('.$max_w.'px)');
 			}
 		}
 		if($opt['image_min_size']){
 			[$min_w, $min_h] = $opt['image_min_size'];
 			if($min_w && $min_w > $w){
-				throw new Exception('图片宽度('.$w.'px)超过限制大小('.$min_w.'px)');
+				throw new Exception('Image width ('.$w.'px) exceeds the limit size ('.$min_w.'px)');
 			}
 			if($min_h && $min_h > $h){
-				throw new Exception('图片高度('.$w.'px)超过限制大小('.$min_w.'px)');
+				throw new Exception('Image height ('.$w.'px) exceeds the limit size ('.$min_w.'px)');
 			}
 		}
 	}

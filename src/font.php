@@ -1,9 +1,14 @@
 <?php
 /**
- * 字体类相关操作函数
+ * Font Handle Functions
  */
 namespace LFPhp\Func;
 
+/**
+ * Get ttf font file info
+ * @param $ttf_file
+ * @return array
+ */
 function ttf_info($ttf_file){
 	$fd = fopen($ttf_file, "r");
 	$text = fread($fd, filesize($ttf_file));
@@ -61,7 +66,7 @@ function ttf_info($ttf_file){
 }
 
 /**
- * 获取Windows系统字体列表（以文件方式，不一定准确）
+ * Get the Windows system font list (in file format, not necessarily accurate)
  * @return string[]
  */
 function get_windows_fonts(){

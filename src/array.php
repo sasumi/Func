@@ -311,7 +311,7 @@ function array_clean_empty($data, $recursive = true){
  */
 function array_trim($arr, $specified_fields = [], $recursive = true){
 	foreach($arr as $k => $val){
-		if($recursive && is_array($arr)){
+		if($recursive && is_array($val)){
 			$arr[$k] = array_trim($val, $specified_fields, $recursive);
 			continue;
 		}

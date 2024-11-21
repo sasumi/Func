@@ -27,7 +27,7 @@ function color_hex2rgb($hex_color){
 /**
  * Convert RGB format to hexadecimal color format
  * @param array $rgb [r,g,b]
- * @param string $prefix 前缀
+ * @param string $prefix
  * @return string
  */
 function color_rgb2hex(array $rgb, $prefix = '#'){
@@ -72,7 +72,7 @@ function color_rgb2hsl(array $rgb){
  * @return int[] [r,g,b]
  */
 function color_hsl2rgb(array $hsl){
-	list($h, $s, $l) = $hsl;
+	[$h, $s, $l] = $hsl;
 	$s /= 100;
 	$l /= 100;
 	$c = (1 - abs((2*$l) - 1))*$s;
@@ -121,7 +121,7 @@ function color_rgb2cmyk(array $rgb){
  * @return int[] [r,g,b]
  */
 function cmyk_to_rgb(array $cmyk) {
-	list($c, $m, $y, $k) = $cmyk;
+	[$c, $m, $y, $k] = $cmyk;
 	$c /= 100;
 	$m /= 100;
 	$y /= 100;
@@ -143,7 +143,7 @@ function cmyk_to_rgb(array $cmyk) {
  * @return array
  */
 function color_rgb2hsb(array $rgb, $accuracy = 3) {
-	list($r, $g, $b) = $rgb;
+	[$r, $g, $b] = $rgb;
 	$r /= 255;
 	$g /= 255;
 	$b /= 255;
@@ -170,7 +170,7 @@ function color_rgb2hsb(array $rgb, $accuracy = 3) {
  * @return int[] [r,g,b]
  */
 function color_hsb2rgb(array $hsb, $accuracy = 3){
-	list($h, $s, $v) = $hsb;
+	[$h, $s, $v] = $hsb;
 	if($v == 0){
 		return [0,0,0];
 	}
