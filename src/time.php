@@ -1,6 +1,6 @@
 <?php
 /**
- * Time-related operation functions
+ * Time Enhancement Functions
  */
 namespace LFPhp\Func;
 
@@ -301,7 +301,7 @@ function make_date_ranges($start, $end = '', $format = 'Ymd'){
 }
 
 /**
- * Get the date after $days working days from $start
+ * Get the date after $days base on start day
  * Actual date = number of working days + number of weekend days - 1
  * @param string $start start date
  * @param int $days Number of working days: positive number means going backward, negative number means going forward
@@ -377,6 +377,12 @@ function time_range_v($seconds){
 	return $str ?: '0';
 }
 
+/**
+ * Make UTC time string
+ * @param $timestamp
+ * @param $short
+ * @return array|false|string|string[]
+ */
 function mk_utc($timestamp = null, $short = false){
 	$timestamp = $timestamp ?: time();
 	if(!$short){

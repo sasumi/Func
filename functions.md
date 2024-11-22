@@ -1403,7 +1403,7 @@ Upload file check by option
  - void 
 
 ### 9.28 get_extensions_by_mime($mime): string[]
-获取匹配指定mime的扩展名列表
+Get a list of extensions that match the specified mime
 #### Parameters
  - {string} *mime* 
 
@@ -1411,16 +1411,16 @@ Upload file check by option
  - string[] 
 
 ### 9.29 get_mimes_by_extension($ext): string[]
-通过文件后缀获取mime信息
+Get mime information by file suffix
 #### Parameters
- - {string} *ext* 文件后缀
+ - {string} *ext* file suffix
 
 #### Returns
- - string[] mime 列表
+ - string[] mime list
 
 ### 9.30 mime_match_extensions($mime,$extensions): bool
-检查给定mime信息，是否在指定扩展名清单中
-该方法通常用于检查上传文件是否符合设定文件类型
+Check if the given mime information is in the specified extension list
+This method is usually used to check whether the uploaded file meets the set file type
 #### Parameters
  - {string} *mime* 
  - {string[]} *extensions* 
@@ -1429,19 +1429,19 @@ Upload file check by option
  - bool 
 
 ### 9.31 mime_match_accept($mime,$accept): bool
-检测文件mime信息是否匹配accept字符串
+Check if the file mime information matches the accept string
 #### Parameters
- - {string} *mime* 文件mime信息
- - {string} *accept* <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ - {string} *mime* file mime information
+ - {string} *accept* <input accept=""/> format reference：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
 
 #### Returns
  - bool 
 
 ### 9.32 file_match_accept($file,$accept): bool
-检测文件是否匹配指定accept定义
+Check if the file matches the specified accept definition
 #### Parameters
- - {string} *file* 文件
- - {string} *accept* <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ - {string} *file* file
+ - {string} *accept* <input accept=""/> information, please refer to the format: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
 
 #### Returns
  - bool 
@@ -2609,7 +2609,7 @@ less secure version.
 
 
 ## 16. TIME
- > Time-related operation functions
+ > Time Enhancement Functions
 
 ### 16.1 time_get_month_period_ranges($start_str,$end_str): array
 Get the upper, middle and lower segment arrays of the specified start and end time
@@ -2717,7 +2717,7 @@ Supplement the date range and fill in the blank days in the middle
  - array 
 
 ### 16.13 calc_actual_date($start,$days): string
-Get the date after $days working days from $start
+Get the date after $days base on start day
 Actual date = number of working days + number of weekend days - 1
 #### Parameters
  - {string} *start* start date
@@ -2758,7 +2758,15 @@ $str = time_range_v(3601);
 #### Returns
  - string 
 
-### 16.17 mk_utc()
+### 16.17 mk_utc($timestamp,$short): array|false|string|string[]
+Make UTC time string
+#### Parameters
+ - {mixed} *timestamp* 
+ - {mixed} *short* 
+
+#### Returns
+ - array|false|string|string[] 
+
 
 
 ## 17. UTIL

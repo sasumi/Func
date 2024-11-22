@@ -1,6 +1,6 @@
 <?php
 /**
- * Database operation (PDO) related operation functions
+ * Database Operation (PDO) Functions
  */
 namespace LFPhp\Func;
 
@@ -9,12 +9,12 @@ use PDO;
 use PDOException;
 
 /**
- * Database type, currently only supports MySQL
+ * Database type, only supports MySQL now
  */
 const DB_TYPE_MYSQL = 'mysql';
 
 /**
- * PDO connect
+ * Connect to database use PDO
  * @param string $db_type
  * @param string $host
  * @param string $user
@@ -31,7 +31,7 @@ function db_connect($db_type, $host, $user, $password, $database, $port = null, 
 }
 
 /**
- * connect database via ssh proxy
+ * Connect database via ssh proxy
  * @desc ssh2 extension required
  * @param array $db_config ['type', 'host', 'user', 'password', 'database', 'port']
  * @param array $ssh_config ['host', 'user', 'password'', 'port']
@@ -61,6 +61,11 @@ function db_connect_via_ssh_proxy($db_config, $ssh_config, $proxy_config = []){
 		$proxy_config['port']);
 }
 
+/**
+ * @param $db_config
+ * @param $port_init
+ * @return int|mixed
+ */
 function db_auto_ssh_port($db_config, $port_init = 9999){
 	static $ps = [];
 	$k = serialize($db_config);
@@ -72,6 +77,7 @@ function db_auto_ssh_port($db_config, $port_init = 9999){
 }
 
 /**
+ * Connect to MySQL database
  * @param string $host
  * @param string $user
  * @param string $password
@@ -86,6 +92,7 @@ function db_mysql_connect($host, $user, $password, $database, $port = null, $cha
 }
 
 /**
+ * Connect to database via DSN
  * @param string $dsn
  * @param string $user
  * @param string $password
@@ -112,7 +119,7 @@ function db_connect_dsn($dsn, $user, $password, $persistence_connect = false){
 }
 
 /**
- * build DSN
+ * Build DSN string
  * @param string $db_type
  * @param string $host
  * @param string $database
@@ -133,7 +140,7 @@ function db_build_dsn($db_type, $host, $database, $port = '', $charsets = ''){
 }
 
 /**
- * db query
+ * Query SQL
  * @param \PDO $pdo
  * @param string $sql
  * @return false|\PDOStatement
@@ -151,7 +158,7 @@ function db_query(PDO $pdo, $sql){
 }
 
 /**
- * db get all
+ * Get all records
  * @param \PDO $pdo
  * @param string $sql
  * @return array
@@ -163,7 +170,7 @@ function db_query_all(PDO $pdo, $sql){
 }
 
 /**
- * database query one record
+ * Get one record
  * @param \PDO $pdo
  * @param string $sql
  * @return array
@@ -176,7 +183,7 @@ function db_query_one(PDO $pdo, $sql){
 }
 
 /**
- * database query one field
+ * Get one field
  * @param \PDO $pdo
  * @param string $sql
  * @param string|null $field
@@ -192,7 +199,7 @@ function db_query_field(PDO $pdo, $sql, $field = null){
 }
 
 /**
- * Append limit statement to sql
+ * Append limit statement to SQL string
  * @param string $sql
  * @param int $start_offset
  * @param int|null $size
@@ -236,7 +243,7 @@ function db_query_count(PDO $pdo, $sql){
 }
 
 /**
- * Pagination Query
+ * Get by pagination
  * @param \PDO $pdo
  * @param string $sql
  * @param int $page
@@ -254,7 +261,7 @@ function db_query_paginate(PDO $pdo, $sql, $page, $page_size){
 	return [db_query_all($pdo, $sql), $total];
 }
 /**
- * Chunk reading
+ * Query SQL in chunk mode
  * @param \PDO $pdo
  * @param string $sql
  * @param callable $handler Batch processing function, pass in parameters ($rows, $page, $finish), if false is returned, the execution is interrupted
@@ -275,11 +282,12 @@ function db_query_chunk(PDO $pdo, $sql, callable $handler, $chunk_size = 100){
 }
 
 /**
- * Block reading
+ * Watch changed on database records
  * @param \PDO $pdo
  * @param string $sql
- * @param callable $handler Batch processing function, pass in parameters ($rows, $page, $finish), if false is returned, the execution is interrupted
+ * @param callable $watcher
  * @param int $chunk_size
+ * @param int $sleep_interval
  * @return bool Whether it is a normal end, false means that the batch processing function is interrupted
  * @throws \Exception
  */
@@ -448,8 +456,7 @@ function db_update(PDO $pdo, array $data, $table, ...$statement){
 }
 
 /**
- * increase specified field
- * @todo to be test
+ * Increase specified field
  * @param \PDO $pdo
  * @param string $table
  * @param string $increase_field

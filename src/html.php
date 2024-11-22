@@ -8,7 +8,7 @@ use DateTime;
 use Exception;
 
 /**
- * HTML single tag
+ * HTML self-closing tags
  */
 const HTML_SELF_CLOSING_TAGS = [
 	'area',
@@ -31,7 +31,7 @@ const HTML_SELF_CLOSING_TAGS = [
 ];
 
 /**
- * Build select node, support optgroup mode
+ * Build html <select>, support optgroup mode
  * @param string $name
  * @param array $options option data,
  * If it is grouping mode, the format is: [value=>text, label=>options, ...]
@@ -71,7 +71,7 @@ function html_tag_select($name, array $options, $current_value = null, $placehol
 }
 
 /**
- * Build select options
+ * Build html select options
  * @param array $options [value=>text,...] option data option array
  * @param string|array $current_value current value
  * @return string
@@ -85,7 +85,7 @@ function html_tag_options(array $options, $current_value = null){
 }
 
 /**
- * Build option node
+ * Build html <option>
  * @param string $text text, spaces will be escaped into &nbsp;
  * @param string $value
  * @param bool $selected
@@ -100,7 +100,7 @@ function html_tag_option($text, $value = '', $selected = false, $attributes = []
 }
 
 /**
- * Build optgroup node
+ * Build html <optgroup>
  * @param string $label
  * @param array $options
  * @param string|array $current_value current value
@@ -112,7 +112,7 @@ function html_tag_option_group($label, $options, $current_value = null){
 }
 
 /**
- * Build textarea
+ * Build html <textarea>
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -124,7 +124,7 @@ function html_tag_textarea($name, $value = '', $attributes = []){
 }
 
 /**
- * Build hidden form node
+ * Build html <input type="hidden">
  * @param string $name
  * @param string $value
  * @return string
@@ -134,7 +134,7 @@ function html_tag_hidden($name, $value = ''){
 }
 
 /**
- * Build data hidden list
+ * Build html data list
  * @param array $data_list data list (can be multi-dimensional array)
  * @return string
  */
@@ -151,7 +151,7 @@ function html_tag_hidden_list($data_list){
 }
 
 /**
- * Build html digital input
+ * Build html number input
  * @param string $name
  * @param string $value
  * @param array $attributes
@@ -165,6 +165,7 @@ function html_tag_number_input($name, $value = '', $attributes = []){
 }
 
 /**
+ * Build html radio group
  * @param string $name
  * @param array $options options [value=>title,...] format
  * @param string $current_value
@@ -190,7 +191,7 @@ function html_tag_radio_group($name, $options, $current_value = '', $wrapper_tag
 }
 
 /**
- * Build the radio button
+ * Build html radio button
  * Use label>(input:radio+{text}) structure
  * @param string $name
  * @param mixed $value
