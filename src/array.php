@@ -257,23 +257,26 @@ function array_merge_assoc(array $org_arr, array $new_arr, $recursive = false){
  * @param bool $clean_empty clear empty item(include empty array)
  * @param bool $clean_null clean while item is null
  * @param bool $trim_string trim string while item is string
+ * @param scalar[] $specified_fields specified fields, empty for all fields
  * @param bool $recursive
  * @return array
  */
-function array_clean($arr, $clean_empty = true, $clean_null = true, $trim_string = true, $recursive = true){
+function array_clean($arr, $clean_empty = true, $clean_null = true, $trim_string = true, $specified_fields = [], $recursive = true){
 	if(empty($arr) || !is_array($arr)){
 		return $arr;
 	}
 	foreach($arr as $k => $item){
-		if($trim_string && is_string($item)){
-			$arr[$k] = trim($item);
-		}
-		if($clean_empty && empty($item)){
-			unset($arr[$k]);
-			continue;
-		}
-		if($clean_null && $item === null){
-			unset($arr[$k]);
+		if(!$specified_fields || in_array($k, $specified_fields)){
+			if($trim_string && is_string($item)){
+				$arr[$k] = trim($item);
+			}
+			if($clean_empty && empty($item)){
+				unset($arr[$k]);
+				continue;
+			}
+			if($clean_null && $item === null){
+				unset($arr[$k]);
+			}
 		}
 		if($recursive && is_array($item)){
 			$arr[$k] = array_clean($item);
@@ -284,22 +287,22 @@ function array_clean($arr, $clean_empty = true, $clean_null = true, $trim_string
 
 /**
  * clean array null value
- * @param array|mixed $data
+ * @param array|mixed $arr
  * @param bool $recursive
  * @return array
  */
-function array_clean_null($data, $recursive = true){
-	return array_clean($data, false, true, false, $recursive);
+function array_clean_null($arr, $recursive = true){
+	return array_clean($arr, false, true, false, $recursive);
 }
 
 /**
  * Clean empty item in array
- * @param array $data
+ * @param array $arr
  * @param bool $recursive
  * @return array
  */
-function array_clean_empty($data, $recursive = true){
-	return array_clean($data, true, false, false, $recursive);
+function array_clean_empty($arr, $recursive = true){
+	return array_clean($arr, true, false, false, $recursive);
 }
 
 /**
@@ -310,16 +313,7 @@ function array_clean_empty($data, $recursive = true){
  * @return array
  */
 function array_trim($arr, $specified_fields = [], $recursive = true){
-	foreach($arr as $k => $val){
-		if($recursive && is_array($val)){
-			$arr[$k] = array_trim($val, $specified_fields, $recursive);
-			continue;
-		}
-		if(is_string($val) && (!$specified_fields || in_array($k, $specified_fields))){
-			$arr[$k] = trim($val);
-		}
-	}
-	return $arr;
+	return array_clean($arr, false, false, true, $specified_fields, $recursive);
 }
 
 /**
