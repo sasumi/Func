@@ -292,7 +292,7 @@ function array_clean($arr, $clean_empty = true, $clean_null = true, $trim_string
  * @return array
  */
 function array_clean_null($arr, $recursive = true){
-	return array_clean($arr, false, true, false, $recursive);
+	return array_clean($arr, false, true, false, [], $recursive);
 }
 
 /**
@@ -302,7 +302,7 @@ function array_clean_null($arr, $recursive = true){
  * @return array
  */
 function array_clean_empty($arr, $recursive = true){
-	return array_clean($arr, true, false, false, $recursive);
+	return array_clean($arr, true, false, false, [], $recursive);
 }
 
 /**
