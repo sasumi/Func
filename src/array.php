@@ -29,22 +29,22 @@ function is_assoc_array($arr){
 
 /**
  * Array group by function
- * group array(); by by_key
+ * group array by $group_key
  * @param array $arr source array, multi-dimensional array (record set)
- * @param scalar $by_key key to group by
+ * @param scalar $group_key key to group by
  * @param boolean $force_unique array key is unique in list
  * @return array
  */
-function array_group($arr, $by_key, $force_unique = false){
+function array_group($arr, $group_key, $force_unique = false){
 	if(empty ($arr) || !is_array($arr)){
 		return $arr;
 	}
 	if($force_unique){
-		return array_column($arr, null, $by_key);
+		return array_column($arr, null, $group_key);
 	}
 	$_result = [];
 	foreach($arr as $item){
-		$_result[$item[$by_key]][] = $item;
+		$_result[$item[$group_key]][] = $item;
 	}
 	return $_result;
 }

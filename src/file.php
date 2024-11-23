@@ -23,7 +23,7 @@ function glob_recursive($pattern, $flags = 0){
 
 	//Fix directory separator
 	array_walk($files, function(&$file){
-		$file = str_replace(array('/', '\\'), array(DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR), $file);
+		$file = str_replace(['/', '\\'], [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $file);
 	});
 	return $files;
 }
@@ -47,8 +47,8 @@ function unlink_recursive($path, $verbose = false){
 		}
 		return;
 	}
-	$foldersToDelete = array();
-	$filesToDelete = array();
+	$foldersToDelete = [];
+	$filesToDelete = [];
 	// we should scan the entire directory before traversing deeper, to not have open handles to each directory:
 	// on very large director trees you can actually get OS-errors if you have too many open directory handles.
 	foreach(new DirectoryIterator($path) as $fileInfo){
@@ -143,9 +143,9 @@ function file_in_dir($file_path, $dir_path, $ignore_file_and_dir_exists = false)
  * @return string
  */
 function resolve_absolute_path($file_or_path){
-	$file_or_path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $file_or_path);
+	$file_or_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file_or_path);
 	$parts = array_filter(explode(DIRECTORY_SEPARATOR, $file_or_path), 'strlen');
-	$absolutes = array();
+	$absolutes = [];
 	foreach($parts as $part){
 		if('.' == $part)
 			continue;
@@ -274,7 +274,7 @@ function mkdir_by_file($file, $permissions = 0777){
  * @return array
  **/
 function get_dirs($dir){
-	$dir_list = array();
+	$dir_list = [];
 	if(false != ($handle = opendir($dir))){
 		$i = 0;
 		while(false !== ($file = readdir($handle))){
@@ -323,7 +323,7 @@ function tail($file, $lines = 10, $buffer = 4096){
 	// Open the file
 	if(is_resource($file) && (get_resource_type($file) == 'file' || get_resource_type($file) == 'stream')){
 		$f = $file;
-	}elseif(is_string($file)){
+	}else if(is_string($file)){
 		$f = fopen($file, 'rb');
 	}else{
 		throw new Exception('$file must be either a resource (file or stream) or a filename.');
@@ -620,14 +620,20 @@ function upload_file_error($upload_error_no){
  * @throws \Exception
  */
 function upload_file_check($file, $opt = [
-	'accept' => 'image/*', //Allowed file formats, please refer to: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
-	'max_size' => 0, //Maximum file size
-	'min_size' => 0, //Minimum file size
-	'image_max_size' => [], //Maximum image size (width, height)
-	'image_min_size' => [], //Minimum image size (width, height)
-]){if(!$file){
-	throw new Exception('File is empty');
-}
+	'accept'         => 'image/*',
+	//Allowed file formats, please refer to: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+	'max_size'       => 0,
+	//Maximum file size
+	'min_size'       => 0,
+	//Minimum file size
+	'image_max_size' => [],
+	//Maximum image size (width, height)
+	'image_min_size' => [],
+	//Minimum image size (width, height)
+]){
+	if(!$file){
+		throw new Exception('File is empty');
+	}
 	if(!is_uploaded_file($file)){
 		throw new Exception('File access denied');
 	}
@@ -667,7 +673,7 @@ function upload_file_check($file, $opt = [
 }
 
 /**
- * 获取匹配指定mime的扩展名列表
+ * Get a list of extensions that match the specified mime
  * @param string $mime
  * @return string[]
  */
@@ -676,14 +682,14 @@ function get_extensions_by_mime($mime){
 }
 
 /**
- * 通过文件后缀获取mime信息
- * @param string $ext 文件后缀
- * @return string[] mime 列表
+ * Get mime information by file suffix
+ * @param string $ext file suffix
+ * @return string[] mime list
  */
 function get_mimes_by_extension($ext){
 	$ext = strtolower(ltrim($ext, '.'));
 	$mime_list = [];
-	foreach(MIME_EXTENSION_MAP as $mime=>$ext_list){
+	foreach(MIME_EXTENSION_MAP as $mime => $ext_list){
 		if(in_array($ext, $ext_list)){
 			$mime_list[] = $mime;
 		}
@@ -692,8 +698,8 @@ function get_mimes_by_extension($ext){
 }
 
 /**
- * 检查给定mime信息，是否在指定扩展名清单中
- * 该方法通常用于检查上传文件是否符合设定文件类型
+ * Check if the given mime information is in the specified extension list
+ * This method is usually used to check whether the uploaded file meets the set file type
  * @param string $mime
  * @param string[] $extensions
  * @return bool
@@ -703,9 +709,9 @@ function mime_match_extensions($mime, array $extensions){
 }
 
 /**
- * 检测文件mime信息是否匹配accept字符串
- * @param string $mime 文件mime信息
- * @param string $accept <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ * Check if the file mime information matches the accept string
+ * @param string $mime file mime information
+ * @param string $accept <input accept=""/> format reference：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
  * @return bool
  */
 function mime_match_accept($mime, $accept){
@@ -730,9 +736,9 @@ function mime_match_accept($mime, $accept){
 }
 
 /**
- * 检测文件是否匹配指定accept定义
- * @param string $file 文件
- * @param string $accept <input accept=""/> 信息，格式请参考：https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+ * Check if the file matches the specified accept definition
+ * @param string $file file
+ * @param string $accept <input accept=""/> information, please refer to the format: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
  * @return bool
  * @throws \Exception
  */
@@ -741,7 +747,7 @@ function file_match_accept($file, $accept){
 	$file_mime = mime_content_type($file);
 	$acc_list = explode_by(',', $accept);
 
-	//文件mime对比单个accept
+	// File mime comparison single accept
 	$mime_compare = function($file_mime, $acc){
 		[$seg1, $seg2] = explode('/', $acc);
 		if($seg2 === '*' && stripos($file_mime, $seg1."/") === 0){
@@ -758,21 +764,20 @@ function file_match_accept($file, $accept){
 			if($mime_compare($file_mime, $acc)){
 				return true;
 			}
-		}
-		//后缀模式
+		}//后缀模式
 		else if($acc[0] === '.'){
-			if(strcasecmp($file_ext, $acc)===0){
+			if(strcasecmp($file_ext, $acc) === 0){
 				return true;
 			}
-		} else {
-			throw new Exception('accept 格式错误：'.$acc);
+		}else{
+			throw new Exception('accept format error: '.$acc);
 		}
 	}
 	return false;
 }
 
 /**
- * 扩展名映射（来自于nginx mime.types）
+ * Extension mapping (from nginx mime.types)
  */
 const MIME_EXTENSION_MAP = [
 	'text/html'                                                                 => ['html', 'htm', 'shtml'],
@@ -851,7 +856,7 @@ const MIME_EXTENSION_MAP = [
 		'msp',
 		'msm',
 	],
-	'audio/midi'                                                                => ['mid', 'midi', 'kar'],
+	'audio/midi'                                                                => ['mid', 'midi', 'car'],
 	'audio/mpeg'                                                                => ['mp3'],
 	'audio/ogg'                                                                 => ['ogg'],
 	'audio/x-m4a'                                                               => ['m4a'],
