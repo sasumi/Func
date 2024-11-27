@@ -867,5 +867,5 @@ function fix_browser_datetime($datetime_str_from_h5, $fix_seconds = 0){
 	if(preg_match('/[^:]\d{2}:\d{2}$/', $datetime_str_from_h5)){
 		$datetime_str_from_h5 .= ':'.str_pad($fix_seconds.'', 2, STR_PAD_LEFT, '0');
 	}
-	return (new DateTime($datetime_str_from_h5))->format('Ymd H:i:s');
+	return (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s');
 }
