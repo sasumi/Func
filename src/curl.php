@@ -152,14 +152,14 @@ function curl_get($url, $data = null, array $curl_option = []){
  * @throws \Exception
  */
 function curl_post($url, $data = null, array $curl_option = []){
-	return curl_query($url, curl_option_merge($curl_option, [
+	return curl_query($url, curl_option_merge([
 		CURLOPT_POST       => true,
 		CURLOPT_POSTFIELDS => is_string($data) ? $data : http_build_query($data),
 		CURLOPT_HTTPHEADER => [
 			//use form-urlencoded header in default
 			'Content-Type: application/x-www-form-urlencoded'
 		]
-	]));
+	], $curl_option));
 }
 
 /**
