@@ -462,15 +462,21 @@ function curl_instance($url, array $ext_curl_option = []){
 	}
 
 	//Ignore custom options
-	foreach ($curl_option as $k => $item) {
-		if (strpos($k, __NAMESPACE__) === false) {
-			if (!is_numeric($k)) {
-				throw new Exception('curl option no support:' . $k);
+	foreach($curl_option as $k => $item){
+		if(strpos($k, __NAMESPACE__) === false){
+			if(!is_numeric($k)){
+				throw new Exception('curl option no support:'.$k);
 			}
-			curl_setopt($ch, $k, $item);
+			if(!curl_setopt($ch, $k, $item)){
+				$curl_option_map = curl_option_map();
+				if(!isset($curl_option_map[$k])){
+					throw new Exception('curl option key no support:'.$k);
+				}
+				throw new Exception('curl set option fail:'.json_encode(curl_print_option([$k => $item], true), JSON_UNESCAPED_UNICODE));
+			}
 		}
 	}
-	if (!$ch) {
+	if(!$ch){
 		throw new Exception('Curl init fail');
 	}
 	return [$ch, $curl_option];
@@ -508,32 +514,46 @@ function curl_data2str($data){
 }
 
 /**
- * 打印curl option
+ * print curl option
  * @param array $options
  * @param bool $as_return
  * @return array|null
  */
 function curl_print_option($options, $as_return = false){
-	static $all_const_list;
-	if (!$all_const_list) {
-		$all_const_list = get_defined_constants();
-	}
 	$prints = [];
-	foreach ($all_const_list as $text => $v) {
-		if (stripos($text, 'CURLOPT_') === 0 && isset($options[$v])) {
-			$prints[$text] = $options[$v];
+	$option_map = curl_option_map();
+	foreach($options as $key => $val){
+		if(isset($option_map[$key])){
+			$prints[$option_map[$key]] = $val;
 		}
 	}
-	if (!$as_return) {
+	if(!$as_return){
 		var_export_min($prints);
 		return null;
-	} else {
+	}else{
 		return $prints;
 	}
 }
 
 /**
- * 转换curl option到标准HTTP头信息
+ * get all curl_option map
+ * @return array [OPT_VAL=>const text, ...]
+ */
+function curl_option_map(){
+	static $option_map;
+	if(!$option_map){
+		$all_const_list = get_defined_constants();
+		foreach($all_const_list as $text => $v){
+			if(stripos($text, 'CURLOPT_') === 0){
+				$option_map[$v] = $text;
+			}
+		}
+	}
+	return $option_map;
+}
+
+/**
+ * convert curl option to standard request header
  * @param array $options
  * @return string[] array
  */
