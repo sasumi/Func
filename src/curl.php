@@ -467,7 +467,7 @@ function curl_instance($url, array $ext_curl_option = []){
 			if(!is_numeric($k)){
 				throw new Exception('curl option no support:'.$k);
 			}
-			if(!curl_setopt($ch, $k, $item)){
+			if(!@curl_setopt($ch, $k, $item)){
 				$curl_option_map = curl_option_map();
 				if(!isset($curl_option_map[$k])){
 					throw new Exception('curl option key no support:'.$k);
@@ -729,15 +729,15 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	 * @return int The number of tasks added, -1 means there are no tasks, 0 may be due to onstart interruption.
 	 * @throw an exception
 	 */
-	$add_task = function ($count) use ($mh, $curl_option_fetcher, $on_item_start, &$tmp_option_cache) {
+	$add_task = function($count) use ($mh, $curl_option_fetcher, $on_item_start, &$tmp_option_cache){
 		$added = 0;
-		for ($i = 0; $i < $count; $i++) {
+		for($i = 0; $i < $count; $i++){
 			$curl_opt = $curl_option_fetcher();
-			if (!$curl_opt) {
+			if(!$curl_opt){
 				return -1;
 			}
 			$added++;
-			if ($on_item_start && $on_item_start($curl_opt) === false) {
+			if($on_item_start && $on_item_start($curl_opt) === false){
 				continue;
 			}
 			[$ch, $curl_option] = curl_instance('', $curl_opt);
@@ -780,16 +780,17 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 	};
 
 	$running_count = 0;
-	do {
+	do{
 		$added_count = $add_task($rolling_window - $running_count);
-		//no more tasks to continue adding
-		if ($added_count === -1) {
+		//no more task & running count is 0
+		if($added_count === -1 && $running_count == 0){
 			break;
 		}
+
 		$state = curl_multi_exec($mh, $running_count);
 		curl_multi_select($mh, 0.1);
 		$get_result();
-	} while ($state === CURLM_OK);
+	} while($state === CURLM_OK);
 	curl_multi_close($mh);
 	return true;
 }
