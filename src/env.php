@@ -385,7 +385,7 @@ function run_command_parallel_width_progress($command, array $param_batches, arr
 		return null;
 	};
 	$on_start = function($param, $param_index) use ($command, $options, $total, &$done, $start_time){
-		show_progress($done, $total, "Command started :$command ($param_index)", $start_time, 20);
+		show_progress($done, $total, "Command started: $command ($param_index)", $start_time, 20);
 		if($options['on_start']){
 			return call_user_func_array($options['on_start'], func_get_args());
 		}

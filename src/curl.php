@@ -241,32 +241,34 @@ function curl_delete($url, $data, array $curl_option = []){
  * @param string $url remote file to download
  * @param string $save_file local file path to save
  * @param array $curl_option
- * @return false|int saved file size, or fail
  * @throws \Exception
  */
 function curl_download_file($url, $save_file, array $curl_option = []){
-	//force use these option
 	$opt = [
 		CURLOPT_HEADER         => 0,
 		CURLOPT_RETURNTRANSFER => 1,
 		CURLOPT_BINARYTRANSFER => 1,
 		CURLOPT_FAILONERROR    => 1,
 	];
-
 	[$ch] = curl_instance($url, curl_option_merge($curl_option, $opt));
-	$raw_data = curl_exec($ch);
-	if(curl_errno($ch)){
-		$err = "curl download file fail:".curl_error($ch);
+	try{
+		$raw_data = curl_exec($ch);
+		if(curl_errno($ch)){
+			throw new Exception("curl download file fail:".curl_error($ch));
+		}
+		if(!strlen($raw_data)){
+			throw new Exception('curl download file fail, file content empty');
+		}
+		//save file
+		$fp = fopen($save_file, 'w');
+		if(!fwrite($fp, $raw_data)){
+			throw new Exception('curl download file fail, file save fail');
+		}
+		fclose($fp);
+	}catch(Exception $e){
 		curl_close($ch);
-		throw new Exception($err);
+		throw $e;
 	}
-	curl_close($ch);
-
-	//save file
-	$fp = fopen($save_file, 'w');
-	fwrite($fp, $raw_data);
-	fclose($fp);
-	return filesize($save_file);
 }
 
 /**
