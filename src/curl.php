@@ -237,6 +237,32 @@ function curl_delete($url, $data, array $curl_option = []){
 }
 
 /**
+ * curl download file
+ * @param string $url remote file to download
+ * @param string $save_file local file path to save
+ * @param array $curl_option
+ * @throws \Exception
+ */
+function curl_download_file($url, $save_file, array $curl_option = []){
+	//force use these option
+	$opt = [
+		CURLOPT_HEADER         => 0,
+		CURLOPT_RETURNTRANSFER => 1,
+		CURLOPT_BINARYTRANSFER => 1,
+		CURLOPT_FAILONERROR    => 1,
+	];
+
+	[$ch] = curl_instance($url, curl_option_merge($curl_option, $opt));
+	$raw_data = curl_exec($ch);
+	curl_close($ch);
+
+	// 将获取到的图片内容保存到本地文件
+	$fp = fopen($save_file, 'w');
+	fwrite($fp, $raw_data);
+	fclose($fp);
+}
+
+/**
  * Quickly execute a curl query then close the curl connection
  * @param string $url
  * @param array $curl_option
@@ -251,7 +277,7 @@ function curl_query($url, array $curl_option){
 	$ret['info'] = curl_getinfo($ch);
 	$errno = curl_errno($ch);
 	if ($errno) {
-		$ret['error'] = curl_error_message($errno);
+		$ret['error'] = curl_error($ch);
 	} else {
 		[$ret['head'], $ret['body']] = curl_cut_raw($ch, $raw_string);
 		if (isset($curl_option[CURLOPT_PAGE_ENCODING])) {
@@ -641,18 +667,6 @@ function curl_cut_raw($ch, $raw_string){
 	$head = substr($raw_string, 0, $header_size);
 	$body = substr($raw_string, $header_size);
 	return [$head, $body];
-}
-
-/**
- * Get curl error information
- * @param int $error_no
- * @return string Empty indicates success
- */
-function curl_error_message($error_no){
-	if(!$error_no){
-		return '';
-	}
-	return CURL_ERROR_MAP[$error_no] ?: "curl error happens($error_no).";
 }
 
 /**
