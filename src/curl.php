@@ -241,6 +241,7 @@ function curl_delete($url, $data, array $curl_option = []){
  * @param string $url remote file to download
  * @param string $save_file local file path to save
  * @param array $curl_option
+ * @return false|int saved file size, or fail
  * @throws \Exception
  */
 function curl_download_file($url, $save_file, array $curl_option = []){
@@ -254,12 +255,18 @@ function curl_download_file($url, $save_file, array $curl_option = []){
 
 	[$ch] = curl_instance($url, curl_option_merge($curl_option, $opt));
 	$raw_data = curl_exec($ch);
+	if(curl_errno($ch)){
+		$err = "curl download file fail:".curl_error($ch);
+		curl_close($ch);
+		throw new Exception($err);
+	}
 	curl_close($ch);
 
-	// 将获取到的图片内容保存到本地文件
+	//save file
 	$fp = fopen($save_file, 'w');
 	fwrite($fp, $raw_data);
 	fclose($fp);
+	return filesize($save_file);
 }
 
 /**
