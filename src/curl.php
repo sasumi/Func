@@ -779,14 +779,14 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 		}
 	};
 
-	$running_count = 0;
+	//avoid one task situation
+	$running_count = -1;
 	do{
 		$added_count = $add_task($rolling_window - $running_count);
 		//no more task & running count is 0
 		if($added_count === -1 && $running_count == 0){
 			break;
 		}
-
 		$state = curl_multi_exec($mh, $running_count);
 		curl_multi_select($mh, 0.1);
 		$get_result();
