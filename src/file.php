@@ -429,6 +429,19 @@ function render_php_file($php_file, $vars = []){
 }
 
 /**
+ * remove empty folder
+ * @param string $path
+ * @return bool
+ */
+function remove_empty_sub_folder($path){
+	$empty = true;
+	foreach(glob($path.DIRECTORY_SEPARATOR.'*') as $file){
+		$empty &= is_dir($file) && remove_empty_sub_folder($file);
+	}
+	return $empty && rmdir($path);
+}
+
+/**
  * Calculate folder size recursively
  * @param string $path
  * @return int
