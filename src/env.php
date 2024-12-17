@@ -279,7 +279,7 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 		$start_timestamp = $inner_start_time;
 	}
 	if($index){
-		$reminds = ' ETA:'.time_get_eta($start_timestamp, $index, $total);
+		$reminds = ' ETR:'.time_get_etr($start_timestamp, $index, $total);
 	}
 	$fin_chars = round(($index/$total)*$progress_length);
 	$left_chars = $progress_length - $fin_chars;

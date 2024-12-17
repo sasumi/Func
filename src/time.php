@@ -341,16 +341,29 @@ function time_range($start, $end){
 }
 
 /**
- * Calculate the estimated end time ETA
+ * Calculate the estimated end time ETR
  * @param int $start_time start time
  * @param int $index Current processing sequence number
  * @param int $total total quantity
  * @param bool $pretty whether to return the remaining time in text format, set false to return seconds
  * @return int|string
  */
-function time_get_eta($start_time, $index, $total, $pretty = true){
+function time_get_etr($start_time, $index, $total, $pretty = true){
 	$seconds = intval((time() - $start_time)*($total - $index)/$index);
 	return $pretty ? format_time_size($seconds) : $seconds;
+}
+
+/**
+ * get estimated time of arrival
+ * @param int $start_time start time
+ * @param int $index Current processing sequence number
+ * @param int $total total quantity
+ * @param string $format date format, use Y-m-d H:i:s for default
+ * @return false|string
+ */
+function time_get_eta($start_time, $index, $total, $format='Y-m-d H:i:s'){
+	$seconds = time_get_etr($start_time, $index, $total);
+	return date($format, time()+$seconds);
 }
 
 /**
