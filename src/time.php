@@ -253,12 +253,12 @@ function pretty_time($timestamp, $as_html = false){
 	$unit_cal = array(
 		'Year' => ONE_YEAR365,
 		'Month' => ONE_MONTH30,
-		'day' => ONE_DAY,
-		'hour' => ONE_HOUR,
-		'minute' => ONE_MINUTE,
+		'Day' => ONE_DAY,
+		'Hour' => ONE_HOUR,
+		'Minute' => ONE_MINUTE,
 	);
 	if($offset > 30 && $offset < 60){
-		$str = $before ? 'Just now' : 'Wait';
+		$str = $before ? 'Recently' : 'Latter';
 	}else if($offset <= 30){
 		$str = $before ? 'Just now' : 'Immediately';
 	}else{
@@ -270,7 +270,8 @@ function pretty_time($timestamp, $as_html = false){
 		}
 		foreach($us as $k => $u){
 			if($u){
-				$str = $u.array_keys($unit_cal)[$k].($before ? 'before' : 'after');
+				$lbl = array_keys($unit_cal)[$k];
+				$str = $u.$lbl.($u > 1 ? 's':'').($before ? ' before' : ' after');
 				break;
 			}
 		}
