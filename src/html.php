@@ -376,7 +376,7 @@ function html_tag_date($name, $date_or_timestamp = '', $attributes = []){
 	$attributes['type'] = 'date';
 	$attributes['name'] = $name;
 	if($date_or_timestamp){
-		$attributes['value'] = is_numeric($date_or_timestamp) ? date('Ymd', $date_or_timestamp) : date('Ymd', strtotime($date_or_timestamp));
+		$attributes['value'] = is_numeric($date_or_timestamp) ? date('Y-m-d', $date_or_timestamp) : date('Y-m-d', strtotime($date_or_timestamp));
 	}
 	return html_tag('input', $attributes);
 }
