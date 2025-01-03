@@ -478,12 +478,12 @@ function html_tag($tag, $attributes = [], $inner_html = ''){
 /**
  * Build HTML link
  * @param string $href
- * @param string $inner_html use href as default
+ * @param string|null $inner_html use href while [null] was set.
  * @param array|[] $attributes
  * @return string
  */
-function html_tag_link($href, $inner_html = '', $attributes = []){
-	$inner_html = $inner_html ?: $href;
+function html_tag_link($href, $inner_html = null, $attributes = []){
+	$inner_html = is_null($inner_html) ? $href : $inner_html;
 	$attributes['href'] = $href;
 	return html_tag('a', $attributes, $inner_html);
 }
@@ -491,11 +491,11 @@ function html_tag_link($href, $inner_html = '', $attributes = []){
 /**
  * Build html external site link, with no-referrer, open in new window as default
  * @param string $href
- * @param string $inner_html use href as default
+ * @param string|null $inner_html
  * @param array|[] $attributes
  * @return string
  */
-function html_tag_external_link($href, $inner_html = '', $attributes = []){
+function html_tag_external_link($href, $inner_html = null, $attributes = []){
 	$attributes = array_merge([
 		'target' => '_blank',
 		'rel'    => 'noreferrer',
