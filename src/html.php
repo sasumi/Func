@@ -476,15 +476,31 @@ function html_tag($tag, $attributes = [], $inner_html = ''){
 }
 
 /**
- * Construct HTML link
- * @param string $inner_html
+ * Build HTML link
  * @param string $href
- * @param array $attributes
+ * @param string $inner_html use href as default
+ * @param array|[] $attributes
  * @return string
  */
-function html_tag_link($inner_html, $href = '', $attributes = []){
+function html_tag_link($href, $inner_html = '', $attributes = []){
+	$inner_html = $inner_html ?: $href;
 	$attributes['href'] = $href;
 	return html_tag('a', $attributes, $inner_html);
+}
+
+/**
+ * Build html external site link, with no-referrer, open in new window as default
+ * @param string $href
+ * @param string $inner_html use href as default
+ * @param array|[] $attributes
+ * @return string
+ */
+function html_tag_external_link($href, $inner_html = '', $attributes = []){
+	$attributes = array_merge([
+		'target' => '_blank',
+		'rel'    => 'noreferrer',
+	], $attributes);
+	return html_tag_link($href, $inner_html, $attributes);
 }
 
 /***
