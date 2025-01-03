@@ -489,7 +489,7 @@ function html_tag_link($href, $inner_html = null, $attributes = []){
 }
 
 /**
- * Build html external site link, with no-referrer, open in new window as default
+ * Build html external site link, with no-referrer, no-opener, open in new window as default for safe
  * @param string $href
  * @param string|null $inner_html
  * @param array|[] $attributes
@@ -497,8 +497,9 @@ function html_tag_link($href, $inner_html = null, $attributes = []){
  */
 function html_tag_external_link($href, $inner_html = null, $attributes = []){
 	$attributes = array_merge([
-		'target' => '_blank',
-		'rel'    => 'noreferrer',
+		'target'         => '_blank',
+		'rel'            => 'noreferrer noopener',
+		'referrerpolicy' => "no-referrer",
 	], $attributes);
 	return html_tag_link($href, $inner_html, $attributes);
 }
