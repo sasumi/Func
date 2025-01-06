@@ -593,9 +593,10 @@ function log_tmp_file($filename, $content, $max_size = 10*1024*1024, $max_files 
  * @param string $prefix The file name prefix
  * @param string $ext The file name suffix
  * @param numeric $mod Permission, default is 777
+ * @param bool $unlink_after_shutdown unlink tmp file after process shutdown
  * @return string
  */
-function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
+function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777, $unlink_after_shutdown = false){
 	$dir = $dir ?: sys_get_temp_dir();
 	if(!is_dir($dir) && !mkdir($dir, true)){
 		throw new Exception('temp file directory create fail:'.$dir);
@@ -604,6 +605,11 @@ function create_tmp_file($dir = null, $prefix = '', $ext = '', $mod = 0777){
 	$fp = fopen($file_name, 'a');
 	fclose($fp);
 	chmod($file_name, $mod);
+	if($unlink_after_shutdown){
+		register_shutdown_function(function() use ($file_name){
+			@unlink($file_name);
+		});
+	}
 	return $file_name;
 }
 
