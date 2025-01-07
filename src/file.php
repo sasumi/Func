@@ -160,13 +160,23 @@ function resolve_absolute_path($file_or_path){
 
 /**
  * Get file extension based on file name
- * @param string $filename file name
+ * @param string $filename file path, file name or url include file name
  * @param bool $to_lower_case whether to convert to lower case, default is to convert to lower case
- * @return string|null string or null,no extension detected
+ * @return string string
  */
 function resolve_file_extension($filename, $to_lower_case = true){
+	$filename = str_replace('\\', '/', $filename);
+	if(strpos($filename, '/') !== false){
+		$filename = preg_replace('/^.*\/([^\/]+)$/', '$1', $filename);
+	}
+	if(strpos($filename, '?') !== false){
+		$filename = preg_replace('/(.*?)\?.*$/', '$1', $filename);
+	}
+	if(strpos($filename, '#') !== false){
+		$filename = preg_replace('/(.*?)\#.*$/', '$1', $filename);
+	}
 	if(strpos($filename, '.') <= 0){
-		return null;
+		return '';
 	}
 	$tmp = explode('.', $filename);
 	return $to_lower_case ? strtolower(end($tmp)) : end($tmp);
