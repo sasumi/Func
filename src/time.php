@@ -350,6 +350,9 @@ function time_range($start, $end){
  * @return int|string
  */
 function time_get_etr($start_time, $index, $total, $pretty = true){
+	if(!$index){
+		return $pretty ? '-' : 0;
+	}
 	$seconds = intval((time() - $start_time)*($total - $index)/$index);
 	return $pretty ? format_time_size($seconds) : $seconds;
 }
@@ -363,7 +366,7 @@ function time_get_etr($start_time, $index, $total, $pretty = true){
  * @return false|string
  */
 function time_get_eta($start_time, $index, $total, $format='Y-m-d H:i:s'){
-	$seconds = time_get_etr($start_time, $index, $total);
+	$seconds = time_get_etr($start_time, $index, $total, false);
 	return date($format, time()+$seconds);
 }
 
