@@ -835,3 +835,22 @@ function array_value_recursive(array $arr, $key = ''){
 	});
 	return $val;
 }
+
+/**
+ * Convert assoc array to yaml string simple
+ * @param array $data
+ * @param int $indent init indent
+ * @return string
+ */
+function array_to_yaml_simple($data, $indent = 0){
+	$yaml = '';
+	foreach($data as $key => $value){
+		$yaml .= str_repeat('  ', $indent).$key.': ';
+		if(is_array($value)){
+			$yaml .= PHP_EOL.array_to_yaml_simple($value, $indent + 1);
+		}else{
+			$yaml .= $value.PHP_EOL;
+		}
+	}
+	return $yaml;
+}
