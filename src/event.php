@@ -1,6 +1,13 @@
 <?php
 /**
  * Custom Event Functions
+ * @example
+ * event_register('onload', function($arg){
+ *    var_dump($arg)
+ * });
+ *
+ * $txt = "hello";
+ * event_fire('onload', $txt);
  */
 namespace LFPhp\Func;
 

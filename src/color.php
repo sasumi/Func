@@ -283,3 +283,80 @@ function _rgb_hsl_hue(&$h, $r, $g, $b, $max, $delta) {
 		$h++;
 	}
 }
+
+
+/**
+ * Console foreground color map collection
+ */
+const CONSOLE_FOREGROUND_COLOR_MAP = [
+	'default'      => '0:39',
+	'black'        => '0;30',
+	'dark_gray'    => '1;30',
+	'blue'         => '0;34',
+	'light_blue'   => '1;34',
+	'green'        => '0;32',
+	'light_green'  => '1;32',
+	'cyan'         => '0;36',
+	'light_cyan'   => '1;36',
+	'red'          => '0;31',
+	'light_red'    => '1;31',
+	'purple'       => '0;35',
+	'light_purple' => '1;35',
+	'brown'        => '0;33',
+	'yellow'       => '1;33',
+	'light_gray'   => '0;37',
+	'white'        => '1;37',
+];
+
+/**
+ * Console background color mapping collection
+ */
+const CONSOLE_BACKGROUND_COLOR_MAP = [
+	'black'      => '40',
+	'red'        => '41',
+	'green'      => '42',
+	'yellow'     => '43',
+	'blue'       => '44',
+	'magenta'    => '45',
+	'cyan'       => '46',
+	'light_gray' => '47',
+];
+
+/**
+ * Generate CLI strings with colors
+ * @param string $text
+ * @param string $fore_color
+ * @param string $back_color
+ * @param bool $override Whether to overwrite the original color setting
+ * @return string
+ */
+function console_color($text, $fore_color = '', $back_color = '', $override = false){
+	if(preg_match("/\033\\[0m/", $text)){
+		if(!$override){
+			return $text;
+		} else {
+			$text = console_color_clean($text);
+		}
+	}
+
+	$color_prefix = '';
+	if($fore_color){
+		$color_prefix .= "\033[".CONSOLE_FOREGROUND_COLOR_MAP[$fore_color]."m";
+	}
+	if($back_color){
+		$color_prefix .= "\033[".CONSOLE_BACKGROUND_COLOR_MAP[$back_color]."m";
+	}
+	if($color_prefix){
+		return $color_prefix.$text."\033[0m";
+	}
+	return $text;
+}
+
+/**
+ * Clean up color control characters
+ * @param string $text
+ * @return string
+ */
+function console_color_clean($text){
+	return preg_replace('/\033\\[.*?m/', '', $text);
+}
