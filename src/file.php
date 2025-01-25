@@ -728,7 +728,7 @@ function get_mimes_by_extension($ext){
 
 /**
  * Detect mime information by file byte count
- * @param $file_path
+ * @param string $file_path
  * @return string|bool return fail if detected fail.
  * @throws \Exception
  */
@@ -740,6 +740,11 @@ function get_mime_by_file($file_path){
 	$file = fopen($file_path, 'rb');
 	if(!$file){
 		throw new Exception("Failed to open file: $file_path");
+	}
+
+	$mime_type = mime_content_type($file_path);
+	if($mime_type !== 'application/octet-stream'){
+		return $mime_type;
 	}
 
 	$header = fread($file, 12);
@@ -756,7 +761,7 @@ function get_mime_by_file($file_path){
 	}else if(strpos($header, "\x25\x50\x44\x46") === 0){
 		return 'application/pdf';
 	}
-	return mime_content_type($file_path);
+	return $mime_type;
 }
 
 /**
@@ -806,7 +811,7 @@ function mime_match_accept($mime, $accept){
  */
 function file_match_accept($file, $accept){
 	$file_ext = resolve_file_extension($file);
-	$file_mime = mime_content_type($file);
+	$file_mime = null;
 	$acc_list = explode_by(',', $accept);
 
 	// File mime comparison single accept
@@ -821,7 +826,7 @@ function file_match_accept($file, $accept){
 		//mime模式
 		if(strpos($acc, '/') !== false){
 			if(!$file_mime){
-				$file_mime = mime_content_type($file);
+				$file_mime = get_mime_by_file($file);
 			}
 			if($mime_compare($file_mime, $acc)){
 				return true;

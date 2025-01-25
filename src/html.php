@@ -898,7 +898,7 @@ function img_to_data_url($img_file){
 	if(!is_file($img_file)){
 		throw new Exception('Image file no exists');
 	}
-	$mime = mime_content_type($img_file);
+	$mime = get_mime_by_file($img_file);
 	if(!$mime){
 		throw new Exception('No mime detected');
 	}
