@@ -727,6 +727,39 @@ function get_mimes_by_extension($ext){
 }
 
 /**
+ * Detect mime information by file byte count
+ * @param $file_path
+ * @return string return empty string if detected fail.
+ * @throws \Exception
+ */
+function get_mime_by_file($file_path){
+	if(!file_exists($file_path) || !is_readable($file_path)){
+		throw new Exception("File does not exist or is not readable: $file_path");
+	}
+
+	$file = fopen($file_path, 'rb');
+	if(!$file){
+		throw new Exception("Failed to open file: $file_path");
+	}
+
+	$header = fread($file, 12);
+	fclose($file);
+
+	if(strpos($header, 'ftypavif') !== false || strpos($header, 'ftypavis') !== false){
+		return 'image/avif';
+	}else if(strpos($header, "\xFF\xD8\xFF") === 0){
+		return 'image/jpeg';
+	}else if(strpos($header, "\x89PNG\x0D\x0A\x1A\x0A") === 0){
+		return 'image/png';
+	}else if(strpos($header, "GIF87a") === 0 || strpos($header, "GIF89a") === 0){
+		return 'image/gif';
+	}else if(strpos($header, "\x25\x50\x44\x46") === 0){
+		return 'application/pdf';
+	}
+	return null;
+}
+
+/**
  * Check if the given mime information is in the specified extension list
  * This method is usually used to check whether the uploaded file meets the set file type
  * @param string $mime
