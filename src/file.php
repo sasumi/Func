@@ -729,7 +729,7 @@ function get_mimes_by_extension($ext){
 /**
  * Detect mime information by file byte count
  * @param $file_path
- * @return string return empty string if detected fail.
+ * @return string|bool return fail if detected fail.
  * @throws \Exception
  */
 function get_mime_by_file($file_path){
@@ -756,7 +756,7 @@ function get_mime_by_file($file_path){
 	}else if(strpos($header, "\x25\x50\x44\x46") === 0){
 		return 'application/pdf';
 	}
-	return null;
+	return mime_content_type($file_path);
 }
 
 /**
