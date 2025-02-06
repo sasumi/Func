@@ -257,6 +257,21 @@ function string2error($string){
 }
 
 /**
+ * check obj is instance of class list
+ * @param object $obj
+ * @param string[] $class_list
+ * @return string|null matched class name，null for mismatch
+ */
+function instanceof_list($obj, array $class_list){
+	foreach($class_list as $class){
+		if($obj instanceof $class){
+			return $class;
+		}
+	}
+	return null;
+}
+
+/**
  * Convert the exception object to other specified exception class objects
  * @param Exception $exception
  * @param string $target_class
