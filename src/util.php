@@ -284,6 +284,7 @@ function exception_convert(Exception $exception, $target_class){
 
 /**
  * Register to convert PHP errors into exceptions
+ * php fatal error was un-catchable
  * @param int $error_levels
  * @param \ErrorException|null $exception_class
  * @return callable|null
@@ -298,21 +299,21 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
 			throw new $exception_class($err_str, 0, $err_severity, $err_file, $err_line);
 		}
 		$err_severity_map = [
-			E_ERROR => ErrorException::class,
-			E_WARNING => WarningException::class,
-			E_PARSE => ParseException::class,
-			E_NOTICE => NoticeException::class,
-			E_CORE_ERROR => CoreErrorException::class,
-			E_CORE_WARNING => CoreWarningException::class,
-			E_COMPILE_ERROR => CompileErrorException::class,
-			E_COMPILE_WARNING => CoreWarningException::class,
-			E_USER_ERROR => UserErrorException::class,
-			E_USER_WARNING => UserWarningException::class,
-			E_USER_NOTICE => UserNoticeException::class,
-			E_STRICT => StrictException::class,
+			E_ERROR             => ErrorException::class,
+			E_WARNING           => WarningException::class,
+			E_PARSE             => ParseException::class,
+			E_NOTICE            => NoticeException::class,
+			E_CORE_ERROR        => CoreErrorException::class,
+			E_CORE_WARNING      => CoreWarningException::class,
+			E_COMPILE_ERROR     => CompileErrorException::class,
+			E_COMPILE_WARNING   => CoreWarningException::class,
+			E_USER_ERROR        => UserErrorException::class,
+			E_USER_WARNING      => UserWarningException::class,
+			E_USER_NOTICE       => UserNoticeException::class,
+			E_STRICT            => StrictException::class,
 			E_RECOVERABLE_ERROR => RecoverableErrorException::class,
-			E_DEPRECATED => DeprecatedException::class,
-			E_USER_DEPRECATED => UserDeprecatedException::class,
+			E_DEPRECATED        => DeprecatedException::class,
+			E_USER_DEPRECATED   => UserDeprecatedException::class,
 		];
 		$exp_class = isset($err_severity_map[$err_severity]) ? $err_severity_map[$err_severity] : ErrorException::class;
 		throw new $exp_class($err_str, 0, $err_severity, $err_file, $err_line);
