@@ -601,17 +601,17 @@ function log_tmp_file($filename, $content, $max_size = 10*1024*1024, $max_files 
  * Create a temporary file
  * @param string $dir The directory where the file is located, default use system temporary directory
  * @param string $prefix The file name prefix
- * @param string $ext The file name suffix
+ * @param string $suffix The file name suffix, like extension(dot required)
  * @param numeric $mod Permission, default is 777
  * @param bool $unlink_after_shutdown unlink tmp file after process shutdown
  * @return string
  */
-function create_tmp_file($dir = '', $prefix = '', $ext = '', $mod = 0777, $unlink_after_shutdown = false){
+function create_tmp_file($dir = '', $prefix = '', $suffix = '', $mod = 0777, $unlink_after_shutdown = false){
 	$dir = $dir ?: sys_get_temp_dir();
 	if(!is_dir($dir) && !mkdir($dir, true)){
 		throw new Exception('temp file directory create fail:'.$dir);
 	}
-	$file_name = $dir.'/'.$prefix.substr(md5(time().rand()), 0, 16).$ext;
+	$file_name = $dir.'/'.$prefix.substr(md5(time().rand()), 0, 16).$suffix;
 	$fp = fopen($file_name, 'a');
 	fclose($fp);
 	chmod($file_name, $mod);
