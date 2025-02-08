@@ -441,17 +441,21 @@ function var_export_min($var, $return = false){
 }
 
 /**
- * Detect memory overflow. It is not recommended to enable this check when running the code to avoid performance loss.
- * @param int $threshold
- * @param callable|string $leak_payload Function called when memory leaks
+ * Detect memory overflow. It is not recommended enabling this check when running the code to avoid performance loss.
+ * @param bool $with_trace_info
  */
-function memory_leak_check($threshold = 0, $leak_payload = 'print_r'){
+function memory_leak_check($with_trace_info = true){
 	static $last_usage;
 	$current_usage = memory_get_usage(true);
-	if(isset($last_usage) && ($current_usage - $last_usage > $threshold)){
+	$trace_msg = '';
+	if($with_trace_info){
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-		$msg = sprintf("Memory Leak:+%s(%s)\n%s#%s %s%s%s()\n", format_size($current_usage - $last_usage), format_size($current_usage), $trace[1]['file'], $trace[1]['line'], $trace[1]['class'], $trace[1]['type'], $trace[1]['function']);
-		$leak_payload($msg);
+		$trace_msg = sprintf(" %s#%s %s%s%s()", $trace[1]['file'], $trace[1]['line'], $trace[1]['class'], $trace[1]['type'], $trace[1]['function']);
+	}
+	if(!isset($last_usage)){
+		print_r(sprintf("[MEM] Start %s%s\n", format_size($current_usage), $trace_msg));
+	}else{
+		print_r(sprintf("[MEM] %s(+%s)%s\n", format_size($current_usage), format_size($current_usage - $last_usage), $trace_msg));
 	}
 	$last_usage = $current_usage;
 }
