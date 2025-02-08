@@ -370,7 +370,8 @@ function html_object_fit_calculate($container_size, $target_size, $object_fit_ty
 		default:
 			throw new InvalidArgumentException("Invalid object-fit type: $object_fit_type");
 	}
-	return $result;
+	//convert px to integer
+	return array_map('intval', $result);
 }
 
 /**
