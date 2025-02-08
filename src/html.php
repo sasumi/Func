@@ -6,6 +6,7 @@ namespace LFPhp\Func;
 
 use DateTime;
 use Exception;
+use InvalidArgumentException;
 
 /**
  * HTML self-closing tags
@@ -298,6 +299,78 @@ function html_tag_img($src, $attributes = [
 ]){
 	$attributes['src'] = $src;
 	return html_tag('img', $attributes);
+}
+
+/**
+ * calculate object-fit size
+ * @see https://developer.mozilla.org/zh-CN/docs/Web/CSS/object-fit
+ * @param int[] $container_size container size: [width, height]
+ * @param int[] $target_size target size: [width, height]
+ * @param string $object_fit_type object-fit type: “contain”, “cover”, “fill”, “none”, “scale-down”
+ * @return array result position info: [left, top, width, height]
+ */
+function html_object_fit_calculate($container_size, $target_size, $object_fit_type){
+	[$container_width, $container_height] = $container_size;
+	[$target_width, $target_height] = $target_size;
+	$container_ratio = $container_width / $container_height;
+	$target_ratio = $target_width/$target_height;
+	$result = ['left' => 0, 'top' => 0, 'width' => 0, 'height' => 0,];
+	switch($object_fit_type){
+		case 'contain':
+			if ($target_ratio > $container_ratio) {
+				$result['width'] = $container_width;
+				$result['height'] = $container_width / $target_ratio;
+				$result['top'] = ($container_height - $result['height']) / 2;
+				$result['left'] = 0;
+			} else {
+				$result['width'] = $container_height * $target_ratio;
+				$result['height'] = $container_height;
+				$result['top'] = 0;
+				$result['left'] = ($container_width - $result['width']) / 2;
+			}
+			break;
+
+		case 'cover':
+			if ($target_ratio > $container_ratio) {
+				$result['width'] = $container_height * $target_ratio;
+				$result['height'] = $container_height;
+				$result['top'] = 0;
+				$result['left'] = ($container_width - $result['width']) / 2;
+			} else {
+				$result['width'] = $container_width;
+				$result['height'] = $container_width / $target_ratio;
+				$result['top'] = ($container_height - $result['height']) / 2;
+				$result['left'] = 0;
+			}
+			break;
+
+		case 'fill':
+			$result['width'] = $container_width;
+			$result['height'] = $container_height;
+			$result['top'] = 0;
+			$result['left'] = 0;
+			break;
+
+		case 'none':
+			$result['width'] = $target_width;
+			$result['height'] = $target_height;
+			$result['top'] = ($container_height - $target_height) / 2;
+			$result['left'] = ($container_width - $target_width) / 2;
+			break;
+
+		case 'scale-down':
+			$contain_result = html_object_fit_calculate($container_size, $target_size, 'contain');
+			$none_result = html_object_fit_calculate($container_size, $target_size, 'none');
+			if ($contain_result['width'] * $contain_result['height'] < $none_result['width'] * $none_result['height']) {
+				$result = $contain_result;
+			} else {
+				$result = $none_result;
+			}
+			break;
+		default:
+			throw new InvalidArgumentException("Invalid object-fit type: $object_fit_type");
+	}
+	return $result;
 }
 
 /**
