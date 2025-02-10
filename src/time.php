@@ -271,7 +271,7 @@ function pretty_time($timestamp, $as_html = false){
 		foreach($us as $k => $u){
 			if($u){
 				$lbl = array_keys($unit_cal)[$k];
-				$str = $u.$lbl.($u > 1 ? 's':'').($before ? ' before' : ' after');
+				$str = $u.' '.$lbl.($u > 1 ? 's':'').($before ? ' before' : ' after');
 				break;
 			}
 		}
