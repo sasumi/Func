@@ -852,7 +852,6 @@ function file_match_accept($file, $accept){
 function file_fix_extension($file_name, $mime){
 	$ext_list = MIME_EXTENSION_MAP[$mime];
 	if(!$ext_list){
-		dump($mime);
 		return $file_name;
 	}
 
