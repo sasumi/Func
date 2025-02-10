@@ -844,6 +844,50 @@ function file_match_accept($file, $accept){
 }
 
 /**
+ * fix file extension via file mime info
+ * @param string $file_name
+ * @param string $mime
+ * @return string if not replacement, return original filename
+ */
+function file_fix_extension($file_name, $mime){
+	$ext_list = MIME_EXTENSION_MAP[$mime];
+	if(!$ext_list){
+		dump($mime);
+		return $file_name;
+	}
+
+	$org_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+	$org_ext_lowercase = strtolower($org_ext);
+
+	//case1: already has extension
+	if($org_ext_lowercase && in_array($org_ext_lowercase, $ext_list)){
+		if($org_ext_lowercase == $org_ext){
+			return $file_name;
+		}
+		//fix file extension case
+		return preg_replace('/\.'.$org_ext.'$/', '.'.$org_ext_lowercase, $file_name);
+	}
+
+	//case2: try resolve extension string from filename first
+	foreach($ext_list as $ext){
+		if(stripos($file_name, $ext) !== false){
+			if($org_ext){
+				return preg_replace('/\.'.$org_ext.'$/', '.'.$ext, $file_name);
+			} else {
+				return $file_name.'.'.$ext;
+			}
+		}
+	}
+
+	//case3: use first extension in mime map
+	if($org_ext){
+		return preg_replace('/\.'.$org_ext.'$/', '.'.$ext_list[0], $file_name);
+	} else {
+		return $file_name.'.'.$ext_list[0];
+	}
+}
+
+/**
  * Extension mapping (from nginx mime.types)
  */
 const MIME_EXTENSION_MAP = [
@@ -858,6 +902,7 @@ const MIME_EXTENSION_MAP = [
 	'text/vnd.sun.j2me.app-descriptor'                                          => ['jad'],
 	'text/vnd.wap.wml'                                                          => ['wml'],
 	'text/x-component'                                                          => ['htc'],
+	'text/x-php'                                                                => ['php'],
 	'image/avif'                                                                => ['avif'],
 	'image/png'                                                                 => ['png'],
 	'image/svg+xml'                                                             => ['svg', 'svgz'],
@@ -911,18 +956,7 @@ const MIME_EXTENSION_MAP = [
 	'application/xhtml+xml'                                                     => ['xhtml'],
 	'application/xspf+xml'                                                      => ['xspf'],
 	'application/zip'                                                           => ['zip'],
-	'application/octet-stream'                                                  => [
-		'bin',
-		'exe',
-		'dll',
-		'deb',
-		'dmg',
-		'iso',
-		'img',
-		'msi',
-		'msp',
-		'msm',
-	],
+	'application/octet-stream'                                                  => ['bin', 'exe', 'dll', 'deb', 'dmg', 'iso', 'img', 'msi', 'msp', 'msm'],
 	'audio/midi'                                                                => ['mid', 'midi', 'car'],
 	'audio/mpeg'                                                                => ['mp3'],
 	'audio/ogg'                                                                 => ['ogg'],
