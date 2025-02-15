@@ -496,7 +496,7 @@ function http_fix_relative_url($url, $base_url){
 
 	// [../] is corrected to [./]
 	if(strpos($url, '../') === 0){
-		$url = substr($url, 1);
+		$url = './'.$url;
 	}
 
 	/* parse base URL and convert to local variables:
