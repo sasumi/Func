@@ -1,3 +1,5 @@
-vendor/
-.idea/
-.vscode
+/vendor
+/test
+/.idea
+/.vscode
+
