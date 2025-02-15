@@ -793,6 +793,12 @@ function curl_concurrent($curl_option_fetcher, $on_item_start = null, $on_item_f
 				$ret['body'] = mb_convert_encoding($ret['body'], 'utf8', $curl_option[CURLOPT_PAGE_ENCODING]);
 			}
 
+			//change response page relative path
+			if ($curl_option[CURLOPT_HTML_FIX_RELATIVE_PATH]) {
+				//Here the last actual URL is used as the replacement criterion
+				$ret['body'] = html_fix_relative_path($ret['body'], $ret['info']['url']);
+			}
+
 			$ret['error'] = curl_error($ch) ?: null;
 			$on_item_finish && $on_item_finish($ret, $curl_option);
 
