@@ -591,6 +591,7 @@ function curl_print_time($curl_info){
 		$data[] = [$name, $val];
 		$colors[] = [$fore_color];
 	}
+	echo $curl_info['url'], "({$curl_info['http_code']})", PHP_EOL;
 	show_stacked_bar(round($total_cost*1000, 3).'ms', $data, [
 		'colors' => $colors,
 	]);
