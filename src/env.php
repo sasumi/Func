@@ -226,6 +226,55 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 }
 
 /**
+ * show horizon stacked bar
+ * @param string $label
+ * @param array $data [[name, value], ...]
+ * @param array $option
+ * @return void
+ */
+function show_stacked_bar($label, $data, $option = []){
+	$option = array_merge([
+		'size'      => 60,
+		'colors' => [],
+	], $option);
+	$progress = '';
+	$char_map = ['▒', '█'];
+	$idx = 0;
+	$last_start_chars = 0;
+	$remarks = [
+		//[start_chars, text, fore_color, back_color]
+	];
+	$last_delimiter = '';
+	$total_cost = array_sumby($data, 1);
+	foreach($data as $k=>[$name, $val]){
+		[$fore_color, $back_color] = $option['colors'][$k];
+		$char_count = ceil($option['size']*$val/$total_cost) ?: 1;
+		$block = $last_delimiter.str_repeat($char_map[$idx%2], $char_count);
+		$progress .= console_color($block, $fore_color);
+		$remarks[] = [$last_start_chars, "↑ $name(".round($val*1000, 3).'ms)', $fore_color, $back_color];
+		$last_delimiter = '│';
+		$last_start_chars += $char_count + 1;
+		$idx++;
+	}
+	foreach($remarks as $k => $remark){
+		[$start_chars, $text, $fore_color, $back_color] = $remark;
+		for($i = $k + 1; $i < count($remarks); $i++){
+			$last_end = $start_chars + mb_strlen($text);
+			if($remarks[$i][0] > $last_end){
+				$text .= str_repeat(' ', $remarks[$i][0] - $last_end).'│';
+			}
+		}
+		$remarks[$k][1] = $text;
+	}
+
+	echo $progress.' '.$label, PHP_EOL;
+	foreach($remarks as [$start_chars, $text, $fore_color, $back_color]){
+		echo console_color(str_repeat(' ', $start_chars).$text, $fore_color, $back_color), PHP_EOL;
+	}
+	echo PHP_EOL;
+}
+
+/**
  * Loading mode outputs console string
  * @param string $patch_text Display text
  * @param string[] $loading_chars Loading character sequence, for example: ['\\', '|', '/', '-']

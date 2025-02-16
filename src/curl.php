@@ -571,6 +571,32 @@ function curl_print_option($options, $as_return = false){
 }
 
 /**
+ * print curl time cost info as stacked bar
+ * @param array $curl_info
+ * @return void
+ */
+function curl_print_time($curl_info){
+	$total_cost = $curl_info['total_time'];
+	$time_segments = [
+		['Redirect', $curl_info['redirect_time'], 'light_blue'],
+		['NameLookup', $curl_info['namelookup_time'], 'green'],
+		['Connect', $curl_info['connect_time'] - $curl_info['namelookup_time'], 'light_green'],
+		['PreTransfer', $curl_info['pretransfer_time'] - $curl_info['connect_time'], 'dark_gray'],
+		['StartTransfer', $curl_info['starttransfer_time'] - $curl_info['pretransfer_time'], 'light_gray'],
+		['Transfer', $curl_info['total_time'] - $curl_info['starttransfer_time'], 'white'],
+	];
+	$data = [];
+	$colors = [];
+	foreach($time_segments as [$name, $val, $fore_color]){
+		$data[] = [$name, $val];
+		$colors[] = [$fore_color];
+	}
+	show_stacked_bar(round($total_cost*1000, 3).'ms', $data, [
+		'colors' => $colors,
+	]);
+}
+
+/**
  * get all curl_option map
  * @return array [OPT_VAL=>const text, ...]
  */
