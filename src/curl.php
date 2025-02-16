@@ -451,10 +451,10 @@ function curl_convert_http_header_to_assoc($headers){
 /**
  * Set default options for curl_* operations
  * @param array $curl_option
- * @param bool $patch Whether to add in append mode, the default is patch
+ * @param bool $override Whether to override option or patch only
  */
-function curl_set_default_option(array $curl_option, $patch = true){
-	$default = $patch ? curl_get_default_option() : [];
+function curl_set_default_option(array $curl_option, $override = false){
+	$default = !$override ? curl_get_default_option() : [];
 	$GLOBALS[CURL_DEFAULT_OPTION_GLOBAL_KEY] = curl_option_merge($default, $curl_option);
 }
 
