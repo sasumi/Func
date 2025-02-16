@@ -579,11 +579,11 @@ function curl_print_time($curl_info){
 	$total_cost = $curl_info['total_time'];
 	$time_segments = [
 		['Redirect', $curl_info['redirect_time'], 'light_blue'],
-		['NameLookup', $curl_info['namelookup_time'], 'green'],
-		['Connect', $curl_info['connect_time'] - $curl_info['namelookup_time'], 'light_green'],
-		['PreTransfer', $curl_info['pretransfer_time'] - $curl_info['connect_time'], 'dark_gray'],
-		['StartTransfer', $curl_info['starttransfer_time'] - $curl_info['pretransfer_time'], 'light_gray'],
-		['Transfer', $curl_info['total_time'] - $curl_info['starttransfer_time'], 'white'],
+		['NSLookup', $curl_info['namelookup_time'], 'green'],
+		['TCPConnect', $curl_info['connect_time'] - $curl_info['namelookup_time'], 'light_green'],
+		['SSL/SSHConnect', $curl_info['pretransfer_time'] - $curl_info['connect_time'], 'dark_gray'],
+		['ServerHandle', $curl_info['starttransfer_time'] - $curl_info['pretransfer_time'], 'light_gray'], //StartTransfer
+		['DataTransfer', $curl_info['total_time'] - $curl_info['starttransfer_time'], 'white'],
 	];
 	$data = [];
 	$colors = [];
