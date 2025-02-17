@@ -588,6 +588,7 @@ function curl_print_time($curl_info){
 	$data = [];
 	$colors = [];
 	foreach($time_segments as [$name, $val, $fore_color]){
+		$name = $name.'('.round($val*1000, 2).'ms)';
 		$data[] = [$name, $val];
 		$colors[] = [$fore_color];
 	}

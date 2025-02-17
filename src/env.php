@@ -227,49 +227,52 @@ function show_progress($index, $total, $patch_text = '', $start_timestamp = null
 
 /**
  * show horizon stacked bar
- * @param string $label
+ * @param string $label text label after stacked bar
  * @param array $data [[name, value], ...]
- * @param array $option
+ * @param array $option ['size', 'colors', 'bar_chars']
  * @return void
  */
-function show_stacked_bar($label, $data, $option = []){
-	$option = array_merge([
-		'size'      => 60,
-		'colors' => [],
-	], $option);
-	$progress = '';
-	$char_map = ['▒', '█'];
+function show_stacked_bar($label, array $data, array $option = []){
+	$bar_size = $option['size'] ?: 60;
+	$colors = $option['colors'] ? array_fix_size($option['colors'], count($data)) : [];
+	$bar_chars = array_fix_size($option['bar_chars'] ?: ['▒', '█'], count($data));
+	$bar_delimiter = $option['bar_delimiter'] ?: '│';
+	$connect_line = $option['connect_line'] ?: '│';
+	$connect_conner = $option['connect_conner'] ?: '└';
+
+	$bar = '';
 	$idx = 0;
 	$last_start_chars = 0;
 	$remarks = [
-		//[start_chars, text, fore_color, back_color]
+		//[start_chars, text, color_text, fore_color, back_color]
 	];
+
+	//print stacked bar
 	$last_delimiter = '';
 	$total_cost = array_sumby($data, 1);
-	foreach($data as $k=>[$name, $val]){
-		[$fore_color, $back_color] = $option['colors'][$k];
-		$char_count = ceil($option['size']*$val/$total_cost) ?: 1;
-		$block = $last_delimiter.str_repeat($char_map[$idx%2], $char_count);
-		$progress .= console_color($block, $fore_color);
-		$remarks[] = [$last_start_chars, "↑ $name(".round($val*1000, 3).'ms)', $fore_color, $back_color];
-		$last_delimiter = '│';
+	foreach($data as $k => [$name, $val]){
+		[$fore_color, $back_color] = $colors[$k];
+		$char_count = ceil($bar_size*$val/$total_cost) ?: 1;
+		$block = $last_delimiter.str_repeat($bar_chars[$k], $char_count);
+		$bar .= console_color($block, $fore_color);
+		$text = "$connect_conner $name";
+		$remarks[] = [$last_start_chars, $text, console_color($text, $fore_color, $back_color), $fore_color, $back_color];
+		$last_delimiter = $bar_delimiter;
 		$last_start_chars += $char_count + 1;
 		$idx++;
 	}
-	foreach($remarks as $k => $remark){
-		[$start_chars, $text, $fore_color, $back_color] = $remark;
+	echo $bar.' '.$label, PHP_EOL;
+
+	//calc label layouts
+	foreach($remarks as $k => [$start_chars, $text, $color_text]){
 		for($i = $k + 1; $i < count($remarks); $i++){
 			$last_end = $start_chars + mb_strlen($text);
 			if($remarks[$i][0] > $last_end){
-				$text .= str_repeat(' ', $remarks[$i][0] - $last_end).'│';
+				$text .= str_repeat(' ', $remarks[$i][0] - $last_end).$connect_line;
+				$color_text .= str_repeat(' ', $remarks[$i][0] - $last_end).console_color($connect_line, $remarks[$i][3], $remarks[$i][4]);
 			}
 		}
-		$remarks[$k][1] = $text;
-	}
-
-	echo $progress.' '.$label, PHP_EOL;
-	foreach($remarks as [$start_chars, $text, $fore_color, $back_color]){
-		echo console_color(str_repeat(' ', $start_chars).$text, $fore_color, $back_color), PHP_EOL;
+		echo str_repeat(' ', $start_chars).$color_text, PHP_EOL;
 	}
 	echo PHP_EOL;
 }

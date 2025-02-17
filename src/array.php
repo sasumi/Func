@@ -591,6 +591,27 @@ function array_sumby(array $arr, $field){
 }
 
 /**
+ * array fix size
+ * @param array $arr
+ * @param int $length
+ * @return array
+ */
+function array_fix_size(array $arr, $length){
+	$len = count($arr);
+	if($len == $length){
+		return $arr;
+	}
+	if($len < $length){
+		$tmp = [];
+		for($i = 0; $i < ceil($length/$len); $i++){
+			$tmp = array_merge($tmp, $arr);
+		}
+		$arr = $tmp;
+	}
+	return array_slice($arr, 0, $length);
+}
+
+/**
  * Set default values to array
  * Usage:
  * <pre>
