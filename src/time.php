@@ -18,6 +18,17 @@ const ONE_MONTH31 = 2678400; //31 days
 const ONE_YEAR365 = 31536000; //one year, 365 days
 const ONE_YEAR366 = 31622400; //one year, 366 days
 
+//translate for time unit
+$GLOBALS[__NAMESPACE__.'\\TIME_UNITS'] = [
+	'YEAR'   => ['year', 'yr'],
+	'MONTH'  => ['month', 'mo'],
+	'WEEK'   => ['week', 'wk'],
+	'DAY'    => ['day', 'd'],
+	'HOUR'   => ['hour', 'h'],
+	'MINUTE' => ['minute', 'm'],
+	'SECOND' => ['second', 's'],
+];
+
 /**
  * Get the upper, middle and lower segment arrays of the specified start and end time
  * @param string $start_str
@@ -173,15 +184,16 @@ function microtime_diff($start, $end = null){
  * @param bool $full_desc
  * @return string
  */
-function format_time_size($secs, $keep_zero_padding = true, $full_desc = false){
+function format_time_size($secs, $keep_zero_padding = false, $full_desc = false){
+	$UNITS = $GLOBALS[__NAMESPACE__.'\\TIME_UNITS'];
 	$tks = [
-		ONE_YEAR365 => ['year', 'yr'],
-		ONE_MONTH30 => ['month', 'mo'],
-		ONE_WEEK => ['week', 'wk'],
-		ONE_DAY => ['day', 'd'],
-		ONE_HOUR => ['hour', 'h'],
-		ONE_MINUTE => ['minute', 'm'],
-		1 => ['second', 's'],
+		ONE_YEAR365 => $UNITS['YEAR'],
+		ONE_MONTH30 => $UNITS['MONTH'],
+		ONE_WEEK    => $UNITS['WEEK'],
+		ONE_DAY     => $UNITS['DAY'],
+		ONE_HOUR    => $UNITS['HOUR'],
+		ONE_MINUTE  => $UNITS['MINUTE'],
+		1           => $UNITS['SECOND'],
 	];
 	$text = '';
 	foreach($tks as $s => [$fd, $sd]){
