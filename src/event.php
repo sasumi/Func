@@ -32,10 +32,7 @@ function event_fire($event, &$p1 = null, &$p2 = null, &$p3 = null, &$p4 = null, 
 		throw new Exception("event fire arguments overload:$arg_count (limitation: $arg_limit)");
 	}
 	global $__FUNC_EVENT_MAP__;
-	$handle_list = isset($__FUNC_EVENT_MAP__[$event]) ? $__FUNC_EVENT_MAP__[$event] : [];
-	if(!$handle_list){
-		return EVENT_PAYLOAD_NULL;
-	}
+	$handle_list = $__FUNC_EVENT_MAP__[$event] ?? [];
 	$hit = EVENT_PAYLOAD_NULL;
 	foreach($handle_list as [$id, $payload]){
 		$hit = EVENT_PAYLOAD_HIT;

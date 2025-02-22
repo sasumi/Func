@@ -835,6 +835,25 @@ function html_meta_redirect($url, $timeout_sec = 0){
 }
 
 /**
+ * html page redirect with message shown
+ * @param string $message
+ * @param string $url
+ * @param int $timeout
+ * @return string html
+ */
+function html_redirect_with_message($message, $url, $timeout = 3){
+	//meta redirect
+	$html = html_meta_redirect($url, $timeout);
+
+	//js redirect
+	$html .= '<script>document.location.href = '.json_encode($url).'";</script>';
+
+	//echo message
+	$html .= h($message);
+	return $html;
+}
+
+/**
  * Build CSP meta tag
  * @param array $csp_rules
  * @param string $report_uri
