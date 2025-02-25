@@ -254,20 +254,20 @@ function curl_download_file($url, $save_file, array $curl_option = []){
 	try{
 		$raw_data = curl_exec($ch);
 		if(curl_errno($ch)){
-			throw new Exception("curl download file fail:".curl_error($ch));
+			throw new Exception(curl_error($ch));
 		}
 		if(!strlen($raw_data)){
-			throw new Exception('curl download file fail, file content empty');
+			throw new Exception('file content empty');
 		}
 		//save file
 		$fp = fopen($save_file, 'w');
 		if(!fwrite($fp, $raw_data)){
-			throw new Exception('curl download file fail, file save fail');
+			throw new Exception('file save fail');
 		}
 		fclose($fp);
 	}catch(Exception $e){
 		curl_close($ch);
-		throw $e;
+		throw new Exception("curl download fail($url): ".$e->getMessage(), $e->getCode(), $e);
 	}
 }
 
