@@ -474,9 +474,11 @@ function curl_instance($url, array $ext_curl_option = []){
 	$curl_option[CURLOPT_URL] = $url ?: $curl_option[CURLOPT_URL];
 
 	//Supplementary support for https:// protocol
-	if (stripos($curl_option[CURLOPT_URL], 'https://') === 0) {
+	//Supplementary support for https:// protocol while no SSL option was set
+	if(!isset($curl_option[CURLOPT_SSL_VERIFYPEER]) && !isset($curl_option[CURLOPT_SSL_VERIFYHOST]) &&
+		stripos($curl_option[CURLOPT_URL], 'https://') === 0){
 		$curl_option[CURLOPT_SSL_VERIFYPEER] = 0;
-		$curl_option[CURLOPT_SSL_VERIFYHOST] = 1;
+		$curl_option[CURLOPT_SSL_VERIFYHOST] = 0;
 	}
 
 	//Correct the HTTP header. If the key => value array is passed in, convert it into a string array.
