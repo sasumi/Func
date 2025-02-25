@@ -249,12 +249,15 @@ function curl_download_file($url, $save_file, array $curl_option = []){
 		CURLOPT_RETURNTRANSFER => 1,
 		CURLOPT_BINARYTRANSFER => 1,
 		CURLOPT_FAILONERROR    => 1,
+
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_SSL_VERIFYPEER => 0,
 	];
 	[$ch] = curl_instance($url, curl_option_merge($curl_option, $opt));
 	try{
 		$raw_data = curl_exec($ch);
 		if(curl_errno($ch)){
-			throw new Exception(curl_error($ch));
+			throw new Exception(curl_error($ch), curl_errno($ch));
 		}
 		if(!strlen($raw_data)){
 			throw new Exception('file content empty');
@@ -267,7 +270,7 @@ function curl_download_file($url, $save_file, array $curl_option = []){
 		fclose($fp);
 	}catch(Exception $e){
 		curl_close($ch);
-		throw new Exception("curl download fail($url): ".$e->getMessage(), $e->getCode(), $e);
+		throw RetweetException::retweetException($e, $e->getMessage()." (curl download $url)");
 	}
 }
 

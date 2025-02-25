@@ -283,6 +283,18 @@ function exception_convert(Exception $exception, $target_class){
 }
 
 /**
+ * override current exception with more information
+ * @param Exception $e
+ * @param string|null $message if not null, new message was set
+ * @param string|null $file if not null, new file location was set
+ * @param string|null $line if not null, new file-line number was set
+ * @return void
+ */
+function exception_override($e, $message = null, $file = null, $line = null){
+
+}
+
+/**
  * Register to convert PHP errors into exceptions
  * php fatal error was un-catchable
  * @param int $error_levels
@@ -511,6 +523,18 @@ function debug_mark_output($as_return = false){
 	}
 	echo $str;
 	return null;
+}
+
+/**
+ * retweet exception with more information
+ */
+class RetweetException extends Exception{
+	public static function retweetException(Exception $e, $message = null, $file = null, $line = null){
+		$ex = new self($message ?: $e->getMessage(), $e->getCode(), $e);
+		$ex->file = $file ?: $e->getFile();
+		$ex->line = $line ?: $e->getLine();
+		return $ex;
+	}
 }
 
 /** Error mapping to exception class */
