@@ -593,7 +593,7 @@ function curl_print_option($options, $as_return = false){
 		}
 	}
 	if(!$as_return){
-		var_export_min($prints);
+		echo json_encode($prints, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
 		return null;
 	}else{
 		return $prints;
