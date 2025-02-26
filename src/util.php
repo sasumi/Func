@@ -288,10 +288,10 @@ function exception_convert(Exception $exception, $target_class){
  * @param string|null $message if not null, new message was set
  * @param string|null $file if not null, new file location was set
  * @param string|null $line if not null, new file-line number was set
- * @return void
+ * @return Exception
  */
 function exception_override($e, $message = null, $file = null, $line = null){
-
+	return RetweetException::retweetException($e, $message, $file, $line);
 }
 
 /**
