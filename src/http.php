@@ -395,7 +395,7 @@ function http_header_download($download_name = '', $disposition = 'attachment'){
 	header("Content-Type: application/force-download");
 	header("Content-Type: application/octet-stream");
 	header("Content-Type: application/download");
-	header("Content-Disposition: $disposition".($download_name ? ";filename=$download_name" : ''));
+	header("Content-Disposition: $disposition".($download_name ? ";filename=\"$download_name\"" : ''));
 	header("Content-Transfer-Encoding: binary");
 }
 
