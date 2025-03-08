@@ -785,17 +785,79 @@ function html_fix_relative_path($html, $page_url){
 }
 
 /**
- * todo
- * @param $html
- * @param $option
- * @return void
+ * convert html to text simplify
+ * @param string $html
+ * @param array $option
+ * @return string
  */
-function html_to_text($html, $option){
-	$option = array_Merge([
-		'trim'            => true,
-		'image_replacer'  => '',
-		'keep_line_break' => false,
+function html_to_text($html, $option = []){
+	$option = array_merge([
+		'trim'                       => true,
+		'keep_line_break'            => true,
+		'image_placeholder'          => '',
+		'merge_multiple_blank_lines' => true,
 	], $option);
+
+	$LINE_CARET = '__LINE_CARET__';
+	$IMG_HOLDER = '__IMG_HOLDER__';
+	if($option['keep_line_break']){
+		$to_line = [
+			'/<br[^>]>/i',
+			'/<\/p>/i',
+			'/<\/div>/i',
+			'/<\/section>/i',
+			'/<\/tr>/i',
+			'/<\/form>/i',
+			'/<\/article>/i',
+		];
+		$html = preg_replace($to_line, array_pad([], count($to_line), $LINE_CARET), $html);
+	}
+
+	if($option['image_placeholder']){
+		$html = preg_replace('/<img[^>]*>/ig', $IMG_HOLDER, $html);
+	}
+
+	$html = preg_replace_callback("/(&#[0-9]+;)/", function($m){
+		return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES");
+	}, $html);
+	$text = strip_tags($html);
+
+	$quotes = function($arr){
+		foreach($arr as $k => $val){
+			$arr[$k] = "/".preg_quote($val)."/i";
+		}
+		return $arr;
+	};
+
+	$HTML_ENTITY_MAP = [
+		[' ', '&nbsp;', '&#160'],
+		["<", '&lt', '&#60'],
+		[">", '&gt;', '&#62'],
+		["&", '&amp;', '&#38'],
+		["\"", '&quot;', '&#34'],
+		["'", '&apos;', '&#39'],
+		["¢", '&cent;', '&#162'],
+		["£", '&pound;', '&#163'],
+		["¥", '&yen;', '&#165'],
+		["€", '&euro;', '&#8364'],
+		["©", '&copy;', '&#169'],
+		["®", '&reg;', '&#174'],
+	];
+
+	$text = preg_replace($quotes(array_column($HTML_ENTITY_MAP, 1)), array_column($HTML_ENTITY_MAP, 0), $text);
+	$text = preg_replace($quotes(array_column($HTML_ENTITY_MAP, 2)), array_column($HTML_ENTITY_MAP, 0), $text);
+	$text = str_replace([
+		$LINE_CARET,
+		$IMG_HOLDER,
+	], ["\n", $option['image_placeholder']], $text);
+	if($option['trim']){
+		$text = trim($text);
+	}
+	if($option['merge_multiple_blank_lines']){
+		$text = preg_replace("/\n\s+$/", "\n", $text);
+		$text = preg_replace("/[\n]{2,}/im", "\n", $text);
+	}
+	return $text;
 }
 
 /**
