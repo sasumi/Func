@@ -751,23 +751,6 @@ function ha($str, $len = 0, $tail = '...', &$length_exceeded = false){
 }
 
 /**
- * Convert plain text to HTML
- * @param string $text
- * @param null $len
- * @param string $tail
- * @param bool $over_length
- * @return string
- */
-function text_to_html($text, $len = null, $tail = '...', &$over_length = false){
-	if($len){
-		$text = substr_utf8($text, $len, $tail, $over_length);
-	}
-	$html = htmlspecialchars($text);
-	$html = str_replace("\r", '', $html);
-	return str_replace([' ', "\n", "\t"], ['&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'], $html);
-}
-
-/**
  * Correct relative paths in HTML
  * @param string $html
  * @param string $page_url
@@ -785,9 +768,80 @@ function html_fix_relative_path($html, $page_url){
 }
 
 /**
+ * Convert plain text to HTML
+ * @param string $text
+ * @param int $len truncation length, empty means no truncation
+ * @param string $tail append tail string character
+ * @param bool $exceeded_length Exceeded length
+ * @return string
+ */
+function text_to_html($text, $len = 0, $tail = '...', &$exceeded_length = false){
+	if($len){
+		$text = substr_utf8($text, $len, $tail, $exceeded_length);
+	}
+	$html = htmlspecialchars($text);
+	$html = str_replace("\r", '', $html);
+	return str_replace([' ', "\n", "\t"], ['&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'], $html);
+}
+
+/**
+ * clean html
+ * proceeds: 
+ * ✅remove html comments
+ * ✅remove empty tags
+ * ✅remove unnecessary tags and their content
+ * ✅remove js inline event in html tag
+ * ✅fix relative paths
+ * @param mixed $html
+ * @return string cleaned html
+ */
+function html_clean($html, $option = []) {
+	$option = array_merge([
+		'url' => '', //current page url, used to fix relative paths
+		'extract_clean_tags' => [], //tags that only need to be removed, but not their content
+	], $option);
+
+	$REMOVE_CONTENT_TAGS = [
+		'applet', 'area', 'base', 'basefont', 'blink', 'button', 'comment', 'embed', 'form', 'frame', 'frameset',
+		'head', 'iframe', 'input', 'isindex', 'listing', 'map', 'marquee', 'meta', 'noembed', 'noframes',
+		'noscript', 'object', 'param', 'plaintext', 'script', 'select', 'style', 'textarea', 'title', 'xmp', 'xml'
+	];
+	$REMOVE_TAGS_ONLY = array_merge([
+		'applet', 'base', 'body', 'head', 'html', 'link', 'marquee', 'meta'
+	], $REMOVE_CONTENT_TAGS, $option['extract_clean_tags']);
+
+	foreach ($REMOVE_CONTENT_TAGS as $t) {
+		$html = preg_replace("/<{$t}[^>]*>.*?<\/{$t}>/is", '', $html);
+	}
+
+	foreach ($REMOVE_TAGS_ONLY as $t) {
+		$html = preg_replace("/<{$t}[^>]*>/i", '', $html);
+	}
+
+	//Remove html comments
+	$html = preg_replace('/<!--.*?-->/is', '', $html);
+
+	//remove empty tags
+	$html = preg_replace('/<[^>]*>\s*<\/[^>]*>/i', '', $html);
+
+	//remove js inline event in html tag ??
+	$html = preg_replace('/(<\w+[^>]+)\son\w+\s*=\s*".*?"/i', '$1', $html);
+
+	if ($option['url']) {
+		$html = html_fix_relative_path($html, $option['url']);
+	}
+
+	return $html;
+}
+
+/**
  * convert html to text simplify
  * @param string $html
- * @param array $option
+ * @param array $option 
+ * trim: whether to trim the text, 
+ * keep_line_break: whether to keep the line break, 
+ * image_placeholder: image placeholder, 
+ * merge_multiple_blank_lines: merge multiple blank lines
  * @return string
  */
 function html_to_text($html, $option = []){
@@ -797,6 +851,9 @@ function html_to_text($html, $option = []){
 		'image_placeholder'          => '',
 		'merge_multiple_blank_lines' => true,
 	], $option);
+
+	//clean html first
+	$html = html_clean($html);
 
 	$LINE_CARET = '__LINE_CARET__';
 	$IMG_HOLDER = '__IMG_HOLDER__';
@@ -808,7 +865,7 @@ function html_to_text($html, $option = []){
 			'/<\/section>/i',
 			'/<\/tr>/i',
 			'/<\/form>/i',
-			'/<\/article>/i',
+			'/<\/article>/i'
 		];
 		$html = preg_replace($to_line, array_pad([], count($to_line), $LINE_CARET), $html);
 	}
