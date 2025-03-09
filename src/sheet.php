@@ -8,6 +8,7 @@ namespace LFPhp\Func;
 
 const CSV_LINE_SEPARATOR = PHP_EOL; //CSV line separator
 const CSV_COMMON_DELIMITER = ','; //Default data separator
+const CSV_HEADER_UTF8_BOM = "\xEF\xBB\xBF"; //csv file require BOM
 
 /**
  * Get the column names in Excel and other spreadsheets
@@ -34,6 +35,7 @@ function spreadsheet_get_column_index($column){
  */
 function csv_download($filename, $data, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
+	echo CSV_HEADER_UTF8_BOM;
 	$headers && csv_rows($headers, false, $delimiter);
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	foreach($data as $row){
@@ -50,6 +52,7 @@ function csv_download($filename, $data, array $headers = [], $delimiter = CSV_CO
  */
 function csv_download_chunk($filename, callable $rows_fetcher, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
+	echo CSV_HEADER_UTF8_BOM;
 	$headers && csv_rows($headers, false, $delimiter);
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	while($rows = $rows_fetcher()){
@@ -69,13 +72,11 @@ function csv_download_chunk($filename, callable $rows_fetcher, array $headers = 
 function csv_rows($rows, $as_return = false, $delimiter = CSV_COMMON_DELIMITER){
 	$ret = '';
 	foreach($rows as $row){
-		foreach($row as $val){
-			$str = join($delimiter, csv_format($val)).CSV_LINE_SEPARATOR;
-			if($as_return){
-				$ret .= $str;
-			}else{
-				echo $str;
-			}
+		$str = join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
+		if($as_return){
+			$ret .= $str;
+		}else{
+			echo $str;
 		}
 	}
 	if($as_return){
