@@ -34,16 +34,10 @@ function spreadsheet_get_column_index($column){
  */
 function csv_download($filename, $data, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
-	if($headers){
-		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
-	}
+	$headers && csv_rows($headers, false, $delimiter);
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	foreach($data as $row){
-		if($fields){
-			echo join($delimiter, csv_format(array_filter_fields($row, $fields))).CSV_LINE_SEPARATOR;
-		}else{
-			echo join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
-		}
+		csv_rows([$fields ? array_filter_fields($row, $fields) : $row], false, $delimiter);
 	}
 }
 
@@ -56,16 +50,38 @@ function csv_download($filename, $data, array $headers = [], $delimiter = CSV_CO
  */
 function csv_download_chunk($filename, callable $rows_fetcher, array $headers = [], $delimiter = CSV_COMMON_DELIMITER){
 	http_header_download($filename);
-	if($headers){
-		echo join($delimiter, csv_format($headers)).CSV_LINE_SEPARATOR;
-	}
+	$headers && csv_rows($headers, false, $delimiter);
 	$fields = is_assoc_array($headers) ? array_keys($headers) : [];
 	while($rows = $rows_fetcher()){
 		foreach($rows as $row){
-			$row = $fields ? array_filter_fields($row, $fields) : $row;
-			echo join($delimiter, csv_format($row)), CSV_LINE_SEPARATOR;
+			csv_rows([$fields ? array_filter_fields($row, $fields) : $row], false, $delimiter);
 		}
 	}
+}
+
+/**
+ * Output CSV data in rows
+ * @param array[] $rows two-dimensional array
+ * @param bool $as_return Whether to return the result as a string
+ * @param string $delimiter delimiter
+ * @return string|null If $as_return is true, return the result as a string
+ */
+function csv_rows($rows, $as_return = false, $delimiter = CSV_COMMON_DELIMITER){
+	$ret = '';
+	foreach($rows as $row){
+		foreach($row as $val){
+			$str = join($delimiter, csv_format($val)).CSV_LINE_SEPARATOR;
+			if($as_return){
+				$ret .= $str;
+			}else{
+				echo $str;
+			}
+		}
+	}
+	if($as_return){
+		return $ret;
+	}
+	return null;
 }
 
 /**
@@ -91,7 +107,7 @@ function csv_read_file_chunk($file, callable $output, $headers = [], $chunk_size
 			$data_size = count($data);
 			if($data_size > $key_size){
 				$data = array_slice($data, 0, $key_size);
-			} else if($data_size < $key_size){
+			}else if($data_size < $key_size){
 				$data = array_pad($data, count($headers), '');
 			}
 			$data = array_combine($headers, $data);
@@ -133,7 +149,7 @@ function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMM
 		}
 		if($keys){
 			$ret[] = array_combine($keys, $data);
-		} else {
+		}else{
 			$ret[] = $data;
 		}
 	}
@@ -165,7 +181,7 @@ function csv_save_file_handle($file_handle, $rows, $delimiter = CSV_COMMON_DELIM
 	$buffer_line = '';
 	$bf_counter = 0;
 	foreach($rows as $row){
-		$buffer_line .= join($delimiter, csv_format($row)).CSV_LINE_SEPARATOR;
+		$buffer_line .= csv_rows([$row], true, $delimiter);
 		$bf_counter++;
 		if($bf_counter >= $buffer_rows){
 			fwrite($file_handle, $buffer_line);
