@@ -725,6 +725,31 @@ function html_attributes(array $attributes = []){
 }
 
 /**
+ * replace attributes
+ * @param string $html
+ * @param string $tag
+ * @param string[] $attribute_value_map [attribute_name=>attribute_value, ...]
+ * @param bool $add_if_no_exists
+ * @return string
+ */
+function html_replace_attributes($html, $tag, $attribute_value_map, $add_if_no_exists = true){
+	$pattern = '/<'.$tag.'\b([^>]*?)(\/?)>/i';
+	return preg_replace_callback($pattern, function($matches) use ($add_if_no_exists, $tag, $attribute_value_map){
+		$attr_str = $matches[1]; // 原始属性部分
+		$self_closing = $matches[2]; // 是否是自闭合标签（如 />）
+		foreach($attribute_value_map as $attr_name => $attr_val){
+			$attr_patter = '/\b'.$attr_name.'=["\'].*?["\']/i';
+			if(preg_match($attr_patter, $attr_str)){
+				$attr_str = preg_replace($attr_patter, $attr_name.'="'.ha($attr_val).'"', $attr_str);
+			}else if($add_if_no_exists){
+				$attr_str .= ' '.$attr_name.'="'.ha($attr_val).'"';
+			}
+		}
+		return "<$tag ".trim($attr_str).($self_closing ? '/' : '').'>';
+	}, $html);
+}
+
+/**
  * Escape and truncate strings in HTML
  * @param string $str
  * @param number|null $len truncation length, empty means no truncation
@@ -786,7 +811,7 @@ function text_to_html($text, $len = 0, $tail = '...', &$exceeded_length = false)
 
 /**
  * clean html
- * proceeds: 
+ * proceeds:
  * ✅remove html comments
  * ✅remove empty tags
  * ✅remove unnecessary tags and their content
@@ -837,10 +862,10 @@ function html_clean($html, $option = []) {
 /**
  * convert html to text simplify
  * @param string $html
- * @param array $option 
- * trim: whether to trim the text, 
- * keep_line_break: whether to keep the line break, 
- * image_placeholder: image placeholder, 
+ * @param array $option
+ * trim: whether to trim the text,
+ * keep_line_break: whether to keep the line break,
+ * image_placeholder: image placeholder,
  * merge_multiple_blank_lines: merge multiple blank lines
  * @return string
  */
