@@ -810,21 +810,26 @@ function text_to_html($text, $len = 0, $tail = '...', &$exceeded_length = false)
 }
 
 /**
- * clean html
+ * clean html to be a safe content
  * proceeds:
- * ✅remove html comments
- * ✅remove empty tags
- * ✅remove unnecessary tags and their content
- * ✅remove js inline event in html tag
- * ✅fix relative paths
+ * ✅ remove html comments
+ * ✅ remove empty tags
+ * ✅ remove unnecessary tags and their content
+ * ✅ remove js inline event in html tag
+ * ✅ fix relative paths
  * @param mixed $html
  * @return string cleaned html
  */
 function html_clean($html, $option = []) {
 	$option = array_merge([
-		'url' => '', //current page url, used to fix relative paths
+		'url'                => '', //current page url, used to fix relative paths
 		'extract_clean_tags' => [], //tags that only need to be removed, but not their content
+		'keep_tags'          => [],
 	], $option);
+
+	if($option['keep_tags']){
+		$option['keep_tags'] = array_map('strtolower', $option['keep_tags']);
+	}
 
 	$REMOVE_CONTENT_TAGS = [
 		'applet', 'area', 'base', 'basefont', 'blink', 'button', 'comment', 'embed', 'form', 'frame', 'frameset',
@@ -834,6 +839,15 @@ function html_clean($html, $option = []) {
 	$REMOVE_TAGS_ONLY = array_merge([
 		'applet', 'base', 'body', 'head', 'html', 'link', 'marquee', 'meta'
 	], $REMOVE_CONTENT_TAGS, $option['extract_clean_tags']);
+
+	if($option['keep_tags']){
+		$REMOVE_CONTENT_TAGS = array_filter($REMOVE_CONTENT_TAGS, function($item) use ($option){
+			return !in_array($item, $option['keep_tags']);
+		});
+		$REMOVE_TAGS_ONLY = array_filter($REMOVE_TAGS_ONLY, function($item) use ($option){
+			return !in_array($item, $option['keep_tags']);
+		});
+	}
 
 	foreach ($REMOVE_CONTENT_TAGS as $t) {
 		$html = preg_replace("/<{$t}[^>]*>.*?<\/{$t}>/is", '', $html);
@@ -847,7 +861,9 @@ function html_clean($html, $option = []) {
 	$html = preg_replace('/<!--.*?-->/is', '', $html);
 
 	//remove empty tags
-	$html = preg_replace('/<[^>]*>\s*<\/[^>]*>/i', '', $html);
+	foreach(['div', 'p', 'span'] as $t){
+		$html = preg_replace("/<$t\s*>\s*<\/$t>/i", '', $html);
+	}
 
 	//remove js inline event in html tag ??
 	$html = preg_replace('/(<\w+[^>]+)\son\w+\s*=\s*".*?"/i', '$1', $html);
@@ -856,7 +872,7 @@ function html_clean($html, $option = []) {
 		$html = html_fix_relative_path($html, $option['url']);
 	}
 
-	return $html;
+	return trim($html);
 }
 
 /**
