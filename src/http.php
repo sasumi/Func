@@ -336,6 +336,28 @@ function http_get_current_host($with_protocol = true, $with_port = false){
 }
 
 /**
+ * http build query recursive
+ * @param array $array
+ * @param string $_prefix
+ * @return string
+ * @throws \Exception
+ */
+function http_build_query_recursive(array $array, $_prefix = ''){
+	$query = [];
+	foreach($array as $key => $value){
+		$encode_key = $_prefix ? $_prefix.urlencode('['.$key.']') : urlencode($key);
+		if(is_array($value)){
+			$query[] = http_build_query_recursive($value, $encode_key);
+		}else if(is_scalar($value)){
+			$query[] = $encode_key.'='.urlencode($value);
+		}else{
+			throw new Exception('value type unable to encoding');
+		}
+	}
+	return implode('&', $query);
+}
+
+/**
  * Download files by file streaming
  * @param string $file file path
  * @param string $download_name Download file name
