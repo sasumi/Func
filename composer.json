@@ -65,6 +65,7 @@
 			"src/font.php",
 			"src/html.php",
 			"src/http.php",
+			"src/image.php",
 			"src/session.php",
 			"src/sheet.php",
 			"src/string.php",

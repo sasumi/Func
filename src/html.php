@@ -1121,25 +1121,3 @@ function fix_browser_datetime($datetime_str_from_h5, $fix_seconds = 0){
 	}
 	return (new DateTime($datetime_str_from_h5))->format('Y-m-d H:i:s');
 }
-
-/**
- * convert image file to data url
- * @example echo "<img src=".img_to_data_url("a.jpg")."/>";
- * @param string $img_file
- * @return string data url
- * @throws \Exception
- */
-function img_to_data_url($img_file){
-	if(!is_file($img_file)){
-		throw new Exception('Image file no exists');
-	}
-	$mime = get_mime_by_file($img_file);
-	if(!$mime){
-		throw new Exception('No mime detected');
-	}
-	$raw_data = file_get_contents($img_file);
-	if(!$raw_data){
-		throw new Exception('Image file empty or no readable');
-	}
-	return "data:{$mime};base64,".base64_encode($raw_data);
-}
