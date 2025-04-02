@@ -798,15 +798,22 @@ function html_fix_relative_path($html, $page_url){
  * @param int $len truncation length, empty means no truncation
  * @param string $tail append tail string character
  * @param bool $exceeded_length Exceeded length
+ * @param bool $nl2p convert line breaker to <p> or <br>
  * @return string
  */
-function text_to_html($text, $len = 0, $tail = '...', &$exceeded_length = false){
+function text_to_html($text, $len = 0, $tail = '...', &$exceeded_length = false, $nl2p = false){
 	if($len){
 		$text = substr_utf8($text, $len, $tail, $exceeded_length);
 	}
 	$html = htmlspecialchars($text);
 	$html = str_replace("\r", '', $html);
-	return str_replace([' ', "\n", "\t"], ['&nbsp;', '<br/>', '&nbsp;&nbsp;&nbsp;&nbsp;'], $html);
+	$html = str_replace([' ', "\t"], ['&nbsp;', '&nbsp;&nbsp;&nbsp;&nbsp;'], $html);
+	if(!$nl2p){
+		$html = str_replace("\n", '<br/>', $html);
+	} else {
+		$html = '<p>'.join('<p>', explode("\n", $html)).'</p>';
+	}
+	return $html;
 }
 
 /**
