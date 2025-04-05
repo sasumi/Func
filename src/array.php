@@ -512,6 +512,41 @@ function array_orderby($arr){
 }
 
 /**
+ * calculate rank in array, return the compared position in collection
+ * @param number $compareTo
+ * @param number[] $collection
+ * @param int $dir SORT_ASC:smaller first, SORT_DESC:bigger first
+ * @return int
+ * @throws \Exception
+ */
+function rank($compareTo, $collection, $dir = SORT_ASC){
+	switch($dir){
+		case SORT_ASC:
+			sort($collection);
+			$rank = 1;
+			foreach($collection as $val){
+				if($val == $compareTo || $val > $compareTo){
+					return $rank;
+				}
+				$rank++;
+			}
+			return $rank;
+
+		case SORT_DESC:
+			rsort($collection);
+			$rank = 1;
+			foreach($collection as $val){
+				if($val == $compareTo || $val < $compareTo){
+					return $rank;
+				}
+				$rank++;
+			}
+			return $rank;
+	}
+	throw new Exception('sort dir no support:'.$dir);
+}
+
+/**
  * Array sort by values
  * @param array[] $src_arr multi-dimensional array (record set)
  * @param string $field field name
