@@ -166,6 +166,7 @@ function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMM
  */
 function csv_save_file($file, $rows, $delimiter = CSV_COMMON_DELIMITER, $mode = 'a+'){
 	$fh = fopen($file, $mode);
+	fwrite($fh, CSV_HEADER_UTF8_BOM);
 	csv_save_file_handle($fh, $rows, $delimiter);
 	fclose($fh);
 }

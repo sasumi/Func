@@ -7,6 +7,7 @@ namespace LFPhp\Func;
 use Closure;
 use ErrorException;
 use Exception;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionObject;
 
@@ -51,6 +52,26 @@ function try_many_times($payload, $tries = 0){
 		}
 	}
 	return $tryCount - 1;
+}
+
+/**
+ * Check if the parameter is empty
+ * @param array $params
+ * @param string[] $check_fields
+ * @param bool $allow_empty whether to allow empty values
+ * @throws InvalidArgumentException
+ */
+function param_check_required(array $params, array $check_fields, $allow_empty = false){
+	$check_fields = array_flip($check_fields);
+	$check_fields = array_intersect_key($params, $check_fields);
+	if(count($check_fields) != count($check_fields)){
+		throw new InvalidArgumentException('Missing required parameters: '.join(',', array_keys($check_fields)));
+	}
+	foreach($check_fields as $k => $v){
+		if(!$allow_empty && empty($v)){
+			throw new InvalidArgumentException("Parameter [$k] cannot be empty");
+		}
+	}
 }
 
 /**
