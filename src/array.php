@@ -572,7 +572,7 @@ function array_orderby_values(array $src_arr, $field, array $values, $pad_tail_o
 
 /**
  * Array sort by keys
- * @param array[] $src_arr
+ * @param array[]|array $src_arr
  * @param string[] $keys
  * @param bool $mismatch_to_head set mismatch item to head
  * @return array
@@ -589,7 +589,7 @@ function array_orderby_keys($src_arr, $keys, $mismatch_to_head = false){
 		}
 	}
 	if($src_arr){
-		$tmp = $mismatch_to_head ? array_merge($src_arr, $tmp) : array_merge_after($tmp, $src_arr);
+		$tmp = $mismatch_to_head ? array_merge_assoc($src_arr, $tmp) : array_merge_assoc($tmp, $src_arr);
 	}
 	return $tmp;
 }
