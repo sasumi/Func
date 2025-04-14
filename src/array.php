@@ -515,35 +515,31 @@ function array_orderby($arr){
  * calculate rank in array, return the compared position in collection
  * @param number $compareTo
  * @param number[] $collection
- * @param int $dir SORT_ASC:smaller first, SORT_DESC:bigger first
+ * @param bool $lower_first start rank from lower number
  * @return int
  * @throws \Exception
  */
-function rank($compareTo, $collection, $dir = SORT_ASC){
-	switch($dir){
-		case SORT_ASC:
-			sort($collection);
-			$rank = 1;
-			foreach($collection as $val){
-				if($val == $compareTo || $val > $compareTo){
-					return $rank;
-				}
-				$rank++;
+function rank($compareTo, $collection, $lower_first = false){
+	if($lower_first){
+		sort($collection);
+		$rank = 1;
+		foreach($collection as $val){
+			if($val == $compareTo || $val > $compareTo){
+				return $rank;
 			}
-			return $rank;
-
-		case SORT_DESC:
-			rsort($collection);
-			$rank = 1;
-			foreach($collection as $val){
-				if($val == $compareTo || $val < $compareTo){
-					return $rank;
-				}
-				$rank++;
-			}
-			return $rank;
+			$rank++;
+		}
+		return $rank;
 	}
-	throw new Exception('sort dir no support:'.$dir);
+	rsort($collection);
+	$rank = 1;
+	foreach($collection as $val){
+		if($val == $compareTo || $val < $compareTo){
+			return $rank;
+		}
+		$rank++;
+	}
+	return $rank;
 }
 
 /**
