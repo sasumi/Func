@@ -524,7 +524,7 @@ function rank($compareTo, $collection, $lower_first = false){
 		sort($collection);
 		$rank = 1;
 		foreach($collection as $val){
-			if($val == $compareTo || $val > $compareTo){
+			if($val == $compareTo || $val < $compareTo){
 				return $rank;
 			}
 			$rank++;
@@ -534,7 +534,7 @@ function rank($compareTo, $collection, $lower_first = false){
 	rsort($collection);
 	$rank = 1;
 	foreach($collection as $val){
-		if($val == $compareTo || $val < $compareTo){
+		if($val == $compareTo || $val > $compareTo){
 			return $rank;
 		}
 		$rank++;
