@@ -520,11 +520,11 @@ function array_orderby($arr){
  * @throws \Exception
  */
 function rank($compareTo, $collection, $lower_first = false){
+	$rank = 1;
 	if($lower_first){
 		sort($collection);
-		$rank = 1;
 		foreach($collection as $val){
-			if($val == $compareTo || $val < $compareTo){
+			if($compareTo <= $val){
 				return $rank;
 			}
 			$rank++;
@@ -532,9 +532,8 @@ function rank($compareTo, $collection, $lower_first = false){
 		return $rank;
 	}
 	rsort($collection);
-	$rank = 1;
 	foreach($collection as $val){
-		if($val == $compareTo || $val > $compareTo){
+		if($compareTo >= $val){
 			return $rank;
 		}
 		$rank++;
