@@ -494,6 +494,10 @@ function curl_set_default_option(array $curl_option, $override = false){
 function curl_instance($url, array $ext_curl_option = []){
 	$curl_option = curl_get_default_option($ext_curl_option);
 	$curl_option[CURLOPT_URL] = $url ?: $curl_option[CURLOPT_URL];
+	
+	if(!is_url($curl_option[CURLOPT_URL])){
+		throw new Exception('curl url invalid: '.$curl_option[CURLOPT_URL]);
+	}
 
 	//Supplementary support for https:// protocol
 	//Supplementary support for https:// protocol while no SSL option was set
@@ -524,7 +528,7 @@ function curl_instance($url, array $ext_curl_option = []){
 
 	$ch = curl_init();
 	if(!$ch){
-		throw new Exception('Curl init fail');
+		throw new Exception('curl init fail');
 	}
 
 	event_fire(EVENT_CURL_INITIALIZED, $ch, $curl_option);
