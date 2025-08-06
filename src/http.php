@@ -129,8 +129,9 @@ function http_send_cors($allow_hosts = [], $http_origin = null){
 		throw new Exception('header already sent');
 	}
 	header("Access-Control-Allow-Origin: $http_scheme://$request_host");
+	header('Access-Control-Allow-Headers: Content-Type, Authorization');
 	header('Access-Control-Allow-Credentials: true');
-	header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+	header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 }
 
 /**
