@@ -905,3 +905,43 @@ function array_to_yaml_simple($data, $indent = 0){
 	}
 	return $yaml;
 }
+
+/**
+ * 简单数组转换成xml（不支持属性）
+ * @param array $array
+ * @param bool $content_only 是否返回xml头
+ * @return string
+ */
+function array_to_xml($array, $content_only = false){
+	$xml = !$content_only ? '<xml>' : '';
+	foreach($array as $key => $value){
+		if(is_array($value)){
+			$xml .= array_to_xml($value, true);
+		}else{
+			$val_str = '';
+			switch(gettype($value)){
+				case 'integer':
+				case 'double':
+					$val_str = $value;
+					break;
+				case 'string':
+					$val_str = "<![CDATA[".htmlspecialchars($value, ENT_XML1)."]]>";
+					break;
+				case 'null':
+					$val_str = '';
+					break;
+				case 'boolean':
+					$val_str = $value ? 'true' : 'false';
+					break;
+				case 'object':
+					$val_str = method_exists($value, '__toString') ? $value->__toString() : '';
+					break;
+				default:
+					throw new Exception('no support type'.gettype($value));
+			}
+			$xml .= "<$key>".$val_str."</$key>";
+		}
+	}
+	$xml .= !$content_only ? '</xml>' : '';
+	return $xml;
+}
