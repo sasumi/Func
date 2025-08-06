@@ -927,7 +927,7 @@ function array_to_xml($array, $content_only = false){
 				case 'string':
 					$val_str = "<![CDATA[".htmlspecialchars($value, ENT_XML1)."]]>";
 					break;
-				case 'null':
+				case 'NULL':
 					$val_str = '';
 					break;
 				case 'boolean':
