@@ -113,25 +113,40 @@ function http_chunk_on(){
  * @param string $http_origin origin request, format: http://www.abc.com, by default obtained from HTTP_ORIGIN or HTTP_REFERER
  * @throws \Exception
  */
-function http_send_cors($allow_hosts = [], $http_origin = null){
+function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_max_age = ONE_DAY) {
 	$http_origin = $http_origin ?: $_SERVER['HTTP_ORIGIN'] ?: $_SERVER['HTTP_REFERER'];
-	if(!$http_origin){
+	if (!$http_origin) {
 		throw new Exception('no http origin detected');
 	}
 	$ret = parse_url($http_origin);
 	$request_host = $ret['host'];
 	$http_scheme = $ret['scheme'];
 
-	if($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))){
-		throw new Exception('request host:'.$request_host.' no in allow host list('.json_encode($allow_hosts).')');
+	if ($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))) {
+		throw new Exception('request host:' . $request_host . ' no in allow host list(' . json_encode($allow_hosts) . ')');
 	}
 	if (headers_sent()) {
 		throw new Exception('header already sent');
 	}
+
+	//Options请求返回的字段比较多
+	if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+		header("Access-Control-Allow-Origin: $http_scheme://$request_host");
+		header('Access-Control-Allow-Credentials: true');
+		header('Access-Control-Allow-Headers: Content-Type, Authorization');
+		header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+		if ($option_cache_max_age) {
+			header("Access-Control-Max-Age: $option_cache_max_age");
+		}
+		http_response_code(204);
+		exit(0);
+	}
+
+	//正常请求也必须返回以下字段
 	header("Access-Control-Allow-Origin: $http_scheme://$request_host");
-	header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+	//由于Options返回了Credentials信息，正常请求也必须有这个头部信息
 	header('Access-Control-Allow-Credentials: true');
-	header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 }
 
 /**
