@@ -371,11 +371,12 @@ function array_filter_values($arr, $reserved_values = [], $remove_values = []){
 function array_filter_recursive($arr, $payload){
 	$ret = [];
 	foreach($arr as $k => $item){
-		if($payload($item, $k) === false){
-			continue;
-		}
 		if(is_array($item)){
 			$ret[$k] = array_filter_recursive($item, $payload);
+			continue;
+		}
+		if($payload($item, $k) !== false){
+			$ret[$k] = $item;
 		}
 	}
 	return $ret;
