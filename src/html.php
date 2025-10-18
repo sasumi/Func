@@ -1069,7 +1069,8 @@ function static_version_set(array $patch_config = []){
 			$_config[$k] = $v;
 		}
 		uksort($_config, function($k1, $k2){
-			return strlen($k1) < strlen($k2);
+			// return negative if $k1 < $k2, 0 if equal, positive if $k1 > $k2
+			return strlen($k1) <=> strlen($k2);
 		});
 	}
 	return $_config;

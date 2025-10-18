@@ -266,7 +266,7 @@ function http_from_json_request(){
  */
 function http_get_content_type(&$directives = []){
 	$type_str = http_get_request_header('Content-Type');
-	[$media_type, $directives_str] = explode_by(';', $type_str);
+	[$media_type, $directives_str] = array_pad(explode_by(';', $type_str), 2, '');
 	if($directives_str && preg_match('/(\w+)=(.*)$/', $directives_str, $matches)){
 		$directives[$matches[1]] = $matches[2];
 	}
