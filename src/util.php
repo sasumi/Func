@@ -351,9 +351,7 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
 			E_DEPRECATED        => DeprecatedException::class,
 			E_USER_DEPRECATED   => UserDeprecatedException::class,
 		];
-		dump('[' . $err_severity_map[$err_severity] . ']' . $err_str, $err_file . '#' . $err_line);
 		$exp_class = isset($err_severity_map[$err_severity]) ? $err_severity_map[$err_severity] : ErrorException::class;
-		dump($exp_class);
 		throw new $exp_class($err_str, 0, $err_severity, $err_file, $err_line);
 	}, $error_levels);
 }
