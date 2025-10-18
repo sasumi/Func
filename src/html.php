@@ -771,6 +771,7 @@ function h($str, $len = null, $tail = '...', &$length_exceeded = false){
  * @return string
  */
 function ha($str, $len = 0, $tail = '...', &$length_exceeded = false){
+	$str = (string)$str;
 	$str = cut_string($str, $len, $tail, $length_exceeded);
 	return htmlspecialchars($str, ENT_QUOTES);
 }
