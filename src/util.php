@@ -320,12 +320,13 @@ function exception_override($e, $message = null, $file = null, $line = null) {
 /**
  * Register to convert PHP errors into exceptions
  * php fatal error was un-catchable
- * @param int $error_levels
+ * @param int $error_levels error levels to be converted, default is current error_reporting() value
  * @param \ErrorException|null $exception_class
  * @return callable|null
  * @throws \ErrorException
  */
-function register_error2exception($error_levels = E_ALL, ErrorException $exception_class = null) {
+function register_error2exception($error_levels = null, ErrorException $exception_class = null) {
+	$error_levels = $error_levels ?: error_reporting();
 	return set_error_handler(function ($err_severity, $err_str, $err_file, $err_line) use ($exception_class) {
 		if (error_reporting() === 0) {
 			dump('error suppressed by @ operator', 1);
@@ -351,6 +352,7 @@ function register_error2exception($error_levels = E_ALL, ErrorException $excepti
 			E_DEPRECATED        => DeprecatedException::class,
 			E_USER_DEPRECATED   => UserDeprecatedException::class,
 		];
+
 		$exp_class = isset($err_severity_map[$err_severity]) ? $err_severity_map[$err_severity] : ErrorException::class;
 		throw new $exp_class($err_str, 0, $err_severity, $err_file, $err_line);
 	}, $error_levels);
