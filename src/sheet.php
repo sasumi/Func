@@ -134,13 +134,15 @@ function csv_read_file_chunk($file, callable $output, $headers = [], $chunk_size
  * @param string[] $keys returns the array key configuration, if empty, returns the natural index array
  * @param int $start_line The number of lines to start reading, the default is line 1
  * @param string $delimiter delimiter
+ * @param string $enclosure enclosure 
+ * @param string $escape escape
  * @return array data, the format is: [[key1=>val, key2=>val, ...], ...], if no key is configured, return a two-dimensional natural index array
  */
-function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMMON_DELIMITER){
+function csv_read_file($file, $keys = [], $start_line = 1, $delimiter = CSV_COMMON_DELIMITER, $enclosure = '"', $escape = '\\'){
 	$fp = fopen($file, 'r');
 	$ret = [];
 	$line_num = 0;
-	while($data = fgetcsv($fp, 0, $delimiter)){
+	while($data = fgetcsv($fp, 0, $delimiter, $enclosure, $escape)){
 		$line_num++;
 		if($start_line && $start_line > $line_num){
 			continue;
