@@ -329,7 +329,6 @@ function register_error2exception($error_levels = null, ErrorException $exceptio
 	$error_levels = $error_levels ?: error_reporting();
 	return set_error_handler(function ($err_severity, $err_str, $err_file, $err_line) use ($exception_class) {
 		if (error_reporting() === 0) {
-			throw new ErrorException('Error suppressed by @ operator, Err:' . $err_str, 0, $err_severity, $err_file, $err_line);
 			return false;
 		}
 		if ($exception_class) {
