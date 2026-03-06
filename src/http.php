@@ -122,7 +122,7 @@ function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_ma
 	$request_host = $ret['host'];
 	$http_scheme = $ret['scheme'];
 
-	if ($allow_hosts && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))) {
+	if ($allow_hosts && !in_array('*', $allow_hosts) && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))) {
 		throw new Exception('request host:' . $request_host . ' no in allow host list(' . json_encode($allow_hosts) . ')');
 	}
 	if (headers_sent()) {
