@@ -119,7 +119,9 @@ function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_ma
 		throw new Exception('no http origin detected');
 	}
 	$ret = parse_url($http_origin);
-	$request_host = $ret['host'];
+
+	$port_str = isset($ret['port']) ? ':' . $ret['port'] : '';
+	$request_host = $ret['host'] . $port_str;
 	$http_scheme = $ret['scheme'];
 
 	if ($allow_hosts && !in_array('*', $allow_hosts) && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))) {
