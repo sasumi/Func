@@ -1,7 +1,9 @@
 <?php
+
 /**
  * HTTP Enhancement Function
  */
+
 namespace LFPhp\Func;
 
 use Exception;
@@ -85,12 +87,12 @@ const HTTP_METHOD_ACL = 'ACL';
  * @param int $status http status code
  * @return bool
  */
-function http_send_status($status){
+function http_send_status($status) {
 	$message = http_get_status_message($status);
-	if(!headers_sent() && $message){
-		if(substr(php_sapi_name(), 0, 3) == 'cgi'){//CGI mode
+	if (!headers_sent() && $message) {
+		if (substr(php_sapi_name(), 0, 3) == 'cgi') { //CGI mode
 			header("Status: $status $message");
-		}else{ //FastCGI mode
+		} else { //FastCGI mode
 			header("{$_SERVER['SERVER_PROTOCOL']} $status $message");
 		}
 		return true;
@@ -101,7 +103,7 @@ function http_send_status($status){
 /**
  * Enable httpd server chunk output
  */
-function http_chunk_on(){
+function http_chunk_on() {
 	@ob_end_clean(); //Force PHP to output content directly to the browser without adding buffer
 	ob_implicit_flush(true); //Set nginx or apache to not buffer and output directly
 	header('X-Accel-Buffering: no'); //The key is to add this line.
@@ -156,9 +158,9 @@ function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_ma
  * @param string $charset
  * @return bool whether it is successful
  */
-function http_send_charset($charset){
+function http_send_charset($charset) {
 	if (!headers_sent()) {
-		header('Content-Type:text/html; charset='.$charset);
+		header('Content-Type:text/html; charset=' . $charset);
 		return true;
 	}
 	return false;
@@ -169,7 +171,7 @@ function http_send_charset($charset){
  * @param int $status
  * @return string|null
  */
-function http_get_status_message($status){
+function http_get_status_message($status) {
 	return HTTP_STATUS_MESSAGE_MAP[$status];
 }
 
@@ -178,33 +180,33 @@ function http_get_status_message($status){
  * @param string $url jump path
  * @param bool $permanently whether it is a long-term resource redirection
  */
-function http_redirect($url, $permanently = false){
+function http_redirect($url, $permanently = false) {
 	http_send_status($permanently ? 301 : 302);
-	header('Location:'.$url);
+	header('Location:' . $url);
 }
 
 /**
  * Get HTTP request header information array
  * @return array [key=>val]
  */
-function http_get_request_headers(){
-	if(function_exists('\http_get_request_headers')){
+function http_get_request_headers() {
+	if (function_exists('\http_get_request_headers')) {
 		return call_user_func('\http_get_request_headers');
 	}
 	$headers = array();
-	foreach($_SERVER as $key => $value){
-		if('HTTP_' == substr($key, 0, 5)){
+	foreach ($_SERVER as $key => $value) {
+		if ('HTTP_' == substr($key, 0, 5)) {
 			$headers[str_replace('_', '-', substr($key, 5))] = $value;
 		}
-		if(isset($_SERVER['PHP_AUTH_DIGEST'])){
+		if (isset($_SERVER['PHP_AUTH_DIGEST'])) {
 			$headers['AUTHORIZATION'] = $_SERVER['PHP_AUTH_DIGEST'];
-		}elseif(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
-			$headers['AUTHORIZATION'] = base64_encode($_SERVER['PHP_AUTH_USER'].':'.$_SERVER['PHP_AUTH_PW']);
+		} elseif (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+			$headers['AUTHORIZATION'] = base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . $_SERVER['PHP_AUTH_PW']);
 		}
-		if(isset($_SERVER['CONTENT_LENGTH'])){
+		if (isset($_SERVER['CONTENT_LENGTH'])) {
 			$headers['CONTENT-LENGTH'] = $_SERVER['CONTENT_LENGTH'];
 		}
-		if(isset($_SERVER['CONTENT_TYPE'])){
+		if (isset($_SERVER['CONTENT_TYPE'])) {
 			$headers['CONTENT-TYPE'] = $_SERVER['CONTENT_TYPE'];
 		}
 	}
@@ -216,10 +218,10 @@ function http_get_request_headers(){
  * @param string $key case-insensitive
  * @return mixed|null
  */
-function http_get_request_header($key){
+function http_get_request_header($key) {
 	$headers = http_get_request_headers();
-	foreach($headers as $k => $val){
-		if(strcasecmp($k, $key) === 0){
+	foreach ($headers as $k => $val) {
+		if (strcasecmp($k, $key) === 0) {
 			return $val;
 		}
 	}
@@ -231,19 +233,19 @@ function http_get_request_header($key){
  * @param $header_str
  * @return array
  */
-function http_parse_headers($header_str){
+function http_parse_headers($header_str) {
 	$headers = [];
-	foreach(explode("\n", $header_str) as $h){
+	foreach (explode("\n", $header_str) as $h) {
 		[$k, $v] = explode(':', $h, 2);
 		//Since HTTP HEADER has no case constraints, in order to avoid irregular data input, all the data is formatted in lower case
 		$k = strtolower($k);
-		if(isset($v)){
-			if (!isset($headers[$k])){
+		if (isset($v)) {
+			if (!isset($headers[$k])) {
 				$headers[$k] = trim($v);
-			}else if(is_array($headers[$k])){
+			} else if (is_array($headers[$k])) {
 				$tmp = array_merge($headers[$k], array(trim($v)));
 				$headers[$k] = $tmp;
-			}else{
+			} else {
 				$tmp = array_merge(array($headers[$k]), array(trim($v)));
 				$headers[$k] = $tmp;
 			}
@@ -256,7 +258,7 @@ function http_parse_headers($header_str){
  * Determine whether the request method is JSON
  * @return bool
  */
-function http_from_json_request(){
+function http_from_json_request() {
 	return http_get_content_type() == 'application/json';
 }
 
@@ -266,10 +268,10 @@ function http_from_json_request(){
  * @param array $directives additional directives, such as ['charset'=>'utf-8'], or ['boundary'=>'ExampleBoundaryString']
  * @return string
  */
-function http_get_content_type(&$directives = []){
+function http_get_content_type(&$directives = []) {
 	$type_str = http_get_request_header('Content-Type');
 	[$media_type, $directives_str] = array_pad(explode_by(';', $type_str), 2, '');
-	if($directives_str && preg_match('/(\w+)=(.*)$/', $directives_str, $matches)){
+	if ($directives_str && preg_match('/(\w+)=(.*)$/', $directives_str, $matches)) {
 		$directives[$matches[1]] = $matches[2];
 	}
 	return strtolower($media_type);
@@ -280,7 +282,7 @@ function http_get_content_type(&$directives = []){
  * @param bool $include_generic_match Whether to support generic matching. Since the client may not strictly process the format of the request, this option is generally not enabled.
  * @return bool
  */
-function http_request_accept_json($include_generic_match = false){
+function http_request_accept_json($include_generic_match = false) {
 	$str = http_get_request_header('Accept');
 	$tmp = http_parse_string_use_q_value($str);
 	$accept_list = array_column($tmp, 'type');
@@ -294,7 +296,7 @@ function http_request_accept_json($include_generic_match = false){
  * @param $str
  * @return array [[type, q], ...]
  */
-function http_parse_string_use_q_value($str){
+function http_parse_string_use_q_value($str) {
 	$accepts = explode(',', $str);
 	$result = [];
 	foreach ($accepts as $accept) {
@@ -306,7 +308,7 @@ function http_parse_string_use_q_value($str){
 		}
 		$result[] = ['type' => strtolower($type), 'q' => $q];
 	}
-	usort($result, function($a, $b) {
+	usort($result, function ($a, $b) {
 		return $b['q'] <=> $a['q'];
 	});
 	return $result;
@@ -316,7 +318,7 @@ function http_parse_string_use_q_value($str){
  * Request comes from POST
  * @return bool
  */
-function request_in_post(){
+function request_in_post() {
 	return $_SERVER['REQUEST_METHOD'] === 'POST';
 }
 
@@ -324,7 +326,7 @@ function request_in_post(){
  * Request comes from GET
  * @return bool
  */
-function request_in_get(){
+function request_in_get() {
 	return $_SERVER['REQUEST_METHOD'] === 'GET';
 }
 
@@ -333,8 +335,8 @@ function request_in_get(){
  * @param bool $with_protocol whether to include the protocol header
  * @return string
  */
-function http_get_current_page_url($with_protocol = true, $with_port = false){
-	return http_get_current_host($with_protocol, $with_port).$_SERVER['REQUEST_URI'];
+function http_get_current_page_url($with_protocol = true, $with_port = false) {
+	return http_get_current_host($with_protocol, $with_port) . $_SERVER['REQUEST_URI'];
 }
 
 /**
@@ -343,14 +345,14 @@ function http_get_current_page_url($with_protocol = true, $with_port = false){
  * @param bool $with_port whether to include the port (valid only for non-http:80, https:443)
  * @return string such as http://www.abc.com http://www.abc.com:81 does not contain a slash at the end
  */
-function http_get_current_host($with_protocol = true, $with_port = false){
+function http_get_current_host($with_protocol = true, $with_port = false) {
 	$server_port = $_SERVER['SERVER_PORT'];
 	$port_str = '';
-	if($with_port && ((server_in_https() && $server_port != 443) || (!server_in_https() && $server_port != 80))){
-		$port_str = ':'.$server_port;
+	if ($with_port && ((server_in_https() && $server_port != 443) || (!server_in_https() && $server_port != 80))) {
+		$port_str = ':' . $server_port;
 	}
 	$protocol_str = $with_protocol ? (server_in_https() ? 'https:' : 'http:') : '';
-	return $protocol_str.'//'.$_SERVER['HTTP_HOST'].$port_str;
+	return $protocol_str . '//' . $_SERVER['HTTP_HOST'] . $port_str;
 }
 
 /**
@@ -360,15 +362,15 @@ function http_get_current_host($with_protocol = true, $with_port = false){
  * @return string
  * @throws \Exception
  */
-function http_build_query_recursive(array $array, $_prefix = ''){
+function http_build_query_recursive(array $array, $_prefix = '') {
 	$query = [];
-	foreach($array as $key => $value){
-		$encode_key = $_prefix ? $_prefix.urlencode('['.$key.']') : urlencode($key);
-		if(is_array($value)){
+	foreach ($array as $key => $value) {
+		$encode_key = $_prefix ? $_prefix . urlencode('[' . $key . ']') : urlencode($key);
+		if (is_array($value)) {
 			$query[] = http_build_query_recursive($value, $encode_key);
-		}else if(is_scalar($value)){
-			$query[] = $encode_key.'='.urlencode($value);
-		}else{
+		} else if (is_scalar($value)) {
+			$query[] = $encode_key . '=' . urlencode($value);
+		} else {
 			throw new Exception('value type unable to encoding');
 		}
 	}
@@ -382,15 +384,15 @@ function http_build_query_recursive(array $array, $_prefix = ''){
  * @param string $disposition header type
  * @return false|int Successfully downloaded file size, false means failed
  */
-function http_download_stream($file, $download_name = '', $disposition = 'attachment'){
+function http_download_stream($file, $download_name = '', $disposition = 'attachment') {
 	http_header_download($download_name, $disposition);
-	$CHUNK_SIZE = 1024*1024;
+	$CHUNK_SIZE = 1024 * 1024;
 	$handle = fopen($file, 'rb');
-	if($handle === false){
+	if ($handle === false) {
 		return false;
 	}
 	$cnt = 0;
-	while(!feof($handle)){
+	while (!feof($handle)) {
 		$buffer = fread($handle, $CHUNK_SIZE);
 		echo $buffer;
 		ob_flush();
@@ -398,7 +400,7 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
 		$cnt += strlen($buffer);
 	}
 	$status = fclose($handle);
-	if($status){
+	if ($status) {
 		return $cnt;
 	}
 	return false;
@@ -410,7 +412,7 @@ function http_download_stream($file, $download_name = '', $disposition = 'attach
  * @param int $json_option
  * @return void
  */
-function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
+function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE) {
 	http_header_json_response();
 	echo json_encode($json, $json_option);
 }
@@ -419,8 +421,8 @@ function http_json_response($json, $json_option = JSON_UNESCAPED_UNICODE){
  * Response JSON return header
  * @param string $charset
  */
-function http_header_json_response($charset = 'utf-8'){
-	header('Content-Type: application/json;'.($charset ? " charset=$charset" : ''));
+function http_header_json_response($charset = 'utf-8') {
+	header('Content-Type: application/json;' . ($charset ? " charset=$charset" : ''));
 }
 
 /**
@@ -428,14 +430,14 @@ function http_header_json_response($charset = 'utf-8'){
  * @param string $download_name
  * @param string $disposition
  */
-function http_header_download($download_name = '', $disposition = 'attachment'){
+function http_header_download($download_name = '', $disposition = 'attachment') {
 	header("Pragma: public");
 	header("Expires: 0");
 	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 	header("Content-Type: application/force-download");
 	header("Content-Type: application/octet-stream");
 	header("Content-Type: application/download");
-	header("Content-Disposition: $disposition".($download_name ? ";filename=\"$download_name\"" : ''));
+	header("Content-Disposition: $disposition" . ($download_name ? ";filename=\"$download_name\"" : ''));
 	header("Content-Transfer-Encoding: binary");
 }
 
@@ -446,13 +448,13 @@ function http_header_download($download_name = '', $disposition = 'attachment'){
  * @param bool $report_only
  * @throws \Exception
  */
-function http_header_csp(array $csp_rules, $report_uri = '', $report_only = false){
-	if($report_only && !$report_uri){
+function http_header_csp(array $csp_rules, $report_uri = '', $report_only = false) {
+	if ($report_only && !$report_uri) {
 		throw new Exception('CSP report uri required.');
 	}
-	$str = ($report_only ? CSP_REPORT_ONLY_PREFIX : CSP_PREFIX).': ';
-	$str .= join('; ', $csp_rules).';';
-	$str .= $report_uri ? csp_report_uri($report_uri).';' : '';
+	$str = ($report_only ? CSP_REPORT_ONLY_PREFIX : CSP_PREFIX) . ': ';
+	$str .= join('; ', $csp_rules) . ';';
+	$str .= $report_uri ? csp_report_uri($report_uri) . ';' : '';
 	header($str);
 }
 
@@ -463,8 +465,8 @@ function http_header_csp(array $csp_rules, $report_uri = '', $report_only = fals
  * @param number $max_age_sec
  * @param bool $include_subdomains
  */
-function http_header_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
-	header('Report-To: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
+function http_header_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true) {
+	header('Report-To: ' . json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
 }
 
 /**
@@ -475,8 +477,8 @@ function http_header_report_api(array $endpoint_urls, $group = 'default', $max_a
  * @param bool $include_subdomains
  * @return void
  */
-function http_header_report_api_nel(array $endpoint_urls, $group = 'network-error', $max_age_sec = ONE_DAY, $include_subdomains = true){
-	header('NEL: '.json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
+function http_header_report_api_nel(array $endpoint_urls, $group = 'network-error', $max_age_sec = ONE_DAY, $include_subdomains = true) {
+	header('NEL: ' . json_encode(generate_report_api($endpoint_urls, $group, $max_age_sec, $include_subdomains)));
 }
 
 /**
@@ -487,9 +489,9 @@ function http_header_report_api_nel(array $endpoint_urls, $group = 'network-erro
  * @param bool $include_subdomains
  * @return array
  */
-function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true){
+function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_sec = ONE_DAY, $include_subdomains = true) {
 	$endpoints_obj = [];
-	foreach($endpoint_urls as $url){
+	foreach ($endpoint_urls as $url) {
 		$endpoints_obj[] = ['url' => $url];
 	}
 	return [
@@ -501,11 +503,41 @@ function generate_report_api(array $endpoint_urls, $group = 'default', $max_age_
 }
 
 /**
+ * Set cookie and synchronize to $_COOKIE immediately, which is more intuitive and convenient to use. Since the original setcookie() function does not synchronize to $_COOKIE until the next request, it may cause some confusion in some scenarios. For example, after calling setcookie('test', 'value'), if you want to get the value of 'test' from $_COOKIE, it will return null instead of 'value'. This function will solve this problem by synchronizing the cookie value to $_COOKIE immediately after setting the cookie.
+ */
+function set_cookie_now($name, $value = "", array $options = []) {
+	// 兼容 PHP 7/8 options
+	$expire = $options['expires'] ?? $options['expire'] ?? 0;
+
+	// 判断是否“有效 cookie 写入”
+	// 规则：
+	// 1. expire <= 当前时间 => 删除/过期行为 ❌
+	// 2. value 为 null 通常也视为删除 ❌
+	$isValid =
+		$value !== null &&
+		!($expire && $expire <= time());
+
+	// 调用原生 setcookie
+	$result = setcookie($name, $value, $options);
+
+	// 同步到 $_COOKIE（仅在当前请求内）
+	if ($result && $isValid) {
+		$_COOKIE[$name] = $value;
+	}
+
+	// 如果是删除行为，也同步 unset（更符合直觉）
+	if ($result && !$isValid) {
+		unset($_COOKIE[$name]);
+	}
+	return $result;
+}
+
+/**
  * Parse the cookie string into a hash array
  * @param string $cookie_str
  * @return array
  */
-function http_parse_cookie($cookie_str){
+function http_parse_cookie($cookie_str) {
 	parse_str(strtr($cookie_str, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
 	return $cookies;
 }
@@ -516,27 +548,27 @@ function http_parse_cookie($cookie_str){
  * @param string $base_url base url (such as page url)
  * @return string|string[]
  */
-function http_fix_relative_url($url, $base_url){
-	if(is_array($url)){
-		foreach($url as $k => $u){
+function http_fix_relative_url($url, $base_url) {
+	if (is_array($url)) {
+		foreach ($url as $k => $u) {
 			$url[$k] = http_fix_relative_url($u, $base_url);
 		}
 		return $url;
 	}
 
 	//The url already contains a schema, or uses a relative protocol [//], so no further matching is required
-	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//'){
+	if (parse_url($url, PHP_URL_SCHEME) != '' || substr($url, 0, 2) == '//') {
 		return $url;
 	}
 
 	//Query statement, or anchor
-	if ($url[0]=='#' || $url[0]=='?'){
-		return $base_url.$url;
+	if ($url[0] == '#' || $url[0] == '?') {
+		return $base_url . $url;
 	}
 
 	// [../] is corrected to [./]
-	if(strpos($url, '../') === 0){
-		$url = './'.$url;
+	if (strpos($url, '../') === 0) {
+		$url = './' . $url;
 	}
 
 	/* parse base URL and convert to local variables:
@@ -554,8 +586,9 @@ function http_fix_relative_url($url, $base_url){
 
 	/* replace '//' or '/./' or '/foo/../' with '/' */
 	$re = array('#(/\.?/)#', '#/(?!\.\.)[^/]+/\.\./#');
-	for($n=1; $n>0; $abs=preg_replace($re, '/', $abs, -1, $n)) {}
+	for ($n = 1; $n > 0; $abs = preg_replace($re, '/', $abs, -1, $n)) {
+	}
 
 	/* absolute URL is ready! */
-	return $scheme.'://'.$abs;
+	return $scheme . '://' . $abs;
 }
