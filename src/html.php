@@ -465,7 +465,7 @@ function html_tag_datetime($name, $datetime_or_timestamp = '', $attributes = [])
 	$attributes['name'] = $name;
 	$attributes['step'] = 1; //Step must be filled in order to select seconds in the case of an empty value
 	if($datetime_or_timestamp){
-		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Ymd\TH:i:s', $datetime_or_timestamp) : date('Ymd\TH:i:s', strtotime($datetime_or_timestamp));
+		$attributes['value'] = is_numeric($datetime_or_timestamp) ? date('Y-m-d\TH:i:s', $datetime_or_timestamp) : date('Y-m-d\TH:i:s', strtotime($datetime_or_timestamp));
 	}else{
 		$attributes['value'] = '0000-00-00T00:00:00';
 	}
