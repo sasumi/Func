@@ -590,34 +590,6 @@ function html_tag_js($src, $attributes = []){
 }
 
 /**
- * Build html date input
- * @param string $name
- * @param string $value
- * @param array $attributes
- * @return string
- */
-function html_tag_date_input($name, $value = '', $attributes = []){
-	$attributes['type'] = 'date';
-	$attributes['name'] = $name;
-	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Ymd', strtotime($value)) : '';
-	return html_tag('input', $attributes);
-}
-
-/**
- * Build html time input
- * @param string $name
- * @param string $value
- * @param array $attributes
- * @return string
- */
-function html_tag_date_time_input($name, $value = '', $attributes = []){
-	$attributes['type'] = 'datetime-local';
-	$attributes['name'] = $name;
-	$attributes['value'] = ($value && strpos($value, '0000') !== false) ? date('Ymd H:i:s', strtotime($value)) : '';
-	return html_tag('input', $attributes);
-}
-
-/**
  * Build DataList
  * @param string $id
  * @param array $data_map index array: [val=>title,...], or natural growth array: [title1, title2,...]
