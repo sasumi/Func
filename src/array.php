@@ -622,6 +622,67 @@ function array_sumby(array $arr, $field){
 }
 
 /**
+ * Enhanced array_column function with better support for ArrayAccess objects in PHP 7.x
+ * PHP 8.0+ has better native support, so use native array_column directly
+ * @param array $arr source array, can contain arrays or ArrayAccess objects
+ * @param string|int|null $column_key column key to extract, null for whole item
+ * @param string|int|null $index_key index key to use as result array key
+ * @return array
+ */
+function array_column_enhanced(array $arr, $column_key, $index_key = null){
+	// PHP 8.0+ has better ArrayAccess support, use native function
+	if (PHP_VERSION_ID >= 80000) {
+		return array_column($arr, $column_key, $index_key);
+	}
+	
+	// PHP 7.x fallback implementation
+	if(empty($arr)){
+		return [];
+	}
+	
+	$result = [];
+	foreach($arr as $item){
+		// Support both array and ArrayAccess objects
+		$is_accessible = is_array($item) || ($item instanceof ArrayAccess);
+		if(!$is_accessible){
+			continue;
+		}
+		
+		// Extract column value
+		if($column_key === null){
+			$value = $item;
+		}else{
+			// For objects, use property access; for arrays/ArrayAccess, use array access
+			if(is_object($item) && !($item instanceof ArrayAccess)){
+				$value = $item->$column_key ?? null;
+			}else{
+				$value = isset($item[$column_key]) ? $item[$column_key] : null;
+			}
+		}
+		
+		// Set result with or without index key
+		if($index_key !== null){
+			$index = null;
+			if(is_object($item) && !($item instanceof ArrayAccess)){
+				$index = $item->$index_key ?? null;
+			}else{
+				$index = isset($item[$index_key]) ? $item[$index_key] : null;
+			}
+			
+			if($index !== null){
+				$result[$index] = $value;
+			}else{
+				$result[] = $value;
+			}
+		}else{
+			$result[] = $value;
+		}
+	}
+	
+	return $result;
+}
+
+/**
  * array fix size
  * @param array $arr
  * @param int $length
