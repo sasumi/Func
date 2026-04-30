@@ -513,9 +513,7 @@ function set_cookie_now($name, $value = "", array $options = []) {
 	// 规则：
 	// 1. expire <= 当前时间 => 删除/过期行为 ❌
 	// 2. value 为 null 通常也视为删除 ❌
-	$isValid =
-		$value !== null &&
-		!($expire && $expire <= time());
+	$isValid = $value !== null && !($expire && $expire <= time());
 
 	// 调用原生 setcookie
 	$result = setcookie($name, $value, $options);
@@ -530,6 +528,15 @@ function set_cookie_now($name, $value = "", array $options = []) {
 		unset($_COOKIE[$name]);
 	}
 	return $result;
+}
+
+/**
+ * Delete cookie immediately and synchronize to $_COOKIE. This function is a convenient wrapper around set_cookie_now() for deleting cookies. It sets the cookie's expiration time to a past time, which triggers the deletion behavior in the browser. After calling this function, the specified cookie will be deleted immediately, and the corresponding key will also be removed from $_COOKIE in the current request.
+ */
+function del_cookie_now($name, array $options = []) {
+	// 设置过期时间为过去，触发删除行为
+	$options['expires'] = time() - 3600;
+	return set_cookie_now($name, null, $options);
 }
 
 /**
@@ -573,7 +580,8 @@ function http_fix_relative_url($url, $base_url) {
 
 	/* parse base URL and convert to local variables:
 	$scheme, $host, $path */
-	extract(parse_url($base_url));
+	$tmp = parse_url($base_url);
+	extract($tmp);
 
 	/* remove non-directory element from path */
 	$path = preg_replace('#/[^/]*$#', '', $path);
