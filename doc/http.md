@@ -14,9 +14,29 @@ Enable httpd server chunk output
 ## 3. http_send_cors($allow_hosts,$http_origin)
 Return cross-domain CORS header information
 #### Parameters
- - {string[]} *$allow_hosts* List of domain names allowed to pass through, empty means all source domain names are allowed
+ - {string[]} *$allow_hosts* List of domain names allowed to pass through (supports wildcards, see cors_host_match()), empty means all source domain names are allowed
  - {string} *$http_origin* origin request, format: http://www.abc.com, by default obtained from HTTP_ORIGIN or HTTP_REFERER
-## 4. http_send_charset($charset): bool
+## 4. cors_host_match($pattern,$host): bool
+Match a request host against a wildcard pattern, case-insensitive
+`*` matches any characters (including none), `?` matches a single character.
+A trailing `:*` means any port, and also matches the host without port (default port).
+#### Parameters
+ - {string} *$pattern* e.g. *.tthaoke.com, localhost:*, 192.168.*.*:*
+ - {string} *$host* request host, format: host or host:port
+
+#### Returns
+ - bool 
+
+## 5. cors_origin_allowed($origin,$allow_hosts): bool
+Check whether the http origin is in the CORS allow host list (wildcards supported), empty list means deny all
+#### Parameters
+ - {string} *$origin* request origin, format: https://dev.tthaoke.com:5173
+ - {string[]} *$allow_hosts* domain list, see http_send_cors()
+
+#### Returns
+ - bool 
+
+## 6. http_send_charset($charset): bool
 Send HTTP header character set
 #### Parameters
  - {string} *$charset* 
@@ -24,7 +44,7 @@ Send HTTP header character set
 #### Returns
  - bool whether it is successful
 
-## 5. http_get_status_message($status): string|null
+## 7. http_get_status_message($status): string|null
 Get the corresponding description of the HTTP status code
 #### Parameters
  - {int} *$status* 
@@ -32,18 +52,18 @@ Get the corresponding description of the HTTP status code
 #### Returns
  - string|null 
 
-## 6. http_redirect($url,$permanently)
+## 8. http_redirect($url,$permanently)
 HTTP redirect
 #### Parameters
  - {string} *$url* jump path
  - {bool} *$permanently* whether it is a long-term resource redirection
-## 7. http_get_request_headers(): array
+## 9. http_get_request_headers(): array
 Get HTTP request header information array
 
 #### Returns
  - array [key=>val]
 
-## 8. http_get_request_header($key): mixed|null
+## 10. http_get_request_header($key): mixed|null
 Get the specified key value in the HTTP request header
 #### Parameters
  - {string} *$key* case-insensitive
@@ -51,7 +71,7 @@ Get the specified key value in the HTTP request header
 #### Returns
  - mixed|null 
 
-## 9. http_parse_headers($header_str): array
+## 11. http_parse_headers($header_str): array
 Parse http header information
 #### Parameters
  - {mixed} *$header_str* 
@@ -59,13 +79,13 @@ Parse http header information
 #### Returns
  - array 
 
-## 10. http_from_json_request(): bool
+## 12. http_from_json_request(): bool
 Determine whether the request method is JSON
 
 #### Returns
  - bool 
 
-## 11. http_get_content_type($directives): string
+## 13. http_get_content_type($directives): string
 Get the content-type in the http request header
 #### Parameters
  - {array} *$directives* additional directives, such as ['charset'=>'utf-8'], or ['boundary'=>'ExampleBoundaryString']
@@ -73,7 +93,7 @@ Get the content-type in the http request header
 #### Returns
  - string 
 
-## 12. http_request_accept_json($include_generic_match): bool
+## 14. http_request_accept_json($include_generic_match): bool
 Determine whether the request is received in SON format
 #### Parameters
  - {bool} *$include_generic_match* Whether to support generic matching. Since the client may not strictly process the format of the request, this option is generally not enabled.
@@ -81,7 +101,7 @@ Determine whether the request is received in SON format
 #### Returns
  - bool 
 
-## 13. http_parse_string_use_q_value($str): array
+## 15. http_parse_string_use_q_value($str): array
 Parse http header information in a weighted manner, Accept, Accept-Encoding, Accept-Language, TE, Want-Digest
 #### Parameters
  - {mixed} *$str* 
@@ -89,19 +109,19 @@ Parse http header information in a weighted manner, Accept, Accept-Encoding, Acc
 #### Returns
  - array [[type, q], ...]
 
-## 14. request_in_post(): bool
+## 16. request_in_post(): bool
 Request comes from POST
 
 #### Returns
  - bool 
 
-## 15. request_in_get(): bool
+## 17. request_in_get(): bool
 Request comes from GET
 
 #### Returns
  - bool 
 
-## 16. http_get_current_page_url($with_protocol): string
+## 18. http_get_current_page_url($with_protocol): string
 Get the current page address
 #### Parameters
  - {bool} *$with_protocol* whether to include the protocol header
@@ -109,7 +129,7 @@ Get the current page address
 #### Returns
  - string 
 
-## 17. http_get_current_host($with_protocol,$with_port): string
+## 19. http_get_current_host($with_protocol,$with_port): string
 Get the domain name of the current page
 #### Parameters
  - {bool} *$with_protocol* whether to include the protocol header: http, https
@@ -118,7 +138,7 @@ Get the domain name of the current page
 #### Returns
  - string such as http://www.abc.com http://www.abc.com:81 does not contain a slash at the end
 
-## 18. http_download_stream($file,$download_name,$disposition): false|int
+## 20. http_download_stream($file,$download_name,$disposition): false|int
 Download files by file streaming
 #### Parameters
  - {string} *$file* file path
@@ -128,7 +148,7 @@ Download files by file streaming
 #### Returns
  - false|int Successfully downloaded file size, false means failed
 
-## 19. http_json_response($json,$json_option): void
+## 21. http_json_response($json,$json_option): void
 Response json data
 #### Parameters
  - {mixed} *$json* 
@@ -137,29 +157,29 @@ Response json data
 #### Returns
  - void 
 
-## 20. http_header_json_response($charset)
+## 22. http_header_json_response($charset)
 Response JSON return header
 #### Parameters
  - {string} *$charset* 
-## 21. http_header_download($download_name,$disposition)
+## 23. http_header_download($download_name,$disposition)
 Send file download header information
 #### Parameters
  - {string} *$download_name* 
  - {string} *$disposition* 
-## 22. http_header_csp($csp_rules,$report_uri,$report_only)
+## 24. http_header_csp($csp_rules,$report_uri,$report_only)
 Send CSP header
 #### Parameters
  - {string[]} *$csp_rules* It is recommended to use the rules generated by the csp_content_rule() method
  - {string} *$report_uri* 
  - {bool} *$report_only* 
-## 23. http_header_report_api($endpoint_urls,$group,$max_age_sec,$include_subdomains)
+## 25. http_header_report_api($endpoint_urls,$group,$max_age_sec,$include_subdomains)
 Send browser settings Report API
 #### Parameters
  - {string[]} *$endpoint_urls* 
  - {string} *$group* 
  - {number} *$max_age_sec* 
  - {bool} *$include_subdomains* 
-## 24. http_header_report_api_nel($endpoint_urls,$group,$max_age_sec,$include_subdomains): void
+## 26. http_header_report_api_nel($endpoint_urls,$group,$max_age_sec,$include_subdomains): void
 Send browser error logs to Report API
 #### Parameters
  - {string[]} *$endpoint_urls* 
@@ -170,7 +190,7 @@ Send browser error logs to Report API
 #### Returns
  - void 
 
-## 25. generate_report_api($endpoint_urls,$group,$max_age_sec,$include_subdomains): array
+## 27. generate_report_api($endpoint_urls,$group,$max_age_sec,$include_subdomains): array
 Generate Report API
 #### Parameters
  - {string[]} *$endpoint_urls* 
@@ -181,7 +201,7 @@ Generate Report API
 #### Returns
  - array 
 
-## 26. http_parse_cookie($cookie_str): array
+## 28. http_parse_cookie($cookie_str): array
 Parse the cookie string into a hash array
 #### Parameters
  - {string} *$cookie_str* 
@@ -189,7 +209,7 @@ Parse the cookie string into a hash array
 #### Returns
  - array 
 
-## 27. http_fix_relative_url($url,$base_url): string|string[]
+## 29. http_fix_relative_url($url,$base_url): string|string[]
 Correct relative URL to absolute URL
 #### Parameters
  - {string} *$url* 

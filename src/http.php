@@ -111,7 +111,7 @@ function http_chunk_on() {
 
 /**
  * Return cross-domain CORS header information
- * @param string[] $allow_hosts List of domain names allowed to pass through, empty means all source domain names are allowed
+ * @param string[] $allow_hosts List of domain names allowed to pass through (wildcards supported, see cors_host_match()), empty means all source domain names are allowed
  * @param string $http_origin origin request, format: http://www.abc.com, by default obtained from HTTP_ORIGIN or HTTP_REFERER
  * @throws \Exception
  */
@@ -126,7 +126,7 @@ function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_ma
 	$request_host = $ret['host'] . $port_str;
 	$http_scheme = $ret['scheme'];
 
-	if ($allow_hosts && !in_array('*', $allow_hosts) && !in_array(strtolower($request_host), array_map('strtolower', $allow_hosts))) {
+	if ($allow_hosts && !in_array('*', $allow_hosts) && !cors_origin_allowed($http_origin, $allow_hosts)) {
 		throw new Exception('request host:' . $request_host . ' no in allow host list(' . json_encode($allow_hosts) . ')');
 	}
 	if (headers_sent()) {
@@ -151,6 +151,56 @@ function http_send_cors($allow_hosts = [], $http_origin = null, $option_cache_ma
 
 	//由于Options返回了Credentials信息，正常请求也必须有这个头部信息
 	header('Access-Control-Allow-Credentials: true');
+}
+
+/**
+ * Match a request host against a wildcard pattern, case-insensitive
+ *
+ * `*` matches any characters (including none), `?` matches a single character.
+ * A trailing `:*` means any port, and also matches the host without port (default port).
+ * @param string $pattern e.g. *.tthaoke.com, localhost:*, 192.168.*.*:*
+ * @param string $host request host, format: host or host:port
+ * @return bool
+ */
+function cors_host_match($pattern, $host) {
+	$pattern = strtolower(trim((string)$pattern));
+	$host = strtolower(trim((string)$host));
+	if ($pattern === '' || $host === '') {
+		return false;
+	}
+	if ($pattern === $host) {
+		return true;
+	}
+	$port_any = substr($pattern, -2) === ':*';
+	if ($port_any) {
+		$pattern = substr($pattern, 0, -2);
+	}
+	//no wildcard and no "any port": the exact comparison above is the only way to match
+	if (!$port_any && strpbrk($pattern, '*?') === false) {
+		return false;
+	}
+	$regex = '/^' . strtr(preg_quote($pattern, '/'), ['\*' => '.*', '\?' => '.']) . ($port_any ? '(?::[0-9]+)?' : '') . '$/';
+	return (bool)preg_match($regex, $host);
+}
+
+/**
+ * Check whether the http origin is in the CORS allow host list (wildcards supported), empty list means deny all
+ * @param string $origin request origin, format: https://dev.tthaoke.com:5173
+ * @param string[] $allow_hosts domain list, see http_send_cors()
+ * @return bool
+ */
+function cors_origin_allowed($origin, $allow_hosts) {
+	$ret = parse_url(trim((string)$origin));
+	if (empty($ret['host']) || !in_array(strtolower($ret['scheme'] ?? ''), ['http', 'https'], true)) {
+		return false;
+	}
+	$host = strtolower($ret['host']) . (isset($ret['port']) ? ':' . $ret['port'] : '');
+	foreach ((array)$allow_hosts as $pattern) {
+		if (cors_host_match($pattern, $host)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
